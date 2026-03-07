@@ -184,7 +184,9 @@ Use the following locations for documentation.
 | `spec/openapi/` | pinned OpenAPI snapshot files used for SDK development |
 | `spec/openapi/README.md` | OpenAPI snapshot metadata (source URL, retrieval date, version) |
 | `ts/README.md` | TypeScript SDK documentation |
-| `examples/` | runnable usage examples |
+| `ts/examples/` | runnable TypeScript SDK usage examples |
+| `py/examples/` | runnable Python SDK usage examples |
+| `go/examples/` | runnable Go SDK usage examples |
 
 Agents should not duplicate documentation across multiple locations.
 
