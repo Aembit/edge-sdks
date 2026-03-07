@@ -12,13 +12,18 @@ This repository contains **multi-language SDKs** for the Aembit Edge API.
 
 These SDKs help applications:
 
-- authenticate workloads using environment-specific attestation  
+- authenticate workloads using environment-specific Trust Provider signals  
 - obtain an Edge bearer token  
 - retrieve credentials for protected services
 
 The SDKs provide higher-level developer abstractions on top of the HTTP API.
 
 The first implementation in this repository is the **TypeScript SDK**, which serves as the reference design for future SDKs.
+
+Terminology:
+
+- Use `Trust Provider` as the canonical term in SDK docs and APIs.
+- OpenAPI schema descriptions may still use `attestation` wording.
 
 Planned SDKs include:
 
@@ -118,7 +123,7 @@ Most applications should only need to configure:
 
 - Edge API base URL  
 - client ID  
-- an attestation provider
+- a Trust Provider
 
 Advanced configuration should remain optional.
 

@@ -31,7 +31,7 @@ Recommended structure for TypeScript work:
 
 - `ts/src/` for SDK implementation
 - `ts/examples/` for runnable examples
-- `ts/test/` or `ts/tests/` for test code
+- colocated tests using `*.test.ts` next to source files
 - `ts/README.md` for TypeScript SDK usage docs
 
 If the structure changes, keep naming and placement consistent within `ts/`.
@@ -42,6 +42,7 @@ TypeScript should expose a high-level client-first interface.
 
 - Primary entry points should hide raw protocol details.
 - Public methods should map to developer tasks such as authenticate and get credentials.
+- Public configuration should use `Trust Provider` terminology (see root `AGENTS.md`).
 - Keep advanced options optional and well-scoped.
 - Preserve credential response data without forcing a rigid credential schema.
 
@@ -83,6 +84,11 @@ Authentication behavior should be predictable and safe under concurrency.
 ## Testing Requirements
 
 TypeScript SDK changes should include tests when behavior changes.
+
+Testing stack and layout:
+
+- use Vitest
+- colocate tests as `*.test.ts` beside the corresponding source files
 
 Focus tests on:
 
