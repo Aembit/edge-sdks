@@ -18,9 +18,17 @@ Each SDK provides a developer-friendly interface for the Edge authentication and
 
 This repository is organized as a multi-language SDK workspace.
 
-TODO: add `tree` output here.
+Repository layout:
 
-Each language directory contains:
+- `/` repository-level governance and overview docs (`README.md`, `AGENTS.md`)
+- `docs/` architecture and design documentation
+- `spec/` cross-language SDK contracts
+- `spec/openapi/` pinned OpenAPI snapshots and snapshot metadata
+- `ts/` TypeScript SDK (reference implementation)
+- `py/` planned Python SDK directory
+- `go/` planned Go SDK directory
+
+Each language SDK directory should contain:
 
 - the SDK implementation  
 - examples demonstrating common usage  
@@ -44,7 +52,8 @@ Each SDK will include runnable example applications that demonstrate common usag
 - retrieving credentials  
 - using credentials to access protected services
 
-Examples are intended to be minimal, practical, and easy to run.
+Examples are intended to be minimal, practical, and easy to run.  
+Examples should live in language-specific directories such as `ts/examples/`, `py/examples/`, and `go/examples/`.
 
 ## Contributing
 
@@ -52,7 +61,7 @@ Contributions are welcome.
 
 If you are contributing code, please review:
 
-AGENTS.md
+`AGENTS.md`
 
 This file contains repository guidelines and development conventions intended for both human contributors and coding agents.
 
@@ -60,8 +69,9 @@ This file contains repository guidelines and development conventions intended fo
 
 Additional documentation about the architecture and SDK design can be found in:
 
-docs/
-spec/
+- `docs/` for architecture and design notes
+- `spec/` for cross-language SDK design contracts
+- `spec/openapi/` for pinned OpenAPI snapshots used in SDK development
 
 ## License
 

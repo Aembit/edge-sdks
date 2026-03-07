@@ -37,7 +37,15 @@ there is a clear language-specific reason to do otherwise.
 
 ## Repository Structure
 
-TODO: add `tree` output here.
+Repository layout:
+
+- `/` repository-level governance and overview docs (`README.md`, `AGENTS.md`)
+- `docs/` architecture and design documentation
+- `spec/` cross-language SDK contracts
+- `spec/openapi/` pinned OpenAPI snapshots and snapshot metadata
+- `ts/` TypeScript SDK (reference implementation)
+- `py/` planned Python SDK directory
+- `go/` planned Go SDK directory
 
 Rules:
 
@@ -53,6 +61,17 @@ Do not introduce cross-language abstractions unless explicitly requested.
 ## Coding Agent Workflow Rules
 
 Coding agents must follow these workflow rules:
+
+### Propose first, then implement
+
+Agents must not make file updates before checking with the user.
+
+Instead:
+
+1. Share a concise proposal or plan for the intended changes.  
+2. Ask clarifying questions if requirements are ambiguous or incomplete.  
+3. Wait for explicit user approval.  
+4. Implement only after approval.
 
 ### Do not commit automatically
 
@@ -174,12 +193,15 @@ Integration tests may be added later.
 
 ## Documentation Locations
 
-Use the following locations for documentation.
+Use the following locations for documentation and examples.
+
+Some language-specific paths are created when that SDK is added.
 
 | Location | Purpose |
 | :---- | :---- |
 | `README.md` | high-level repository overview |
 | `docs/` | architecture and design explanations |
+| `docs/README.md` | docs index and writing conventions |
 | `spec/` | cross-language SDK design contracts |
 | `spec/openapi/` | pinned OpenAPI snapshot files used for SDK development |
 | `spec/openapi/README.md` | OpenAPI snapshot metadata (source URL, retrieval date, version) |
@@ -192,9 +214,11 @@ Agents should not duplicate documentation across multiple locations.
 
 ## Language-Specific Instructions
 
-Language-specific development rules are defined in:
+Language-specific development rules are defined in language directories:
 
-ts/AGENTS.md py/AGENTS.md go/AGENTS.md
+- `ts/AGENTS.md` (current)
+- `py/AGENTS.md` (add when Python SDK work begins)
+- `go/AGENTS.md` (add when Go SDK work begins)
 
 Coding agents working in a language directory must follow both:
 
