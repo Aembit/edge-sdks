@@ -43,6 +43,8 @@ Rules:
 
 - Language-specific code must remain within its language directory.  
 - Cross-language design documents belong in `spec/`.  
+- Pinned OpenAPI snapshots belong in `spec/openapi/`.  
+- OpenAPI metadata and provenance belong in `spec/openapi/README.md`.  
 - Architecture and design explanations belong in `docs/`.  
 - Examples should live inside the language directory they belong to.
 
@@ -179,6 +181,8 @@ Use the following locations for documentation.
 | `README.md` | high-level repository overview |
 | `docs/` | architecture and design explanations |
 | `spec/` | cross-language SDK design contracts |
+| `spec/openapi/` | pinned OpenAPI snapshot files used for SDK development |
+| `spec/openapi/README.md` | OpenAPI snapshot metadata (source URL, retrieval date, version) |
 | `ts/README.md` | TypeScript SDK documentation |
 | `examples/` | runnable usage examples |
 
