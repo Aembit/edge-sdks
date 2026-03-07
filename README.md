@@ -28,11 +28,13 @@ Each language directory contains:
 
 ## Project Status
 
-This project is in early development.
+This repository hosts SDKs for the Aembit Edge API.
 
-The first SDK being implemented is **TypeScript**, which will serve as the reference implementation for the overall SDK design.
+The **TypeScript SDK** is the first implementation and serves as the
+reference design for the SDK architecture.
 
-Additional SDKs for other languages will be added over time.
+Additional SDKs for other languages (such as Python and Go) will follow
+the same conceptual design where possible.
 
 ## Examples
 
