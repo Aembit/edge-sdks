@@ -17,3 +17,16 @@ export type {
   EdgeServerWorkloadDetails,
   EdgeSuccessResponse
 } from "./types.js";
+
+export {
+  ApiError,
+  AuthError,
+  CredentialError,
+  EdgeSdkError,
+  TransportError,
+  extractEdgeGenericErrorBody,
+  extractRequestId,
+  isRetryableStatusCode,
+  mapHttpError,
+  mapTransportError
+} from "./errors.js";
