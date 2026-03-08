@@ -29,6 +29,20 @@ Planned v1 behavior:
 - Cross-language contracts and API snapshots: `spec/` and `spec/openapi/`
 - Cross-language architecture: `docs/architecture.md`
 
+## Local Development
+
+Run from `ts/`:
+
+- `npm install`
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+
+Package status:
+
+- `ts/package.json` is currently marked `private: true`.
+- Revisit package publish metadata and release workflow when publish work starts.
+
 ## Planned Layout
 
 Expected TypeScript SDK structure:
