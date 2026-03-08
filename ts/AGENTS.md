@@ -53,6 +53,8 @@ For credential payloads, prefer flexible representations such as `unknown` plus 
 - Prefer strict typing and avoid `any` in public API surfaces.
 - Use `unknown` for untrusted external data and validate before use.
 - Keep public types intentionally minimal and stable.
+- Add clear, concise JSDoc for public exported types/interfaces, especially for behavior-affecting fields and defaults.
+- Avoid redundant comments that only restate obvious type names.
 - Prefer named exports over default exports for SDK modules.
 - Use `async` and `await` over promise chains for readability.
 
