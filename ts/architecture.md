@@ -8,7 +8,7 @@ This is an initial architecture for v1.
 
 v1 baseline:
 
-- runtime target: Node.js `>=18`
+- runtime target: Node.js `>=20`
 - package output: ESM-only
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`

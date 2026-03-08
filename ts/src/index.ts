@@ -1,11 +1,11 @@
-export type { AuthSession } from "./types/auth";
-export type { EdgeClientConfig } from "./types/client-config";
+export type { AuthSession } from "./types/auth.js";
+export type { EdgeClientConfig } from "./types/client-config.js";
 export type {
   CredentialResult,
   CredentialServerRef,
   GetCredentialInput,
   GetCredentialOptions,
-} from "./types/credential";
+} from "./types/credential.js";
 export type {
   ApiErrorLike,
   AuthErrorLike,
@@ -14,10 +14,10 @@ export type {
   EdgeSdkErrorLike,
   TransportErrorLike,
   TrustProviderErrorLike,
-} from "./types/errors";
-export type { RetryPolicy, RetryPolicyOverride } from "./types/retry";
+} from "./types/errors.js";
+export type { RetryPolicy, RetryPolicyOverride } from "./types/retry.js";
 export type {
   ClientWorkloadDetails,
   TrustProvider,
   TrustProviderKind,
-} from "./types/trust-provider";
+} from "./types/trust-provider.js";

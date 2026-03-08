@@ -10,7 +10,7 @@ The TypeScript SDK is in active development.
 
 ## Runtime And Packaging
 
-- Node.js-first SDK target: `>=18`
+- Node.js-first SDK target: `>=20`
 - Package output: ESM-only
 
 ## v1 Scope
@@ -41,6 +41,13 @@ Expected TypeScript SDK structure:
 
 - Test runner: Vitest
 - Local development and test commands should use `npm`
+
+## Troubleshooting
+
+- Verify runtime version: `node -v` (must be `>=20`).
+- Some IDE, CI, or coding-agent shells may use a different Node version than your interactive terminal.
+- If commands fail with runtime/tooling import errors, switch to Node `>=20` and reinstall dependencies:
+  - `npm install` (or `npm ci` in clean environments)
 
 ## Roadmap Notes
 

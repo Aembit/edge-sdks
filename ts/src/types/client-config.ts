@@ -1,5 +1,5 @@
-import type { RetryPolicyOverride } from "./retry";
-import type { TrustProvider } from "./trust-provider";
+import type { RetryPolicyOverride } from "./retry.js";
+import type { TrustProvider } from "./trust-provider.js";
 
 /**
  * Public configuration contract for the SDK client.

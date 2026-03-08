@@ -1,4 +1,4 @@
-import type { RetryPolicyOverride } from "./retry";
+import type { RetryPolicyOverride } from "./retry.js";
 
 /**
  * Server reference used by `getCredential()`.
