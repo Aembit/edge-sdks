@@ -25,7 +25,9 @@ Planned v1 behavior:
 ## Documentation
 
 - Implementation and agent guidance: `ts/AGENTS.md`
+- TypeScript architecture design: `ts/architecture.md`
 - Cross-language contracts and API snapshots: `spec/` and `spec/openapi/`
+- Cross-language architecture: `docs/architecture.md`
 
 ## Planned Layout
 

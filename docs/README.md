@@ -10,6 +10,10 @@ Use `docs/` for:
 - rationale and design tradeoffs
 - implementation notes that apply across SDKs
 
+## Architecture Documents
+
+- Cross-language architecture: `docs/architecture.md`
+
 ## What Belongs Elsewhere
 
 - Use `spec/` for cross-language contracts and protocol-aligned SDK design specs.
