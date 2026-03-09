@@ -281,7 +281,7 @@ function normalizeServerRef(server: CredentialServerRef): {
   const transportProtocol = server.transportProtocol ?? "TCP"
   if (transportProtocol !== "TCP") {
     throw new CredentialError(
-      `Unsupported server.transportProtocol '${transportProtocol}'. Only 'TCP' is supported`,
+      "Unsupported server.transportProtocol. Only 'TCP' is supported",
       {
         retryable: false
       }

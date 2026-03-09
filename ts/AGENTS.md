@@ -92,6 +92,7 @@ Testing stack and layout:
 
 - use Vitest
 - colocate tests as `*.test.ts` beside the corresponding source files
+- typed linting is enabled; `@typescript-eslint/require-await` is disabled for `*.test.ts` because async mock handlers often intentionally return promises without internal `await`
 
 Focus tests on:
 

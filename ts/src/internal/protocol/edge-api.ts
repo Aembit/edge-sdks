@@ -3,8 +3,7 @@ import {
   ApiError,
   AuthError,
   CredentialError,
-  EdgeSdkError,
-  TransportError
+  EdgeSdkError
 } from "./errors.js";
 import type { EdgeTransportRequest } from "./http-transport.js";
 import type {
@@ -132,7 +131,7 @@ function buildHeaders(
 function mapEndpointError(
   operation: "auth" | "credentials",
   error: unknown
-): AuthError | CredentialError | ApiError | TransportError | unknown {
+): unknown {
   if (!(error instanceof EdgeSdkError)) {
     return error;
   }

@@ -41,6 +41,11 @@ export default [
         ...globals.node,
         ...globals.vitest
       }
+    },
+    rules: {
+      // Vitest mock handlers are often async by contract and may return resolved/rejected
+      // promises directly without internal await expressions.
+      "@typescript-eslint/require-await": "off"
     }
   }
 ]

@@ -5,6 +5,36 @@ import { EdgeApi } from "./edge-api.js";
 import type { EdgeApiOptions } from "./edge-api.js";
 import type { EdgeAuthRequestBody, EdgeCredentialsRequestBody } from "./types.js";
 
+function getFirstCallArgument(
+  mock: ReturnType<typeof vi.fn>
+): Record<string, unknown> {
+  const call = mock.mock.calls[0] as [unknown] | undefined;
+  if (!call) {
+    throw new Error("Expected mock to be called");
+  }
+
+  return call[0] as Record<string, unknown>;
+}
+
+interface RequestMatcher {
+  operation: string;
+  path: string;
+  method: string;
+  body: unknown;
+  headers: Record<string, string>;
+}
+
+function assertRequestMatches(
+  actual: Record<string, unknown>,
+  expected: RequestMatcher
+): void {
+  expect(actual.operation).toBe(expected.operation);
+  expect(actual.path).toBe(expected.path);
+  expect(actual.method).toBe(expected.method);
+  expect(actual.body).toEqual(expected.body);
+  expect(actual.headers).toEqual(expect.objectContaining(expected.headers));
+}
+
 describe("EdgeApi", () => {
   it("builds auth request with operation, path, and resource set header", async () => {
     const requestJsonMock = vi.fn(async () => ({
@@ -35,17 +65,15 @@ describe("EdgeApi", () => {
     expect(result.accessToken).toBe("token");
 
     expect(requestJsonMock).toHaveBeenCalledTimes(1);
-    expect(requestJsonMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        operation: "auth",
-        path: "/edge/v1/auth",
-        method: "POST",
-        body: authBody,
-        headers: expect.objectContaining({
-          "x-aembit-resourceset": "rs-default"
-        })
-      })
-    );
+    assertRequestMatches(getFirstCallArgument(requestJsonMock), {
+      operation: "auth",
+      path: "/edge/v1/auth",
+      method: "POST",
+      body: authBody,
+      headers: {
+        "x-aembit-resourceset": "rs-default"
+      }
+    });
   });
 
   it("builds credentials request with bearer token and resource set override", async () => {
@@ -80,18 +108,16 @@ describe("EdgeApi", () => {
     expect(result.data?.apiKey).toBe("k");
 
     expect(requestJsonMock).toHaveBeenCalledTimes(1);
-    expect(requestJsonMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        operation: "credentials",
-        path: "/edge/v1/credentials",
-        method: "POST",
-        body: credentialsBody,
-        headers: expect.objectContaining({
-          authorization: "Bearer bearer-token",
-          "x-aembit-resourceset": "rs-override"
-        })
-      })
-    );
+    assertRequestMatches(getFirstCallArgument(requestJsonMock), {
+      operation: "credentials",
+      path: "/edge/v1/credentials",
+      method: "POST",
+      body: credentialsBody,
+      headers: {
+        authorization: "Bearer bearer-token",
+        "x-aembit-resourceset": "rs-override"
+      }
+    });
   });
 
   it("maps ApiError to AuthError for auth calls", async () => {

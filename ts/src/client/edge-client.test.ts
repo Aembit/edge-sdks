@@ -11,7 +11,12 @@ function asFetchMock(
 }
 
 function parseRequestBody(fetchMock: ReturnType<typeof vi.fn>, callIndex: number): unknown {
-  const [, init] = fetchMock.mock.calls[callIndex]
+  const call = fetchMock.mock.calls[callIndex] as [unknown, RequestInit | undefined] | undefined
+  if (!call) {
+    throw new Error(`Expected mock call at index ${String(callIndex)}`)
+  }
+
+  const [, init] = call
   const body = (init as RequestInit).body
   if (typeof body !== "string") {
     return undefined
@@ -24,12 +29,22 @@ function getRequestHeaders(
   fetchMock: ReturnType<typeof vi.fn>,
   callIndex: number
 ): Record<string, string> {
-  const [, init] = fetchMock.mock.calls[callIndex]
+  const call = fetchMock.mock.calls[callIndex] as [unknown, RequestInit | undefined] | undefined
+  if (!call) {
+    throw new Error(`Expected mock call at index ${String(callIndex)}`)
+  }
+
+  const [, init] = call
   return ((init as RequestInit).headers ?? {}) as Record<string, string>
 }
 
 function getRequestPath(fetchMock: ReturnType<typeof vi.fn>, callIndex: number): string {
-  const [url] = fetchMock.mock.calls[callIndex]
+  const call = fetchMock.mock.calls[callIndex] as [unknown] | undefined
+  if (!call) {
+    throw new Error(`Expected mock call at index ${String(callIndex)}`)
+  }
+
+  const [url] = call
   return new URL(String(url)).pathname
 }
 
