@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EdgeClient } from "./index.js";
+import { EdgeClient, trustProviders } from "./index.js";
 import type { AuthSession } from "./index.js";
 
 describe("public type exports", () => {
@@ -17,5 +17,9 @@ describe("public type exports", () => {
 
   it("exports EdgeClient runtime class", () => {
     expect(typeof EdgeClient).toBe("function");
+  });
+
+  it("exports built-in trust provider factories", () => {
+    expect(typeof trustProviders.awsMetadataService).toBe("function");
   });
 });

@@ -20,29 +20,19 @@ Planned v1 behavior:
 - high-level Edge client for authentication and credential retrieval
 - automatic token lifecycle management
 - retry logic for transient failures
-- built-in Trust Provider coverage focused on AWS and OIDC
+- built-in Trust Provider coverage starting with AWS Metadata Service (IMDSv2)
 
 ## Client API (Current)
 
 The SDK now exposes `EdgeClient` as the developer-facing API.
 
 ```ts
-import { EdgeClient } from "@aembit/edge-sdk-ts"
+import { EdgeClient, trustProviders } from "@aembit/edge-sdk-ts"
 
 const client = new EdgeClient({
   baseUrl: "https://tenant.aembit.io",
   clientId: "your-client-id",
-  trustProvider: {
-    id: "aws-metadata-service",
-    kind: "aws_metadata_service",
-    async collectIdentity() {
-      return {
-        aws: {
-          instanceIdentityDocument: "..."
-        }
-      }
-    }
-  }
+  trustProvider: trustProviders.awsMetadataService()
 })
 
 await client.authenticate()
@@ -59,6 +49,7 @@ Notes:
 
 - `authenticate()` updates SDK session state and does not return raw bearer tokens.
 - `getCredential()` auto-authenticates when no valid token is cached.
+- `trustProviders.awsMetadataService()` collects identity from AWS IMDSv2.
 - `server.host` and `server.port` are required.
 - `server.transportProtocol` currently supports only `"TCP"` and defaults to `"TCP"` if omitted.
 
@@ -109,7 +100,7 @@ Expected TypeScript SDK structure:
 
 ## Roadmap Notes
 
-- Additional Trust Provider support beyond AWS and OIDC
+- Additional Trust Provider support beyond AWS Metadata Service (for example AWS Role and OIDC)
 - Bundler/tooling decision is pending; package output remains ESM-only
 
 ## Security

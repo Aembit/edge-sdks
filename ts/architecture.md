@@ -12,7 +12,7 @@ v1 baseline:
 - package output: ESM-only
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
-- initial Trust Provider coverage: AWS Metadata Service, AWS Role, and GitHub OIDC
+- initial Trust Provider coverage: AWS Metadata Service (IMDSv2)
 - test framework: Vitest with colocated tests (`*.test.ts`)
 
 ## Layer Implementation
@@ -59,11 +59,7 @@ export interface TrustProvider {
 Initial implementations:
 
 - `aws-metadata-service.ts`
-  - retrieves identity signals from AWS Metadata Service
-- `aws-role.ts`
-  - retrieves identity signals for AWS Role-based trust configuration
-- `github-oidc.ts`
-  - retrieves GitHub OIDC identity token signals
+  - retrieves IMDSv2 token, instance identity document, and signature
 
 Design notes:
 
@@ -262,10 +258,7 @@ ts/
         types.ts
         errors.ts
       trust-providers/
-        interface.ts
         aws-metadata-service.ts
-        aws-role.ts
-        github-oidc.ts
       auth/
         token-manager.ts
 ```
@@ -286,3 +279,4 @@ ts/
 - bundler/tooling choice for package build remains open
 - naming and typing depth for `GetCredentialInput.server` may be refined after first implementation pass
 - per-call retry override is optional for v1 and can be introduced after base client behavior is stable
+- AWS Role and OIDC Trust Provider implementations remain roadmap items after AWS Metadata Service
