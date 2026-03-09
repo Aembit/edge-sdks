@@ -99,8 +99,10 @@ Expected TypeScript SDK structure:
 ## Troubleshooting
 
 - Verify runtime version: `node -v` (must be `>=20`).
+- Run `npm run check:node` to validate the active runtime before build/test commands.
 - Some IDE, CI, or coding-agent shells may use a different Node version than your interactive terminal.
-- If commands fail with runtime/tooling import errors, switch to Node `>=20` and reinstall dependencies:
+- `npm run build`, `npm run typecheck`, and `npm test` run a Node version precheck automatically.
+- If commands fail with runtime/tooling import errors, switch to Node `>=20` using your preferred tool and reinstall dependencies:
   - `npm install` (or `npm ci` in clean environments)
 
 ## Roadmap Notes
