@@ -40,3 +40,10 @@ export {
   sleepMs
 } from "./retry.js";
 export type { RetryEvent } from "./retry.js";
+
+export { EdgeHttpTransport } from "./http-transport.js";
+export type {
+  EdgeTransportMethod,
+  EdgeTransportOptions,
+  EdgeTransportRequest
+} from "./http-transport.js";

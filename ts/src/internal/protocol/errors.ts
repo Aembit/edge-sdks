@@ -29,6 +29,7 @@ interface HttpErrorMappingInput {
   statusCode: number;
   body?: unknown;
   headers?: EdgeResponseHeaders | HeaderLookup;
+  retryableStatusCodes?: number[];
   message?: string;
   cause?: unknown;
 }
@@ -147,7 +148,7 @@ export function mapHttpError(input: HttpErrorMappingInput): ApiError | AuthError
     statusCode: input.statusCode,
     apiCode,
     requestId,
-    retryable: isRetryableStatusCode(input.statusCode),
+    retryable: isRetryableHttpStatus(input.statusCode, input.retryableStatusCodes ?? []),
     cause: input.cause
   };
 
@@ -162,7 +163,15 @@ export function mapHttpError(input: HttpErrorMappingInput): ApiError | AuthError
   return new ApiError(message, common);
 }
 
-export function mapTransportError(error: unknown, message = "Edge transport request failed"): TransportError {
+interface TransportErrorMappingOptions {
+  retryable?: boolean;
+}
+
+export function mapTransportError(
+  error: unknown,
+  message = "Edge transport request failed",
+  options: TransportErrorMappingOptions = {}
+): TransportError {
   if (error instanceof TransportError) {
     return error;
   }
@@ -173,7 +182,7 @@ export function mapTransportError(error: unknown, message = "Edge transport requ
       : "";
 
   return new TransportError(`${message}${causeMessage}`, {
-    retryable: true,
+    retryable: options.retryable ?? true,
     cause: error
   });
 }
