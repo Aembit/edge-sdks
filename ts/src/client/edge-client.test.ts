@@ -110,6 +110,28 @@ describe("EdgeClient", () => {
     })
   })
 
+  it("rejects malformed auth success payload shape", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response("null", {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      })
+    )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+    })
+
+    await expect(client.authenticate()).rejects.toBeInstanceOf(AuthError)
+    await expect(client.authenticate()).rejects.toMatchObject({
+      kind: "auth",
+      retryable: false
+    })
+  })
+
   it("getCredential() auto-authenticates and defaults transportProtocol to TCP", async () => {
     const fetchMock = vi
       .fn()
@@ -168,6 +190,166 @@ describe("EdgeClient", () => {
       },
       credentialType: "ApiKey"
     })
+  })
+
+  it("rejects malformed credential success payload shape", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-2",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response("null", {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+    })
+
+    await expect(
+      client.getCredential({
+        server: {
+          host: "db.internal",
+          port: 443
+        }
+      })
+    ).rejects.toBeInstanceOf(CredentialError)
+  })
+
+  it("rejects credential success payload when data is not an object", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-2",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            credentialType: "ApiKey",
+            expiresAt: null,
+            data: "not-an-object"
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+    })
+
+    await expect(
+      client.getCredential({
+        server: {
+          host: "db.internal",
+          port: 443
+        }
+      })
+    ).rejects.toBeInstanceOf(CredentialError)
+  })
+
+  it("rejects credential success payload when expiresAt has invalid type", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-2",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            credentialType: "ApiKey",
+            expiresAt: 123,
+            data: { apiKey: "abc" }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+    })
+
+    await expect(
+      client.getCredential({
+        server: {
+          host: "db.internal",
+          port: 443
+        }
+      })
+    ).rejects.toBeInstanceOf(CredentialError)
+  })
+
+  it("rejects credential success payload when credentialType has invalid type", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-2",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            credentialType: 123,
+            expiresAt: null,
+            data: { apiKey: "abc" }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+    })
+
+    await expect(
+      client.getCredential({
+        server: {
+          host: "db.internal",
+          port: 443
+        }
+      })
+    ).rejects.toBeInstanceOf(CredentialError)
   })
 
   it("reuses cached auth token for subsequent getCredential() calls", async () => {
@@ -1175,6 +1357,134 @@ describe("EdgeClient", () => {
     const second = client.getCredential(
       { server: { host: "db.internal", port: 443 } },
       { resourceSet: "rs-1", retry: { maxAttempts: 3 } }
+    )
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const authCalls = fetchMock.mock.calls.filter(
+      (_, idx) => getRequestPath(fetchMock, idx) === "/edge/v1/auth"
+    )
+    expect(authCalls).toHaveLength(1)
+
+    resolveAuth?.(
+      new Response(
+        JSON.stringify({
+          accessToken: "token-shared",
+          tokenType: "Bearer",
+          expiresIn: 3600
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+
+    await Promise.all([first, second])
+  })
+
+  it("deduplicates in-flight auth for undefined retry and equivalent default override", async () => {
+    let resolveAuth: ((value: Response) => void) | undefined
+    const fetchMock = vi.fn((input: unknown) => {
+      const path = new URL(String(input)).pathname
+      if (path === "/edge/v1/auth") {
+        return new Promise<Response>((resolve) => {
+          resolveAuth = resolve
+        })
+      }
+
+      if (path === "/edge/v1/credentials") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              credentialType: "ApiKey",
+              expiresAt: null,
+              data: { apiKey: "ok" }
+            }),
+            { status: 200, headers: { "content-type": "application/json" } }
+          )
+        )
+      }
+
+      return Promise.reject(new Error("unexpected request"))
+    })
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+    })
+
+    const first = client.getCredential(
+      { server: { host: "db.internal", port: 443 } },
+      { resourceSet: "rs-1" }
+    )
+    const second = client.getCredential(
+      { server: { host: "db.internal", port: 443 } },
+      { resourceSet: "rs-1", retry: { maxAttempts: 3 } }
+    )
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const authCalls = fetchMock.mock.calls.filter(
+      (_, idx) => getRequestPath(fetchMock, idx) === "/edge/v1/auth"
+    )
+    expect(authCalls).toHaveLength(1)
+
+    resolveAuth?.(
+      new Response(
+        JSON.stringify({
+          accessToken: "token-shared",
+          tokenType: "Bearer",
+          expiresIn: 3600
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+
+    await Promise.all([first, second])
+  })
+
+  it("deduplicates in-flight auth for undefined retry and empty override", async () => {
+    let resolveAuth: ((value: Response) => void) | undefined
+    const fetchMock = vi.fn((input: unknown) => {
+      const path = new URL(String(input)).pathname
+      if (path === "/edge/v1/auth") {
+        return new Promise<Response>((resolve) => {
+          resolveAuth = resolve
+        })
+      }
+
+      if (path === "/edge/v1/credentials") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              credentialType: "ApiKey",
+              expiresAt: null,
+              data: { apiKey: "ok" }
+            }),
+            { status: 200, headers: { "content-type": "application/json" } }
+          )
+        )
+      }
+
+      return Promise.reject(new Error("unexpected request"))
+    })
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+    })
+
+    const first = client.getCredential(
+      { server: { host: "db.internal", port: 443 } },
+      { resourceSet: "rs-1" }
+    )
+    const second = client.getCredential(
+      { server: { host: "db.internal", port: 443 } },
+      { resourceSet: "rs-1", retry: {} }
     )
 
     await Promise.resolve()

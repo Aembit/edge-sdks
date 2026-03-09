@@ -5,6 +5,7 @@ import {
   TrustProviderError
 } from "../internal/protocol/errors.js"
 import { EdgeHttpTransport } from "../internal/protocol/http-transport.js"
+import { mergeRetryPolicy } from "../internal/protocol/retry.js"
 import type { AuthSession } from "../types/auth.js"
 import type { EdgeClientConfig } from "../types/client-config.js"
 import type {
@@ -15,6 +16,10 @@ import type {
 } from "../types/credential.js"
 import type { RetryPolicyOverride } from "../types/retry.js"
 import type { ClientWorkloadDetails } from "../types/trust-provider.js"
+import type {
+  EdgeAuthSuccessBody,
+  EdgeCredentialsSuccessBody
+} from "../internal/protocol/types.js"
 
 const DEFAULT_AUTH_EXPIRY_SKEW_MS = 60_000
 
@@ -113,11 +118,12 @@ export class EdgeClient {
       resourceSet: options.resourceSet,
       retry: options.retry
     })
+    const credentialBody = parseCredentialSuccessBody(response)
 
     return {
-      credentialType: response.credentialType,
-      expiresAt: response.expiresAt ?? null,
-      data: response.data ?? {}
+      credentialType: credentialBody.credentialType,
+      expiresAt: credentialBody.expiresAt ?? null,
+      data: credentialBody.data ?? {}
     }
   }
 
@@ -162,7 +168,7 @@ export class EdgeClient {
 
     const key = serializeAuthSingleFlightKey({
       resourceSet: expectedResourceSet,
-      retryKey: serializeRetryPolicyOverride(expectedRetry)
+      retryKey: serializeEffectiveRetryPolicyKey(this.config.retry, expectedRetry)
     })
     const inFlight = this.inFlightAuthByKey.get(key)
     if (inFlight) {
@@ -199,9 +205,10 @@ export class EdgeClient {
           retry: options.retry
         }
       )
+      const authBody = parseAuthSuccessBody(response)
 
-      const accessToken = parseAccessToken(response.accessToken)
-      const expiresAtMs = calculateExpiresAtMs(response.expiresIn, Date.now())
+      const accessToken = parseAccessToken(authBody.accessToken)
+      const expiresAtMs = calculateExpiresAtMs(authBody.expiresIn, Date.now())
       const tokenState: CachedTokenState = {
         accessToken,
         expiresAtMs,
@@ -299,6 +306,62 @@ function parseAccessToken(token: string | null | undefined): string {
   return value
 }
 
+function parseAuthSuccessBody(response: EdgeAuthSuccessBody): EdgeAuthSuccessBody {
+  if (!isRecord(response)) {
+    throw new AuthError("Edge auth response payload must be an object", {
+      retryable: false
+    })
+  }
+
+  return response
+}
+
+function parseCredentialSuccessBody(
+  response: EdgeCredentialsSuccessBody
+): EdgeCredentialsSuccessBody {
+  if (!isRecord(response)) {
+    throw new CredentialError("Edge credential response payload must be an object", {
+      retryable: false
+    })
+  }
+
+  const credentialType = response.credentialType
+  if (credentialType !== undefined && typeof credentialType !== "string") {
+    throw new CredentialError(
+      "Edge credential response field 'credentialType' must be a string when provided",
+      {
+        retryable: false
+      }
+    )
+  }
+
+  const expiresAt = response.expiresAt
+  if (expiresAt !== undefined && expiresAt !== null && typeof expiresAt !== "string") {
+    throw new CredentialError(
+      "Edge credential response field 'expiresAt' must be a string or null when provided",
+      {
+        retryable: false
+      }
+    )
+  }
+
+  const data = response.data
+  if (data !== undefined && !isRecord(data)) {
+    throw new CredentialError(
+      "Edge credential response field 'data' must be an object when provided",
+      {
+        retryable: false
+      }
+    )
+  }
+
+  return {
+    credentialType,
+    expiresAt,
+    data
+  }
+}
+
 function calculateExpiresAtMs(
   expiresInSeconds: number | undefined,
   nowMs: number
@@ -359,21 +422,61 @@ function resolveEffectiveResourceSet(
   return requestResourceSet ?? defaultResourceSet
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value)
+}
+
 function serializeAuthSingleFlightKey(key: AuthSingleFlightKey): string {
   return JSON.stringify([key.resourceSet ?? null, key.retryKey])
 }
 
-function serializeRetryPolicyOverride(retry: RetryPolicyOverride | undefined): string {
-  if (!retry) {
-    return ""
-  }
+function serializeEffectiveRetryPolicyKey(
+  baseRetry: RetryPolicyOverride | undefined,
+  requestRetry: RetryPolicyOverride | undefined
+): string {
+  const mergedOverride = mergeRetryOverrides(baseRetry, requestRetry)
+  const effectiveRetry = mergeRetryPolicy(mergedOverride)
 
   return JSON.stringify({
-    enabled: retry.enabled,
-    maxAttempts: retry.maxAttempts,
-    baseDelayMs: retry.baseDelayMs,
-    maxDelayMs: retry.maxDelayMs,
-    jitter: retry.jitter,
-    retryableStatusCodes: retry.retryableStatusCodes
+    enabled: effectiveRetry.enabled,
+    maxAttempts: effectiveRetry.maxAttempts,
+    baseDelayMs: effectiveRetry.baseDelayMs,
+    maxDelayMs: effectiveRetry.maxDelayMs,
+    jitter: effectiveRetry.jitter,
+    retryableStatusCodes: normalizeRetryableStatusCodes(
+      effectiveRetry.retryableStatusCodes
+    )
   })
+}
+
+function mergeRetryOverrides(
+  base: RetryPolicyOverride | undefined,
+  request: RetryPolicyOverride | undefined
+): RetryPolicyOverride | undefined {
+  if (!base && !request) {
+    return undefined
+  }
+
+  const baseOverride = base ?? {}
+  const requestOverride = request ?? {}
+
+  return {
+    enabled: requestOverride.enabled ?? baseOverride.enabled,
+    maxAttempts: requestOverride.maxAttempts ?? baseOverride.maxAttempts,
+    baseDelayMs: requestOverride.baseDelayMs ?? baseOverride.baseDelayMs,
+    maxDelayMs: requestOverride.maxDelayMs ?? baseOverride.maxDelayMs,
+    jitter: requestOverride.jitter ?? baseOverride.jitter,
+    retryableStatusCodes:
+      requestOverride.retryableStatusCodes ?? baseOverride.retryableStatusCodes
+  }
+}
+
+function normalizeRetryableStatusCodes(
+  statusCodes: number[] | undefined
+): number[] | undefined {
+  if (!statusCodes || statusCodes.length === 0) {
+    return undefined
+  }
+
+  return [...new Set(statusCodes)].sort((left, right) => left - right)
 }
