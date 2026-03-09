@@ -30,3 +30,13 @@ export {
   mapHttpError,
   mapTransportError
 } from "./errors.js";
+
+export {
+  DEFAULT_RETRY_POLICY,
+  calculateBackoffDelayMs,
+  executeWithRetry,
+  isRetryableHttpStatus,
+  mergeRetryPolicy,
+  sleepMs
+} from "./retry.js";
+export type { RetryEvent } from "./retry.js";

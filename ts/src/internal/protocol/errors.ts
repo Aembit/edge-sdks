@@ -7,6 +7,7 @@ import type {
   TransportErrorLike
 } from "../../types/errors.js";
 import type { EdgeGenericErrorBody, EdgeResponseHeaders } from "./types.js";
+import { isRetryableHttpStatus } from "./retry.js";
 
 type HeaderLookup = {
   get(name: string): string | null;
@@ -88,7 +89,7 @@ export class CredentialError extends EdgeSdkError implements CredentialErrorLike
 }
 
 export function isRetryableStatusCode(statusCode: number): boolean {
-  return statusCode === 429 || statusCode >= 500;
+  return isRetryableHttpStatus(statusCode);
 }
 
 export function extractEdgeGenericErrorBody(body: unknown): EdgeGenericErrorBody | undefined {
