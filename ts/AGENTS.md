@@ -93,6 +93,7 @@ Testing stack and layout:
 - use Vitest
 - colocate tests as `*.test.ts` beside the corresponding source files
 - typed linting is enabled; `@typescript-eslint/require-await` is disabled for `*.test.ts` because async mock handlers often intentionally return promises without internal `await`
+- run `npm run lint` for TypeScript code changes; use `npm run lint:fix` when appropriate and re-run `npm run lint`
 
 Focus tests on:
 
@@ -125,6 +126,7 @@ Examples are part of product quality, not optional extras.
 
 Before handing work back to the user:
 
+- run `npm run lint` for TypeScript file changes and confirm it passes
 - confirm behavior with relevant tests
 - ensure API and README changes are aligned
 - verify examples still reflect recommended usage
