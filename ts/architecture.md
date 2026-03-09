@@ -23,7 +23,7 @@ Purpose: HTTP execution and Edge API protocol handling.
 
 Modules:
 
-- `transport.ts`
+- `http-transport.ts`
   - fetch-based HTTP transport
   - timeout handling
   - retry middleware integration
@@ -195,6 +195,25 @@ Initial default values (subject to tuning):
 - `maxDelayMs: 2000`
 - jitter enabled
 
+### Retry Behavior Summary (TypeScript)
+
+TypeScript implementation details for retry behavior:
+
+- Effective retry policy is computed from:
+  1. SDK defaults
+  2. transport-level retry overrides
+  3. per-request retry overrides (highest precedence)
+- Per-request override fields with `undefined` values do not erase transport-level defaults.
+- HTTP retryability is determined using the effective policy:
+  - default retryable status codes (`429` and `5xx`)
+  - plus any configured `retryableStatusCodes`
+- Deterministic local setup failures are non-retryable:
+  - invalid URL construction
+  - invalid request combinations (for example `GET` with body)
+  - request-body serialization failures
+- Successful (`2xx`) responses with empty or malformed JSON payloads are treated as non-retryable transport errors.
+- Fetch execution failures (including common transient network failures) are treated as retryable transport failures unless the error is already mapped to a non-retryable SDK error.
+
 ## HTTP Response Code Handling (Edge API v1)
 
 As of `spec/openapi/api-1.yaml` (retrieved `2026-03-07T17:37:55Z`), expected endpoint response codes are:
@@ -232,7 +251,7 @@ ts/
     internal/
       protocol/
         edge-api.ts
-        transport.ts
+        http-transport.ts
         retry.ts
         types.ts
         errors.ts

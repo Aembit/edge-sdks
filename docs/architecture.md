@@ -113,6 +113,20 @@ SDKs should:
 - apply retries only to transient failures (network, throttling, and selected server errors)
 - use bounded backoff (with jitter recommended)
 
+### Retry Summary
+
+Cross-language retry behavior should follow this contract:
+
+- Retry defaults are enabled unless explicitly disabled.
+- `maxAttempts` includes the first request attempt.
+- Retries apply to transient failures:
+  - transport/network failures
+  - HTTP `429`
+  - selected `5xx` responses
+  - additional status codes configured by caller policy
+- Deterministic local failures (invalid request setup, serialization errors, malformed success payloads) should fail fast and should not be retried.
+- When retry attempts are exhausted, normalized SDK errors should preserve whether the failure was considered retryable under the effective policy.
+
 ## Endpoint Response Code Semantics (Edge API v1)
 
 As of `spec/openapi/api-1.yaml` (retrieved `2026-03-07T17:37:55Z`), expected HTTP response codes are:
