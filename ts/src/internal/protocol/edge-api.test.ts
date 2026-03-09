@@ -1,0 +1,149 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { ApiError, AuthError, CredentialError } from "./errors.js";
+import { EdgeApi } from "./edge-api.js";
+import type { EdgeApiOptions } from "./edge-api.js";
+import type { EdgeAuthRequestBody, EdgeCredentialsRequestBody } from "./types.js";
+
+describe("EdgeApi", () => {
+  it("builds auth request with operation, path, and resource set header", async () => {
+    const requestJsonMock = vi.fn(async () => ({
+      ok: true as const,
+      status: 200 as const,
+      body: {
+        accessToken: "token",
+        tokenType: "Bearer",
+        expiresIn: 3600
+      },
+      headers: {}
+    }));
+
+    const api = new EdgeApi({
+      transport: {
+        requestJson:
+          requestJsonMock as unknown as EdgeApiOptions["transport"]["requestJson"]
+      },
+      resourceSet: "rs-default"
+    });
+
+    const authBody: EdgeAuthRequestBody = {
+      clientId: "client-id",
+      client: { aws: { instanceIdentityDocument: "doc" } }
+    };
+
+    const result = await api.auth(authBody);
+    expect(result.accessToken).toBe("token");
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(1);
+    expect(requestJsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: "auth",
+        path: "/edge/v1/auth",
+        method: "POST",
+        body: authBody,
+        headers: expect.objectContaining({
+          "x-aembit-resourceset": "rs-default"
+        })
+      })
+    );
+  });
+
+  it("builds credentials request with bearer token and resource set override", async () => {
+    const requestJsonMock = vi.fn(async () => ({
+      ok: true as const,
+      status: 200 as const,
+      body: {
+        credentialType: "ApiKey",
+        expiresAt: null,
+        data: { apiKey: "k" }
+      },
+      headers: {}
+    }));
+
+    const api = new EdgeApi({
+      transport: {
+        requestJson:
+          requestJsonMock as unknown as EdgeApiOptions["transport"]["requestJson"]
+      },
+      resourceSet: "rs-default"
+    });
+
+    const credentialsBody: EdgeCredentialsRequestBody = {
+      client: { aws: { instanceIdentityDocument: "doc" } },
+      server: { transportProtocol: "TCP", host: "db.local", port: 443 },
+      credentialType: "ApiKey"
+    };
+
+    const result = await api.credentials(credentialsBody, "bearer-token", {
+      resourceSet: "rs-override"
+    });
+    expect(result.data?.apiKey).toBe("k");
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(1);
+    expect(requestJsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: "credentials",
+        path: "/edge/v1/credentials",
+        method: "POST",
+        body: credentialsBody,
+        headers: expect.objectContaining({
+          authorization: "Bearer bearer-token",
+          "x-aembit-resourceset": "rs-override"
+        })
+      })
+    );
+  });
+
+  it("maps ApiError to AuthError for auth calls", async () => {
+    const requestJsonMock = vi.fn(async () => {
+      throw new ApiError("auth failed", {
+        statusCode: 400,
+        apiCode: "100",
+        requestId: "req-auth",
+        retryable: false
+      });
+    });
+
+    const api = new EdgeApi({
+      transport: {
+        requestJson:
+          requestJsonMock as unknown as EdgeApiOptions["transport"]["requestJson"]
+      }
+    });
+
+    await expect(
+      api.auth({
+        clientId: "client-id",
+        client: {}
+      })
+    ).rejects.toBeInstanceOf(AuthError);
+  });
+
+  it("maps ApiError to CredentialError for credentials calls", async () => {
+    const requestJsonMock = vi.fn(async () => {
+      throw new ApiError("credentials failed", {
+        statusCode: 400,
+        apiCode: "101",
+        requestId: "req-cred",
+        retryable: false
+      });
+    });
+
+    const api = new EdgeApi({
+      transport: {
+        requestJson:
+          requestJsonMock as unknown as EdgeApiOptions["transport"]["requestJson"]
+      }
+    });
+
+    await expect(
+      api.credentials(
+        {
+          client: {},
+          server: { transportProtocol: "TCP" }
+        },
+        "bearer-token"
+      )
+    ).rejects.toBeInstanceOf(CredentialError);
+  });
+});

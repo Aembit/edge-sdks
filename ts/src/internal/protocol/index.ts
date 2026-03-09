@@ -47,3 +47,6 @@ export type {
   EdgeTransportOptions,
   EdgeTransportRequest
 } from "./http-transport.js";
+
+export { EdgeApi } from "./edge-api.js";
+export type { EdgeApiOptions, EdgeApiRequestOptions } from "./edge-api.js";
