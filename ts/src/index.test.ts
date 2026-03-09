@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { EdgeClient } from "./index.js";
 import type { AuthSession } from "./index.js";
 
 describe("public type exports", () => {
@@ -12,5 +13,9 @@ describe("public type exports", () => {
 
     expect(session.authenticated).toBe(true);
     expect(session.trustProviderId).toBe("test-provider");
+  });
+
+  it("exports EdgeClient runtime class", () => {
+    expect(typeof EdgeClient).toBe("function");
   });
 });

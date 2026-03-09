@@ -143,10 +143,16 @@ Request contract:
 
 ```ts
 type GetCredentialInput = {
-  server: Record<string, unknown>;
+  server: {
+    host: string;
+    port: number;
+    transportProtocol?: "TCP";
+  };
   credentialType?: string;
 };
 ```
+
+`transportProtocol` defaults to `"TCP"` when omitted.
 
 Response contract:
 

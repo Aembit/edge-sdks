@@ -22,6 +22,46 @@ Planned v1 behavior:
 - retry logic for transient failures
 - built-in Trust Provider coverage focused on AWS and OIDC
 
+## Client API (Current)
+
+The SDK now exposes `EdgeClient` as the developer-facing API.
+
+```ts
+import { EdgeClient } from "@aembit/edge-sdk-ts"
+
+const client = new EdgeClient({
+  baseUrl: "https://tenant.aembit.io",
+  clientId: "your-client-id",
+  trustProvider: {
+    id: "aws-metadata-service",
+    kind: "aws_metadata_service",
+    async collectIdentity() {
+      return {
+        aws: {
+          instanceIdentityDocument: "..."
+        }
+      }
+    }
+  }
+})
+
+await client.authenticate()
+
+const credential = await client.getCredential({
+  server: {
+    host: "db.internal",
+    port: 443
+  }
+})
+```
+
+Notes:
+
+- `authenticate()` updates SDK session state and does not return raw bearer tokens.
+- `getCredential()` auto-authenticates when no valid token is cached.
+- `server.host` and `server.port` are required.
+- `server.transportProtocol` currently supports only `"TCP"` and defaults to `"TCP"` if omitted.
+
 ## Documentation
 
 - Implementation and agent guidance: `ts/AGENTS.md`

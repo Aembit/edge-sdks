@@ -89,6 +89,14 @@ export class CredentialError extends EdgeSdkError implements CredentialErrorLike
   }
 }
 
+export class TrustProviderError extends EdgeSdkError {
+  readonly kind = "trust_provider" as const;
+
+  constructor(message: string, init: Omit<EdgeSdkErrorInit, "kind"> = {}) {
+    super(message, { ...init, kind: "trust_provider" });
+  }
+}
+
 export function isRetryableStatusCode(statusCode: number): boolean {
   return isRetryableHttpStatus(statusCode);
 }

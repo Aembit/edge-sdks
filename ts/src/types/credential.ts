@@ -2,13 +2,22 @@ import type { RetryPolicyOverride } from "./retry.js";
 
 /**
  * Server reference used by `getCredential()`.
- * Fields are flexible to support multiple server identification patterns.
  */
 export interface CredentialServerRef {
-  id?: string;
-  hostname?: string;
-  labels?: Record<string, string>;
-  [key: string]: unknown;
+  /**
+   * Target server hostname or IP address.
+   */
+  host: string;
+
+  /**
+   * Target server port.
+   */
+  port: number;
+
+  /**
+   * Transport protocol for the target server. Only `TCP` is currently supported.
+   */
+  transportProtocol?: "TCP";
 }
 
 /**

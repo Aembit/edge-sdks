@@ -1,3 +1,5 @@
+export { EdgeClient } from "./client/edge-client.js";
+
 export type { AuthSession } from "./types/auth.js";
 export type { EdgeClientConfig } from "./types/client-config.js";
 export type {

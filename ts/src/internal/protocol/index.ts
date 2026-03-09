@@ -23,6 +23,7 @@ export {
   AuthError,
   CredentialError,
   EdgeSdkError,
+  TrustProviderError,
   TransportError,
   extractEdgeGenericErrorBody,
   extractRequestId,
