@@ -74,6 +74,7 @@ Notes:
 Run from `ts/`:
 
 - `npm install`
+- `npm run lint`
 - `npm run typecheck`
 - `npm test`
 - `npm run build`
@@ -95,6 +96,7 @@ Expected TypeScript SDK structure:
 
 - Test runner: Vitest
 - Local development and test commands should use `npm`
+- Linter: ESLint with `typescript-eslint` recommended checks
 
 ## Troubleshooting
 

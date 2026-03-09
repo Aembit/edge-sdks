@@ -21,16 +21,23 @@
   "scripts": {
     "check:node": "node -e \"const major = Number.parseInt(process.versions.node.split('.')[0], 10); if (Number.isNaN(major) || major < 20) { console.error('Node.js >=20 is required. Current:', process.versions.node); process.exit(1); }\"",
     "prebuild": "npm run check:node",
+    "prelint": "npm run check:node",
     "pretypecheck": "npm run check:node",
     "pretest": "npm run check:node",
     "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@eslint/js": "^8.57.1",
     "@types/node": "^20.19.37",
+    "eslint": "^8.57.1",
+    "globals": "^17.4.0",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
   }
 }
