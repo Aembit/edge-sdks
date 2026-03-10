@@ -83,11 +83,26 @@ Expected TypeScript SDK structure:
 - `ts/examples/` runnable examples
 - colocated tests as `*.test.ts` beside source files
 
+Current runnable example:
+
+- `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
+
 ## Testing
 
 - Test runner: Vitest
 - Local development and test commands should use `npm`
 - Linter: ESLint with `typescript-eslint` recommended checks
+
+## Examples
+
+Run from `ts/`:
+
+- `npm run example:aws-imds`
+- `npm run example:aws-imds:envfile`
+- example docs: `ts/examples/aws-imds-ec2/README.md`
+- integration example: `ts/examples/aws-imds-ec2/index.mjs`
+
+Note: `npm run example:aws-imds:envfile` uses `node --env-file` and requires Node `20.6+`.
 
 ## Troubleshooting
 

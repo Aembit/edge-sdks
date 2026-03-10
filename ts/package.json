@@ -20,6 +20,7 @@
   },
   "scripts": {
     "check:node": "node -e \"const major = Number.parseInt(process.versions.node.split('.')[0], 10); if (Number.isNaN(major) || major < 20) { console.error('Node.js >=20 is required. Current:', process.versions.node); process.exit(1); }\"",
+    "check:node:envfile": "node -e \"const [majorRaw, minorRaw] = process.versions.node.split('.'); const major = Number.parseInt(majorRaw, 10); const minor = Number.parseInt(minorRaw, 10); if (Number.isNaN(major) || Number.isNaN(minor) || major < 20 || (major === 20 && minor < 6)) { console.error('Node.js >=20.6 is required for --env-file example commands. Current:', process.versions.node); process.exit(1); }\"",
     "prebuild": "npm run check:node",
     "prelint": "npm run check:node",
     "pretypecheck": "npm run check:node",
@@ -29,7 +30,9 @@
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "example:aws-imds": "npm run build && node ./examples/aws-imds-ec2/index.mjs",
+    "example:aws-imds:envfile": "npm run build && npm run check:node:envfile && node --env-file=./examples/aws-imds-ec2/.env ./examples/aws-imds-ec2/index.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^8.57.1",
