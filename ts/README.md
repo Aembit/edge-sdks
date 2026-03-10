@@ -103,6 +103,7 @@ Run from `ts/`:
 - integration example: `ts/examples/aws-imds-ec2/index.mjs`
 
 Note: `npm run example:aws-imds:envfile` uses `node --env-file` and requires Node `20.6+`.
+Note: current Edge behavior requires setting `credentialType` on `/edge/v1/credentials` requests (the AWS example sets `AEMBIT_CREDENTIAL_TYPE` as required).
 
 ## Troubleshooting
 

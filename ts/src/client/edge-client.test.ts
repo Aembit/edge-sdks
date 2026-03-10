@@ -35,7 +35,36 @@ function getRequestHeaders(
   }
 
   const [, init] = call
-  return ((init as RequestInit).headers ?? {}) as Record<string, string>
+  return normalizeHeaders((init as RequestInit).headers)
+}
+
+function normalizeHeaders(headers: RequestInit["headers"] | undefined): Record<string, string> {
+  const normalized: Record<string, string> = {}
+  if (!headers) {
+    return normalized
+  }
+
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      normalized[key.toLowerCase()] = value
+    })
+    return normalized
+  }
+
+  if (Array.isArray(headers)) {
+    for (const [key, value] of headers) {
+      normalized[key.toLowerCase()] = value
+    }
+    return normalized
+  }
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (typeof value === "string") {
+      normalized[key.toLowerCase()] = value
+    }
+  }
+
+  return normalized
 }
 
 function getRequestPath(fetchMock: ReturnType<typeof vi.fn>, callIndex: number): string {
@@ -925,7 +954,7 @@ describe("EdgeClient", () => {
     const fetchMock = vi.fn((input: unknown, init?: RequestInit) => {
       const path = new URL(String(input)).pathname
       if (path === "/edge/v1/auth") {
-        const headers = (init?.headers ?? {}) as Record<string, string>
+        const headers = normalizeHeaders(init?.headers)
         const resourceSet = headers["x-aembit-resourceset"]
         if (resourceSet === "rs-a") {
           return new Promise<Response>((resolve) => {
@@ -1010,7 +1039,7 @@ describe("EdgeClient", () => {
     )
     expect(credentialCalls).toHaveLength(2)
     const credentialHeaders = credentialCalls.map(
-      ([, init]) => ((init as RequestInit).headers ?? {}) as Record<string, string>
+      ([, init]) => normalizeHeaders((init as RequestInit).headers)
     )
     expect(credentialHeaders.map((headers) => headers["x-aembit-resourceset"]).sort()).toEqual([
       "rs-a",
@@ -1028,7 +1057,7 @@ describe("EdgeClient", () => {
     const fetchMock = vi.fn((input: unknown, init?: RequestInit) => {
       const path = new URL(String(input)).pathname
       if (path === "/edge/v1/auth") {
-        const headers = (init?.headers ?? {}) as Record<string, string>
+        const headers = normalizeHeaders(init?.headers)
         const resourceSet = headers["x-aembit-resourceset"]
         if (resourceSet === "rs-a") {
           return new Promise<Response>((resolve) => {
@@ -1113,7 +1142,7 @@ describe("EdgeClient", () => {
     const fetchMock = vi.fn((input: unknown, init?: RequestInit) => {
       const path = new URL(String(input)).pathname
       if (path === "/edge/v1/auth") {
-        const headers = (init?.headers ?? {}) as Record<string, string>
+        const headers = normalizeHeaders(init?.headers)
         const resourceSet = headers["x-aembit-resourceset"]
         if (resourceSet === undefined) {
           return new Promise<Response>((resolve) => {

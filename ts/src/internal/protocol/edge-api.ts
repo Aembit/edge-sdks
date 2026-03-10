@@ -123,8 +123,9 @@ function buildHeaders(
   resourceSet?: string
 ): Record<string, string | undefined> {
   return {
-    authorization: bearerToken ? `Bearer ${bearerToken}` : undefined,
-    "x-aembit-resourceset": resourceSet
+    Authorization: bearerToken ? `Bearer ${bearerToken}` : undefined,
+    "X-Aembit-ResourceSet": resourceSet,
+    "Content-Type": "application/json"
   };
 }
 

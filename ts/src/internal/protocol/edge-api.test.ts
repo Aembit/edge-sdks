@@ -71,7 +71,8 @@ describe("EdgeApi", () => {
       method: "POST",
       body: authBody,
       headers: {
-        "x-aembit-resourceset": "rs-default"
+        "X-Aembit-ResourceSet": "rs-default",
+        "Content-Type": "application/json"
       }
     });
   });
@@ -114,8 +115,9 @@ describe("EdgeApi", () => {
       method: "POST",
       body: credentialsBody,
       headers: {
-        authorization: "Bearer bearer-token",
-        "x-aembit-resourceset": "rs-override"
+        Authorization: "Bearer bearer-token",
+        "X-Aembit-ResourceSet": "rs-override",
+        "Content-Type": "application/json"
       }
     });
   });
