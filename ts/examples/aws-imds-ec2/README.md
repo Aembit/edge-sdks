@@ -69,6 +69,37 @@ With `.env` file:
 npm run example:aws-imds:envfile
 ```
 
+## Copy `ts/` To A VM
+
+From the repository root, use:
+
+```bash
+./scripts/deploy-ts-to-vm.sh \
+  --host ec2-xx-xx-xx-xx.compute.amazonaws.com \
+  --user ubuntu \
+  --key ~/.ssh/your-key.pem \
+  --remote-dir ~/edge-sdks/ts
+```
+
+This is useful for EC2 testing of runnable examples and excludes `node_modules`, `dist`, `.env*`, and `.DS_Store`.
+It keeps local `ts/node_modules` and `ts/dist` by default; pass `--clean-local` (or set `DEPLOY_CLEAN_LOCAL=1`) only when you explicitly want local cleanup.
+
+Using a config file:
+
+```bash
+cp ./scripts/deploy-ts-to-vm.env.example ./scripts/deploy-ts-to-vm.env
+./scripts/deploy-ts-to-vm.sh --config ./scripts/deploy-ts-to-vm.env
+```
+
+Using environment variables:
+
+```bash
+export DEPLOY_HOST=ec2-xx-xx-xx-xx.compute.amazonaws.com
+export DEPLOY_USER=ubuntu
+export DEPLOY_REMOTE_DIR=~/edge-sdks/ts
+./scripts/deploy-ts-to-vm.sh
+```
+
 ## Output
 
 The script prints credential metadata and `dataKeys` by default.
