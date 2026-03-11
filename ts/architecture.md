@@ -11,6 +11,7 @@ v1 baseline:
 - runtime target: Node.js `>=20`
 - package output: ESM-only
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
+- canonical API docs: `https://docs.aembit.io/api-guide/edge/`
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
 - initial Trust Provider coverage: AWS Metadata Service (IMDSv2)
 - test framework: Vitest with colocated tests (`*.test.ts`)
@@ -19,7 +20,7 @@ v1 baseline:
 
 ### 1) API Transport and Protocol Layer (`ts/src/internal/protocol`)
 
-Purpose: HTTP execution and Edge API protocol handling.
+Purpose: HTTP execution and Aembit Edge API protocol handling.
 
 Modules:
 
@@ -133,7 +134,7 @@ Raw bearer tokens are not exposed by this return model.
 
 ### `getCredential()` request/response model
 
-Public request model should be simpler than raw protocol payloads but still recognizable to developers reading the Edge API documentation.
+Public request model should be simpler than raw protocol payloads but still recognizable to developers reading the Aembit Edge API documentation.
 
 Request contract:
 
@@ -216,7 +217,7 @@ TypeScript implementation details for retry behavior:
 - Successful (`2xx`) responses with empty or malformed JSON payloads are treated as non-retryable transport errors.
 - Fetch execution failures (including common transient network failures) are treated as retryable transport failures unless the error is already mapped to a non-retryable SDK error.
 
-## HTTP Response Code Handling (Edge API v1)
+## HTTP Response Code Handling (Aembit Edge API v1)
 
 As of `spec/openapi/api-1.yaml` (retrieved `2026-03-07T17:37:55Z`), expected endpoint response codes are:
 

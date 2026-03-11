@@ -6,7 +6,7 @@ import type { TrustProvider } from "./trust-provider.js";
  */
 export interface EdgeClientConfig {
   /**
-   * Base URL for the tenant Edge API (for example https://{tenant}.aembit.io).
+   * Base URL for the tenant Aembit Edge API (for example https://{tenant}.aembit.io).
    */
   baseUrl: string;
 
@@ -21,7 +21,7 @@ export interface EdgeClientConfig {
   trustProvider: TrustProvider;
 
   /**
-   * Optional Resource Set value sent with Edge API requests.
+   * Optional Resource Set value sent with Aembit Edge API requests.
    */
   resourceSet?: string;
 

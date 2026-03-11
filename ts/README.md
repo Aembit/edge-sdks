@@ -59,6 +59,7 @@ Notes:
 - TypeScript architecture design: `ts/architecture.md`
 - Cross-language contracts and API snapshots: `spec/` and `spec/openapi/`
 - Cross-language architecture: `docs/architecture.md`
+- Official Aembit Edge API docs (canonical API semantics): https://docs.aembit.io/api-guide/edge/
 
 ## Local Development
 

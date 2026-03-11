@@ -2,7 +2,7 @@
 
 SDKs and examples for integrating applications and services with the [Aembit Edge API](https://docs.aembit.io/api-guide/edge/).
 
-These libraries make it easier for developers to authenticate workloads and retrieve credentials through Aembit without interacting with the raw HTTP API directly.
+These libraries make it easier for developers to authenticate workloads and retrieve credentials through Aembit without interacting with raw Aembit Edge API HTTP requests directly.
 
 The SDKs are intended for:
 
@@ -12,7 +12,7 @@ The SDKs are intended for:
 - automation and CI/CD systems  
 - other applications that need programmatic access to credentials managed by Aembit
 
-Each SDK provides a developer-friendly interface for the Edge authentication and credential retrieval flow while handling common concerns such as request construction, token lifecycle management, and error handling.
+Each SDK provides a developer-friendly interface for the Aembit Edge API authentication and credential retrieval flow while handling common concerns such as request construction, token lifecycle management, and error handling.
 
 ## Repository Structure
 
@@ -72,6 +72,7 @@ Additional documentation about the architecture and SDK design can be found in:
 - `docs/` for architecture and design notes
 - `spec/` for cross-language SDK design contracts
 - `spec/openapi/` for pinned OpenAPI snapshots used in SDK development
+- official Aembit Edge API docs: https://docs.aembit.io/api-guide/edge/
 
 ## License
 

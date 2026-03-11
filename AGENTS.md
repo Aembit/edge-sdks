@@ -24,6 +24,7 @@ Terminology:
 
 - Use `Trust Provider` as the canonical term in SDK docs and APIs.
 - OpenAPI schema descriptions may still use `attestation` wording.
+- Use official Aembit wording from `https://docs.aembit.io/api-guide/edge/`; do not introduce alternate platform terms unless explicitly requested.
 
 Planned SDKs include:
 
@@ -121,7 +122,7 @@ The default usage path must be simple.
 
 Most applications should only need to configure:
 
-- Edge API base URL  
+- Aembit Edge API base URL  
 - client ID  
 - a Trust Provider
 
@@ -151,7 +152,7 @@ The high-level client should hide unnecessary protocol complexity.
 
 ### Do not assume a fixed credential format
 
-The Edge API may return different credential types depending on the
+Aembit Edge API may return different credential types depending on the
 credential provider configured for the target service.
 
 Examples may include:

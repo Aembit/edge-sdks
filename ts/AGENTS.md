@@ -43,6 +43,7 @@ TypeScript should expose a high-level client-first interface.
 - Primary entry points should hide raw protocol details.
 - Public methods should map to developer tasks such as authenticate and get credentials.
 - Public configuration should use `Trust Provider` terminology (see root `AGENTS.md`).
+- Use official Aembit Edge API terminology from `https://docs.aembit.io/api-guide/edge/`; avoid introducing alternate API names in docs/comments.
 - Keep advanced options optional and well-scoped.
 - Preserve credential response data without forcing a rigid credential schema.
 

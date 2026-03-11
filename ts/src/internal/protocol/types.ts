@@ -1,7 +1,7 @@
 import type { ClientWorkloadDetails } from "../../types/trust-provider.js";
 
 /**
- * Edge API v1 endpoint paths used by the protocol layer.
+ * Aembit Edge API v1 endpoint paths used by the protocol layer.
  */
 export type EdgeAuthPath = "/edge/v1/auth";
 export type EdgeCredentialsPath = "/edge/v1/credentials";

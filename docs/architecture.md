@@ -6,7 +6,7 @@ It is language-agnostic. Language-specific implementation details belong in each
 
 ## Goals
 
-- Provide a high-level SDK that hides protocol details of the Edge API.
+- Provide a high-level SDK that hides protocol details of the Aembit Edge API.
 - Keep a consistent conceptual model across languages.
 - Support environment-specific workload identity via Trust Providers.
 - Keep public APIs simple while preserving flexibility for credential payloads.
@@ -20,6 +20,7 @@ It is language-agnostic. Language-specific implementation details belong in each
 ## Sources of Truth
 
 - Protocol contract: pinned OpenAPI snapshots in `spec/openapi/`.
+- API semantics and terminology: official Aembit Edge API docs (`https://docs.aembit.io/api-guide/edge/`).
 - Architectural contract: this document.
 - Language realization: language-specific architecture documents.
 
@@ -127,7 +128,7 @@ Cross-language retry behavior should follow this contract:
 - Deterministic local failures (invalid request setup, serialization errors, malformed success payloads) should fail fast and should not be retried.
 - When retry attempts are exhausted, normalized SDK errors should preserve whether the failure was considered retryable under the effective policy.
 
-## Endpoint Response Code Semantics (Edge API v1)
+## Endpoint Response Code Semantics (Aembit Edge API v1)
 
 As of `spec/openapi/api-1.yaml` (retrieved `2026-03-07T17:37:55Z`), expected HTTP response codes are:
 

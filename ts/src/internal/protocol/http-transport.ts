@@ -6,7 +6,7 @@ import type { EdgeResponseHeaders, EdgeSuccessResponse } from "./types.js";
 type EdgeProtocolOperation = "auth" | "credentials" | "api";
 
 /**
- * Supported HTTP methods for Edge API requests.
+ * Supported HTTP methods for Aembit Edge API requests.
  */
 export type EdgeTransportMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -15,7 +15,7 @@ export type EdgeTransportMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
  */
 export interface EdgeTransportOptions {
   /**
-   * Base URL for the tenant Edge API.
+   * Base URL for the tenant Aembit Edge API.
    */
   baseUrl: string;
 

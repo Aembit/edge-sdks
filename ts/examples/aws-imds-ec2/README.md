@@ -12,7 +12,7 @@ Run from `ts/`.
 
 - Node.js `>=20`
 - EC2 instance with IMDSv2 enabled and reachable at `169.254.169.254`
-- Aembit Edge base URL and client ID configured for AWS Metadata Service trust
+- Aembit Edge API base URL and client ID configured for AWS Metadata Service trust
 - A target service host/port that matches your Aembit policy
 
 ## Configure Environment
@@ -27,6 +27,8 @@ Set `AEMBIT_EDGE_BASE_URL` to your tenant's regional Edge hostname by replacing 
 
 - `<tenant>`
 - `<region>`
+
+Reference: official Aembit Edge API docs: https://docs.aembit.io/api-guide/edge/
 
 Required variables:
 

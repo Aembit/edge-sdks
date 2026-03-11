@@ -15,7 +15,7 @@ import type {
 } from "./types.js";
 
 /**
- * Per-call options for Edge API operations.
+ * Per-call options for Aembit Edge API operations.
  */
 export interface EdgeApiRequestOptions {
   /**
@@ -33,7 +33,7 @@ export interface EdgeApiRequestOptions {
 }
 
 /**
- * Required configuration for the Edge API adapter.
+ * Required configuration for the Aembit Edge API adapter.
  */
 export interface EdgeApiOptions {
   /**
@@ -53,7 +53,7 @@ interface EdgeTransportLike {
 }
 
 /**
- * Low-level Edge API adapter for endpoint-specific request construction.
+ * Low-level Aembit Edge API adapter for endpoint-specific request construction.
  */
 export class EdgeApi {
   private readonly transport: EdgeTransportLike;
