@@ -80,7 +80,8 @@ normalize_remote_dir() {
       printf '%s' "~"
       ;;
     "$HOME"/*)
-      printf '~/%s' "${value#"$HOME"/}"
+      # Intentionally emit literal "~/" so remote-side expansion uses remote HOME.
+      printf '%s/%s' \~ "${value#"$HOME"/}"
       ;;
     *)
       printf '%s' "$value"
@@ -94,7 +95,8 @@ expand_tilde_path() {
     "~")
       printf '%s' "$HOME"
       ;;
-    "~/"*)
+    # Match literal "~/" prefix for local key-path expansion.
+    \~/*)
       printf '%s/%s' "$HOME" "${value#~/}"
       ;;
     *)
@@ -261,8 +263,8 @@ if [ -n "$SSH_KEY" ]; then
 fi
 
 # Resolve repo root as parent of this script directory.
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
 TS_DIR="$REPO_ROOT/ts"
 
 if [ ! -d "$TS_DIR" ]; then
