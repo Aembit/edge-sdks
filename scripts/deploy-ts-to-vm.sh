@@ -97,7 +97,7 @@ expand_tilde_path() {
       ;;
     # Match literal "~/" prefix for local key-path expansion.
     \~/*)
-      printf '%s/%s' "$HOME" "${value#~/}"
+      printf '%s/%s' "$HOME" "${value#\~/}"
       ;;
     *)
       printf '%s' "$value"
