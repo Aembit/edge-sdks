@@ -72,7 +72,7 @@ Additional documentation about the architecture and SDK design can be found in:
 - `docs/` for architecture and design notes
 - `spec/` for cross-language SDK design contracts
 - `spec/openapi/` for pinned OpenAPI snapshots used in SDK development
-- official Aembit Edge API docs: https://docs.aembit.io/api-guide/edge/
+- official Aembit Edge API docs: <https://docs.aembit.io/api-guide/edge/>
 
 ## License
 
