@@ -313,7 +313,7 @@ echo "Extracting archive on remote host into ${REMOTE_DIR}"
 NORMALIZED_REMOTE_DIR=$(normalize_remote_dir "$REMOTE_DIR")
 REMOTE_DIR_Q=$(quote_for_sh "$NORMALIZED_REMOTE_DIR")
 REMOTE_ARCHIVE_Q=$(quote_for_sh "$REMOTE_ARCHIVE")
-REMOTE_CMD="set -eu; remote_dir=${REMOTE_DIR_Q}; remote_archive=${REMOTE_ARCHIVE_Q}; case \"\$remote_dir\" in \"~\") remote_dir=\$HOME ;; \"~/\"*) remote_dir=\$HOME/\${remote_dir#~/} ;; esac; mkdir -p \"\$remote_dir\"; tar -xzf \"\$remote_archive\" -C \"\$remote_dir\"; rm -f \"\$remote_archive\""
+REMOTE_CMD="set -eu; remote_dir=${REMOTE_DIR_Q}; remote_archive=${REMOTE_ARCHIVE_Q}; case \"\$remote_dir\" in \"~\") remote_dir=\$HOME ;; \"~/\"*) remote_dir=\$HOME/\${remote_dir#\~/} ;; esac; mkdir -p \"\$remote_dir\"; tar -xzf \"\$remote_archive\" -C \"\$remote_dir\"; rm -f \"\$remote_archive\""
 if [ -n "$SSH_KEY" ]; then
   ssh -p "$SSH_PORT" -i "$SSH_KEY" "${USER_NAME}@${HOST}" "$REMOTE_CMD"
 else
