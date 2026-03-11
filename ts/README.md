@@ -31,7 +31,7 @@ import { EdgeClient, trustProviders } from "@aembit/edge-sdk-ts"
 
 const client = new EdgeClient({
   baseUrl: "https://tenant.aembit.io",
-  clientId: "your-client-id",
+  clientId: "your-edge-sdk-client-id",
   trustProvider: trustProviders.awsMetadataService()
 })
 
@@ -50,6 +50,8 @@ Notes:
 - `authenticate()` updates SDK session state and does not return raw bearer tokens.
 - `getCredential()` auto-authenticates when no valid token is cached.
 - `trustProviders.awsMetadataService()` collects identity from AWS IMDSv2.
+- `clientId` is the Edge SDK Client ID from Trust Provider configuration.
+- `clientId` is not the client workload `Client Identifier` value used in policy configuration.
 - `server.host` and `server.port` are required.
 - `server.transportProtocol` currently supports only `"TCP"` and defaults to `"TCP"` if omitted.
 

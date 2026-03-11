@@ -123,10 +123,16 @@ The default usage path must be simple.
 Most applications should only need to configure:
 
 - Aembit Edge API base URL  
-- client ID  
+- Edge SDK Client ID (from Trust Provider configuration)  
 - a Trust Provider
 
 Advanced configuration should remain optional.
+
+Clarification:
+
+- `Edge SDK Client ID` is an auto-generated value tied to Trust Provider setup.
+- It is not the same as `Client Identifier` from client workload configuration.
+- Access policy configuration (client workload, server workload, Trust Provider, credential provider) is managed in Aembit and must already exist for SDK requests to match.
 
 ### Consistent conceptual model across languages
 
