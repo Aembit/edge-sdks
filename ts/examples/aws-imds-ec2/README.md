@@ -28,7 +28,7 @@ Set `AEMBIT_EDGE_BASE_URL` to your tenant's regional Edge hostname by replacing 
 - `<tenant>`
 - `<region>`
 
-Reference: official Aembit Edge API docs: https://docs.aembit.io/api-guide/edge/
+Reference: official Aembit Edge API docs: <https://docs.aembit.io/api-guide/edge/>
 
 Required variables:
 
