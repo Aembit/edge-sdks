@@ -10,7 +10,7 @@ import { EdgeClient, trustProviders } from "../../dist/index.js"
  * - AEMBIT_SERVER_PORT
  *
  * Optional env vars:
- * - AEMBIT_RESOURCE_SET
+ * - AEMBIT_RESOURCE_SET_ID
  * - AEMBIT_CREDENTIAL_TYPE
  */
 async function main() {
@@ -18,7 +18,7 @@ async function main() {
   const clientId = getRequiredEnv("AEMBIT_CLIENT_ID")
   const serverHost = getRequiredEnv("AEMBIT_SERVER_HOST")
   const serverPort = parseRequiredPort("AEMBIT_SERVER_PORT")
-  const resourceSet = getOptionalEnv("AEMBIT_RESOURCE_SET")
+  const resourceSet = getOptionalEnv("AEMBIT_RESOURCE_SET_ID")
   const credentialType = getOptionalEnv("AEMBIT_CREDENTIAL_TYPE")
   const printCredentialJson = parseOptionalBoolean("AEMBIT_PRINT_CREDENTIAL_JSON", false)
 

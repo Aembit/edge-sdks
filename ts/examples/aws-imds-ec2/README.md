@@ -23,6 +23,11 @@ Copy the example env file and fill in real values:
 cp ./examples/aws-imds-ec2/.env.example ./examples/aws-imds-ec2/.env
 ```
 
+Set `AEMBIT_EDGE_BASE_URL` to your tenant's regional Edge hostname by replacing both placeholders:
+
+- `<tenant>`
+- `<region>`
+
 Required variables:
 
 - `AEMBIT_EDGE_BASE_URL`
@@ -33,7 +38,7 @@ Required variables:
 
 Optional variables:
 
-- `AEMBIT_RESOURCE_SET`
+- `AEMBIT_RESOURCE_SET_ID`
 - `AEMBIT_PRINT_CREDENTIAL_JSON` (`true`/`false`)
 - `AEMBIT_IMDS_TIMEOUT_MS`
 - `AEMBIT_IMDS_TOKEN_TTL_SECONDS`
@@ -67,3 +72,48 @@ npm run example:aws-imds:envfile
 The script prints credential metadata and `dataKeys` by default.
 
 Set `AEMBIT_PRINT_CREDENTIAL_JSON=true` to print full credential data.
+
+Example successful output:
+
+```text
+Authenticated session: {
+  authenticated: true,
+  expiresAt: '2026-03-10T20:18:09.108Z',
+  trustProviderId: 'aws-metadata-service'
+}
+{
+  "credentialType": "ApiKey",
+  "expiresAt": "2026-03-10T19:19:09.2559713Z",
+  "data": {
+    "apiKey": "sekretk3y!"
+  }
+}
+```
+
+## Troubleshooting
+
+### `401` on `/credentials` after successful auth
+
+If `authenticate()` succeeds but credential retrieval returns `401`, verify that `AEMBIT_EDGE_BASE_URL` is the final regional Edge host (no redirect).
+
+Example:
+
+- redirected host pattern: `https://<tenant>.ec.<region>.aembit.io`
+
+Using a base URL that redirects to another host can cause `Authorization` to be dropped on redirect, resulting in `401` for `/credentials`.
+
+### `200` with `credentialType: "Unknown"` and empty `data`
+
+This indicates that the request reached Edge, but did not match the expected access policy/service request shape.
+
+Verify:
+
+- `AEMBIT_SERVER_HOST` and `AEMBIT_SERVER_PORT`
+- `AEMBIT_CREDENTIAL_TYPE` value for the target provider
+- workload identity mapping for the EC2 instance
+- resource set selection (`AEMBIT_RESOURCE_SET_ID` or tenant default)
+
+## Security Note
+
+Do not use real secrets in shared logs or screenshots.
+Use `AEMBIT_PRINT_CREDENTIAL_JSON=true` only for controlled testing.
