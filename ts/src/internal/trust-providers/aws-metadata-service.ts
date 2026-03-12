@@ -1,5 +1,6 @@
 import { TrustProviderError } from "../protocol/errors.js"
 import { executeWithRetry, isRetryableHttpStatus, mergeRetryPolicy } from "../protocol/retry.js"
+import { isAbortError, resolveRequestUrl } from "../shared/http-utils.js"
 import type { RetryPolicyOverride } from "../../types/retry.js"
 import type { ClientWorkloadDetails, TrustProvider } from "../../types/trust-provider.js"
 
@@ -243,10 +244,6 @@ function resolveTokenTtlSeconds(value: number | undefined): number {
   return DEFAULT_IMDS_TOKEN_TTL_SECONDS
 }
 
-function resolveRequestUrl(baseUrl: string, path: string): string {
-  return new URL(path, baseUrl).toString()
-}
-
 function createImdsHttpError(
   statusCode: number,
   operationName: string,
@@ -274,10 +271,6 @@ function parseMetadataToken(value: string): string {
   }
 
   return token
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError"
 }
 
 function isNetworkError(error: unknown): boolean {

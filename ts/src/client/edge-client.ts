@@ -6,6 +6,7 @@ import {
 } from "../internal/protocol/errors.js"
 import { EdgeHttpTransport } from "../internal/protocol/http-transport.js"
 import { mergeRetryPolicy } from "../internal/protocol/retry.js"
+import { mergeRetryOverrides } from "../internal/shared/retry-utils.js"
 import type { AuthSession } from "../types/auth.js"
 import type { EdgeClientConfig } from "../types/client-config.js"
 import type {
@@ -447,28 +448,6 @@ function serializeEffectiveRetryPolicyKey(
       effectiveRetry.retryableStatusCodes
     )
   })
-}
-
-function mergeRetryOverrides(
-  base: RetryPolicyOverride | undefined,
-  request: RetryPolicyOverride | undefined
-): RetryPolicyOverride | undefined {
-  if (!base && !request) {
-    return undefined
-  }
-
-  const baseOverride = base ?? {}
-  const requestOverride = request ?? {}
-
-  return {
-    enabled: requestOverride.enabled ?? baseOverride.enabled,
-    maxAttempts: requestOverride.maxAttempts ?? baseOverride.maxAttempts,
-    baseDelayMs: requestOverride.baseDelayMs ?? baseOverride.baseDelayMs,
-    maxDelayMs: requestOverride.maxDelayMs ?? baseOverride.maxDelayMs,
-    jitter: requestOverride.jitter ?? baseOverride.jitter,
-    retryableStatusCodes:
-      requestOverride.retryableStatusCodes ?? baseOverride.retryableStatusCodes
-  }
 }
 
 function normalizeRetryableStatusCodes(

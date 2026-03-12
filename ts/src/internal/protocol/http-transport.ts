@@ -1,6 +1,8 @@
 import type { RetryPolicyOverride } from "../../types/retry.js";
 import { EdgeSdkError, TransportError, mapHttpError, mapTransportError } from "./errors.js";
 import { executeWithRetry, isRetryableHttpStatus, mergeRetryPolicy } from "./retry.js";
+import { isAbortError, resolveRequestUrl } from "../shared/http-utils.js";
+import { mergeRetryOverrides } from "../shared/retry-utils.js";
 import type { EdgeResponseHeaders, EdgeSuccessResponse } from "./types.js";
 
 type EdgeProtocolOperation = "auth" | "credentials" | "api";
@@ -199,10 +201,6 @@ export class EdgeHttpTransport {
   }
 }
 
-function resolveRequestUrl(baseUrl: string, path: string): string {
-  return new URL(path, baseUrl).toString();
-}
-
 function normalizeRequestHeaders(
   headers?: Record<string, string | undefined>
 ): Record<string, string> {
@@ -249,35 +247,4 @@ async function parseJsonBody(response: Response): Promise<ParsedJsonBody> {
   } catch (error) {
     return { kind: "invalid", error };
   }
-}
-
-function isAbortError(error: unknown): boolean {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "name" in error &&
-    (error as { name?: string }).name === "AbortError"
-  );
-}
-
-function mergeRetryOverrides(
-  base?: RetryPolicyOverride,
-  request?: RetryPolicyOverride
-): RetryPolicyOverride | undefined {
-  if (!base && !request) {
-    return undefined;
-  }
-
-  const baseOverride = base ?? {};
-  const requestOverride = request ?? {};
-
-  return {
-    enabled: requestOverride.enabled ?? baseOverride.enabled,
-    maxAttempts: requestOverride.maxAttempts ?? baseOverride.maxAttempts,
-    baseDelayMs: requestOverride.baseDelayMs ?? baseOverride.baseDelayMs,
-    maxDelayMs: requestOverride.maxDelayMs ?? baseOverride.maxDelayMs,
-    jitter: requestOverride.jitter ?? baseOverride.jitter,
-    retryableStatusCodes:
-      requestOverride.retryableStatusCodes ?? baseOverride.retryableStatusCodes
-  };
 }
