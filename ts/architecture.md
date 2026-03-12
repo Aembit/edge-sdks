@@ -14,6 +14,7 @@ v1 baseline:
 - canonical API docs: `https://docs.aembit.io/api-guide/edge/`
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
 - initial Trust Provider coverage: AWS Metadata Service (IMDSv2)
+- next Trust Provider target: AWS Role (IAM role credentials with signed STS GetCallerIdentity request data)
 - test framework: Vitest with colocated tests (`*.test.ts`)
 
 ## Layer Implementation
@@ -62,11 +63,54 @@ Initial implementations:
 - `aws-metadata-service.ts`
   - retrieves IMDSv2 token, instance identity document, and signature
 
+Planned implementation:
+
+- `aws-role.ts`
+  - resolves IAM role credentials from the AWS runtime
+  - builds signed AWS STS `GetCallerIdentity` request data for `/edge/v1/auth`
+
 Design notes:
 
 - Provider mechanics remain internal.
 - Public API exposes provider selection, not provider internals.
 - Provider failures are wrapped into SDK-defined errors.
+
+### AWS Role Trust Provider Contract (Step 1)
+
+This section defines the v1 contract for the planned AWS Role Trust Provider.
+
+Public factory target:
+
+```ts
+trustProviders.awsRole(options)
+```
+
+Planned options contract:
+
+```ts
+type AwsRoleTrustProviderOptions = {
+  id?: string;
+  region: string;
+  retry?: Partial<RetryPolicy>;
+};
+```
+
+`region` is required for v1 to keep behavior explicit and deterministic.
+
+Identity payload contract returned by `collectIdentity()`:
+
+```ts
+{
+  aws: {
+    stsGetCallerIdentity: {
+      headers: Record<string, string>;
+      region: string;
+    };
+  };
+}
+```
+
+This matches the `AwsDTO.stsGetCallerIdentity` schema in `spec/openapi/api-1.yaml`.
 
 ### 3) Developer Client Layer (`ts/src/client`)
 

@@ -149,6 +149,10 @@ export DEPLOY_REMOTE_DIR=~/edge-sdks/ts
 ## Roadmap Notes
 
 - Additional Trust Provider support beyond AWS Metadata Service (for example AWS Role and OIDC)
+- Planned AWS Role Trust Provider contract:
+  - public factory: `trustProviders.awsRole(...)`
+  - required option: `region`
+  - auth identity payload uses `client.aws.stsGetCallerIdentity.{headers,region}` per Aembit Edge API docs
 - Bundler/tooling decision is pending; package output remains ESM-only
 
 ## Security
