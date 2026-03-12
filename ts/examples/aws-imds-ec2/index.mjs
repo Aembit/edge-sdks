@@ -8,31 +8,25 @@ import { EdgeClient, trustProviders } from "../../dist/index.js"
  * - AEMBIT_CLIENT_ID
  * - AEMBIT_SERVER_HOST
  * - AEMBIT_SERVER_PORT
+ * - AEMBIT_CREDENTIAL_TYPE
  *
  * Optional env vars:
  * - AEMBIT_RESOURCE_SET_ID
- * - AEMBIT_CREDENTIAL_TYPE
  */
 async function main() {
   const baseUrl = getRequiredEnv("AEMBIT_EDGE_BASE_URL")
   const clientId = getRequiredEnv("AEMBIT_CLIENT_ID")
   const serverHost = getRequiredEnv("AEMBIT_SERVER_HOST")
   const serverPort = parseRequiredPort("AEMBIT_SERVER_PORT")
+  const credentialType = getRequiredEnv("AEMBIT_CREDENTIAL_TYPE")
   const resourceSet = getOptionalEnv("AEMBIT_RESOURCE_SET_ID")
-  const credentialType = getOptionalEnv("AEMBIT_CREDENTIAL_TYPE")
   const printCredentialJson = parseOptionalBoolean("AEMBIT_PRINT_CREDENTIAL_JSON", false)
-
-  const imdsTimeoutMs = parseOptionalPositiveInt("AEMBIT_IMDS_TIMEOUT_MS")
-  const imdsTokenTtlSeconds = parseOptionalPositiveInt("AEMBIT_IMDS_TOKEN_TTL_SECONDS")
 
   // 1) Create an EdgeClient with the built-in AWS Metadata Service Trust Provider.
   const client = new EdgeClient({
     baseUrl,
     clientId,
-    trustProvider: trustProviders.awsMetadataService({
-      timeoutMs: imdsTimeoutMs,
-      tokenTtlSeconds: imdsTokenTtlSeconds
-    }),
+    trustProvider: trustProviders.awsMetadataService(),
     resourceSet
   })
 
@@ -109,20 +103,6 @@ function getOptionalEnv(name) {
 
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : undefined
-}
-
-function parseOptionalPositiveInt(name) {
-  const raw = getOptionalEnv(name)
-  if (!raw) {
-    return undefined
-  }
-
-  const parsed = Number.parseInt(raw, 10)
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`${name} must be a positive integer`)
-  }
-
-  return parsed
 }
 
 function parseOptionalBoolean(name, defaultValue = false) {

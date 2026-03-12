@@ -68,8 +68,6 @@ Optional variables:
 
 - `AEMBIT_RESOURCE_SET_ID`
 - `AEMBIT_PRINT_CREDENTIAL_JSON` (`true`/`false`)
-- `AEMBIT_IMDS_TIMEOUT_MS`
-- `AEMBIT_IMDS_TOKEN_TTL_SECONDS`
 
 ## Run Example
 
@@ -95,13 +93,18 @@ export AEMBIT_CREDENTIAL_TYPE=ApiKey
 # Optional:
 # export AEMBIT_RESOURCE_SET_ID=your-resource-set-id
 # export AEMBIT_PRINT_CREDENTIAL_JSON=true
-# export AEMBIT_IMDS_TIMEOUT_MS=1000
-# export AEMBIT_IMDS_TOKEN_TTL_SECONDS=21600
 
 npm run example:aws-imds
 ```
 
 This path works on Node `>=20` and does not depend on `--env-file`.
+
+Advanced tuning:
+
+- The default happy path uses `trustProviders.awsMetadataService()` with built-in IMDS timeout/TTL defaults.
+- If you need to tune IMDS timeout or token TTL, use the Trust Provider options in code:
+  - `trustProviders.awsMetadataService({ timeoutMs, tokenTtlSeconds })`
+- `.env.example` includes `AEMBIT_IMDS_TIMEOUT_MS` and `AEMBIT_IMDS_TOKEN_TTL_SECONDS` as template hints for that code-level tuning.
 
 ## Copy `ts/` to a Remote VM
 
