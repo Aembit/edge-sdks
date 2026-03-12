@@ -145,6 +145,7 @@ cd ~/edge-sdks/ts
 npm install
 npm run build
 cp ./examples/aws-imds-ec2/.env.example ./examples/aws-imds-ec2/.env
+npm run example:aws-imds:envfile
 ```
 
 Validate required env entries before running:
