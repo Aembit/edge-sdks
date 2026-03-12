@@ -1,6 +1,7 @@
 import { CredentialError } from "../protocol/errors.js";
 import type { EdgeCredentialsSuccessBody } from "../protocol/types.js";
 import type { CredentialServerRef } from "../../types/credential.js";
+import { isRecord } from "../shared/type-guards.js";
 
 /**
  * Validates and normalizes public server reference input.
@@ -99,8 +100,4 @@ export function parseCredentialSuccessBody(
     expiresAt,
     data
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
 }

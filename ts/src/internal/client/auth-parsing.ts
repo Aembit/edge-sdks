@@ -1,5 +1,6 @@
 import { AuthError } from "../protocol/errors.js";
 import type { EdgeAuthSuccessBody } from "../protocol/types.js";
+import { isRecord } from "../shared/type-guards.js";
 
 /**
  * Parses and validates access token values from `/edge/v1/auth` responses.
@@ -50,8 +51,4 @@ export function calculateExpiresAtMs(
   }
 
   return nowMs + Math.round(expiresInSeconds * 1000);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
 }

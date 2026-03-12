@@ -6,27 +6,23 @@ import {
 import { EdgeHttpTransport } from "../internal/protocol/http-transport.js"
 import {
   calculateExpiresAtMs,
-  parseAccessToken,
-  parseAuthSuccessBody
-} from "../internal/client/auth-parsing.js"
-import {
-  normalizeServerRef,
-  parseCredentialSuccessBody
-} from "../internal/client/credential-parsing.js"
-import {
   formatExpiresAt,
   isTokenValid,
+  normalizeServerRef,
+  parseAccessToken,
+  parseAuthSuccessBody,
+  parseCredentialSuccessBody,
   resolveAuthExpirySkewMs,
   resolveEffectiveResourceSet,
   serializeAuthSingleFlightKey,
   serializeEffectiveRetryPolicyKey
-} from "../internal/client/token-state.js"
+} from "../internal/client/index.js"
 import type { AuthSession } from "../types/auth.js"
 import type { EdgeClientConfig } from "../types/client-config.js"
 import type { CredentialResult, GetCredentialInput, GetCredentialOptions } from "../types/credential.js"
 import type { RetryPolicyOverride } from "../types/retry.js"
 import type { ClientWorkloadDetails } from "../types/trust-provider.js"
-import type { CachedTokenState } from "../internal/client/token-state.js"
+import type { CachedTokenState } from "../internal/client/index.js"
 
 /**
  * High-level SDK client for authentication and credential retrieval.
