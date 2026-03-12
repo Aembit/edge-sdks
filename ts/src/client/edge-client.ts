@@ -1,26 +1,25 @@
 import { EdgeApi } from "../internal/protocol/edge-api.js"
 import {
-  AuthError,
   CredentialError,
   TrustProviderError
 } from "../internal/protocol/errors.js"
 import { EdgeHttpTransport } from "../internal/protocol/http-transport.js"
 import { mergeRetryPolicy } from "../internal/protocol/retry.js"
 import { mergeRetryOverrides } from "../internal/shared/retry-utils.js"
+import {
+  calculateExpiresAtMs,
+  parseAccessToken,
+  parseAuthSuccessBody
+} from "../internal/client/auth-parsing.js"
+import {
+  normalizeServerRef,
+  parseCredentialSuccessBody
+} from "../internal/client/credential-parsing.js"
 import type { AuthSession } from "../types/auth.js"
 import type { EdgeClientConfig } from "../types/client-config.js"
-import type {
-  CredentialResult,
-  CredentialServerRef,
-  GetCredentialInput,
-  GetCredentialOptions
-} from "../types/credential.js"
+import type { CredentialResult, GetCredentialInput, GetCredentialOptions } from "../types/credential.js"
 import type { RetryPolicyOverride } from "../types/retry.js"
 import type { ClientWorkloadDetails } from "../types/trust-provider.js"
-import type {
-  EdgeAuthSuccessBody,
-  EdgeCredentialsSuccessBody
-} from "../internal/protocol/types.js"
 
 const DEFAULT_AUTH_EXPIRY_SKEW_MS = 60_000
 
@@ -249,141 +248,6 @@ export class EdgeClient {
   }
 }
 
-function normalizeServerRef(server: CredentialServerRef): {
-  host: string
-  port: number
-  transportProtocol: "TCP"
-} {
-  if (!server || typeof server !== "object") {
-    throw new CredentialError("getCredential() requires a valid server object", {
-      retryable: false
-    })
-  }
-
-  if (typeof server.host !== "string") {
-    throw new CredentialError("getCredential() requires server.host", {
-      retryable: false
-    })
-  }
-
-  const host = server.host.trim()
-  if (host.length === 0) {
-    throw new CredentialError("getCredential() requires server.host", {
-      retryable: false
-    })
-  }
-
-  if (!Number.isInteger(server.port) || server.port <= 0 || server.port > 65535) {
-    throw new CredentialError("getCredential() requires a valid server.port", {
-      retryable: false
-    })
-  }
-
-  const transportProtocol = server.transportProtocol ?? "TCP"
-  if (transportProtocol !== "TCP") {
-    throw new CredentialError(
-      "Unsupported server.transportProtocol. Only 'TCP' is supported",
-      {
-        retryable: false
-      }
-    )
-  }
-
-  return {
-    host,
-    port: server.port,
-    transportProtocol
-  }
-}
-
-function parseAccessToken(token: string | null | undefined): string {
-  const value = typeof token === "string" ? token.trim() : ""
-  if (value.length === 0) {
-    throw new AuthError("Edge auth response missing accessToken", {
-      retryable: false
-    })
-  }
-
-  return value
-}
-
-function parseAuthSuccessBody(response: EdgeAuthSuccessBody): EdgeAuthSuccessBody {
-  if (!isRecord(response)) {
-    throw new AuthError("Edge auth response payload must be an object", {
-      retryable: false
-    })
-  }
-
-  return response
-}
-
-function parseCredentialSuccessBody(
-  response: EdgeCredentialsSuccessBody
-): EdgeCredentialsSuccessBody {
-  if (!isRecord(response)) {
-    throw new CredentialError("Edge credential response payload must be an object", {
-      retryable: false
-    })
-  }
-
-  const credentialType = response.credentialType
-  if (credentialType !== undefined && typeof credentialType !== "string") {
-    throw new CredentialError(
-      "Edge credential response field 'credentialType' must be a string when provided",
-      {
-        retryable: false
-      }
-    )
-  }
-
-  const expiresAt = response.expiresAt
-  if (expiresAt !== undefined && expiresAt !== null && typeof expiresAt !== "string") {
-    throw new CredentialError(
-      "Edge credential response field 'expiresAt' must be a string or null when provided",
-      {
-        retryable: false
-      }
-    )
-  }
-
-  const data = response.data
-  if (data !== undefined && !isRecord(data)) {
-    throw new CredentialError(
-      "Edge credential response field 'data' must be an object when provided",
-      {
-        retryable: false
-      }
-    )
-  }
-
-  return {
-    credentialType,
-    expiresAt,
-    data
-  }
-}
-
-function calculateExpiresAtMs(
-  expiresInSeconds: number | undefined,
-  nowMs: number
-): number | null {
-  if (expiresInSeconds === undefined) {
-    return null
-  }
-
-  if (
-    typeof expiresInSeconds !== "number" ||
-    !Number.isFinite(expiresInSeconds) ||
-    expiresInSeconds < 0
-  ) {
-    throw new AuthError("Edge auth response contains invalid expiresIn", {
-      retryable: false
-    })
-  }
-
-  return nowMs + Math.round(expiresInSeconds * 1000)
-}
-
 function isTokenValid(
   tokenState: CachedTokenState | undefined,
   nowMs: number,
@@ -421,10 +285,6 @@ function resolveEffectiveResourceSet(
   requestResourceSet: string | undefined
 ): string | undefined {
   return requestResourceSet ?? defaultResourceSet
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value)
 }
 
 function serializeAuthSingleFlightKey(key: AuthSingleFlightKey): string {
