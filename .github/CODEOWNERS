@@ -1,0 +1,14 @@
+# Code Owners
+
+## Default owner for the repository
+
+* @kevinsapp
+
+## TypeScript SDK ownership
+
+ts/ @kevinsapp
+
+## Architecture and specification docs
+
+docs/ @kevinsapp
+spec/ @kevinsapp
