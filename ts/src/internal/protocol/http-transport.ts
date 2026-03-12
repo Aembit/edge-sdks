@@ -106,8 +106,8 @@ export class EdgeHttpTransport {
     retryableStatusCodes?: number[]
   ): Promise<EdgeSuccessResponse<TSuccessStatus, TSuccessBody>> {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    let url = "";
-    let init: RequestInit = {};
+    let url: string;
+    let init: RequestInit;
 
     try {
       url = resolveRequestUrl(this.baseUrl, request.path);

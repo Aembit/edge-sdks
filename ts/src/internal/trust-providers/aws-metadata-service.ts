@@ -133,7 +133,7 @@ class AwsMetadataServiceTrustProvider implements TrustProvider {
   }): Promise<string> {
     const signalController = new AbortController()
     const timeoutId = setTimeout(() => signalController.abort(), this.timeoutMs)
-    let requestUrl = ""
+    let requestUrl: string
 
     try {
       try {
