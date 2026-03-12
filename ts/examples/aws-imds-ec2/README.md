@@ -47,29 +47,37 @@ Optional variables:
 
 ## Run Example
 
-Option 1 (with env file):
+Run these commands from `ts/`.
 
-```bash
-npm run build
-npm run check:node:envfile
-node --env-file=./examples/aws-imds-ec2/.env ./examples/aws-imds-ec2/index.mjs
-```
-
-`--env-file` requires Node `20.6+`.
-
-With exported env vars:
-
-```bash
-npm run example:aws-imds
-```
-
-With `.env` file:
+Path A (recommended): use `.env` directly.
 
 ```bash
 npm run example:aws-imds:envfile
 ```
 
-## Copy `ts/` To A VM
+`--env-file` requires Node `20.6+`.
+
+Path B: export variables manually, then run.
+
+```bash
+export AEMBIT_EDGE_BASE_URL=https://<tenant>.ec.<region>.aembit.io
+export AEMBIT_CLIENT_ID=your-edge-sdk-client-id
+export AEMBIT_SERVER_HOST=target.example.com
+export AEMBIT_SERVER_PORT=443
+export AEMBIT_CREDENTIAL_TYPE=ApiKey
+
+# Optional:
+# export AEMBIT_RESOURCE_SET_ID=your-resource-set-id
+# export AEMBIT_PRINT_CREDENTIAL_JSON=true
+# export AEMBIT_IMDS_TIMEOUT_MS=1000
+# export AEMBIT_IMDS_TOKEN_TTL_SECONDS=21600
+
+npm run example:aws-imds
+```
+
+This path works on Node `>=20` and does not depend on `--env-file`.
+
+## Copy `ts/` to a Remote VM
 
 From the repository root, use:
 
@@ -83,6 +91,10 @@ From the repository root, use:
 
 This is useful for EC2 testing of runnable examples and excludes `node_modules`, `dist`, `.env*`, and `.DS_Store`.
 It keeps local `ts/node_modules` and `ts/dist` by default; pass `--clean-local` (or set `DEPLOY_CLEAN_LOCAL=1`) only when you explicitly want local cleanup.
+Because `.env*` is excluded, local example env files are not uploaded to the remote VM.
+
+`DEPLOY_*` variables configure the local deploy script only.
+`AEMBIT_*` variables are runtime inputs for the example on the remote VM.
 
 Using a config file:
 
@@ -98,6 +110,21 @@ export DEPLOY_HOST=ec2-xx-xx-xx-xx.compute.amazonaws.com
 export DEPLOY_USER=ubuntu
 export DEPLOY_REMOTE_DIR=~/edge-sdks/ts
 ./scripts/deploy-ts-to-vm.sh
+```
+
+After copy, run on the remote VM:
+
+```bash
+cd ~/edge-sdks/ts
+npm install
+npm run build
+cp ./examples/aws-imds-ec2/.env.example ./examples/aws-imds-ec2/.env
+```
+
+Validate required env entries before running:
+
+```bash
+grep '^AEMBIT_' ./examples/aws-imds-ec2/.env
 ```
 
 ## Output
