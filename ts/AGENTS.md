@@ -95,6 +95,7 @@ Testing stack and layout:
 - colocate tests as `*.test.ts` beside the corresponding source files
 - typed linting is enabled; `@typescript-eslint/require-await` is disabled for `*.test.ts` because async mock handlers often intentionally return promises without internal `await`
 - run `npm run lint` for TypeScript code changes; use `npm run lint:fix` when appropriate and re-run `npm run lint`
+- run `npm run lint:md` from the repository root for Markdown/documentation changes
 
 Focus tests on:
 

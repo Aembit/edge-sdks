@@ -1,5 +1,6 @@
 ## Local artifacts
 .DS_Store
+node_modules/
 
 ## Environment files
 .env

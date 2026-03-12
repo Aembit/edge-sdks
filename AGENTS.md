@@ -203,6 +203,11 @@ Testing should cover:
 
 Integration tests may be added later.
 
+Linting expectations:
+
+- For TypeScript changes, run `npm run lint`, `npm run typecheck`, and `npm test` from `ts/`.
+- For Markdown/documentation changes, run `npm run lint:md` from the repository root.
+
 ## Documentation Locations
 
 Use the following locations for documentation and examples.
