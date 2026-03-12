@@ -4,8 +4,6 @@ import {
   TrustProviderError
 } from "../internal/protocol/errors.js"
 import { EdgeHttpTransport } from "../internal/protocol/http-transport.js"
-import { mergeRetryPolicy } from "../internal/protocol/retry.js"
-import { mergeRetryOverrides } from "../internal/shared/retry-utils.js"
 import {
   calculateExpiresAtMs,
   parseAccessToken,
@@ -15,24 +13,20 @@ import {
   normalizeServerRef,
   parseCredentialSuccessBody
 } from "../internal/client/credential-parsing.js"
+import {
+  formatExpiresAt,
+  isTokenValid,
+  resolveAuthExpirySkewMs,
+  resolveEffectiveResourceSet,
+  serializeAuthSingleFlightKey,
+  serializeEffectiveRetryPolicyKey
+} from "../internal/client/token-state.js"
 import type { AuthSession } from "../types/auth.js"
 import type { EdgeClientConfig } from "../types/client-config.js"
 import type { CredentialResult, GetCredentialInput, GetCredentialOptions } from "../types/credential.js"
 import type { RetryPolicyOverride } from "../types/retry.js"
 import type { ClientWorkloadDetails } from "../types/trust-provider.js"
-
-const DEFAULT_AUTH_EXPIRY_SKEW_MS = 60_000
-
-interface CachedTokenState {
-  accessToken: string
-  expiresAtMs: number | null
-  resourceSet?: string
-}
-
-interface AuthSingleFlightKey {
-  resourceSet?: string
-  retryKey: string
-}
+import type { CachedTokenState } from "../internal/client/token-state.js"
 
 /**
  * High-level SDK client for authentication and credential retrieval.
@@ -246,76 +240,4 @@ export class EdgeClient {
       )
     }
   }
-}
-
-function isTokenValid(
-  tokenState: CachedTokenState | undefined,
-  nowMs: number,
-  skewMs: number
-): tokenState is CachedTokenState {
-  if (!tokenState) {
-    return false
-  }
-
-  if (tokenState.expiresAtMs === null) {
-    return true
-  }
-
-  return nowMs < tokenState.expiresAtMs - skewMs
-}
-
-function resolveAuthExpirySkewMs(value: number | undefined): number {
-  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
-    return Math.floor(value)
-  }
-
-  return DEFAULT_AUTH_EXPIRY_SKEW_MS
-}
-
-function formatExpiresAt(expiresAtMs: number | null): string | null {
-  if (expiresAtMs === null) {
-    return null
-  }
-
-  return new Date(expiresAtMs).toISOString()
-}
-
-function resolveEffectiveResourceSet(
-  defaultResourceSet: string | undefined,
-  requestResourceSet: string | undefined
-): string | undefined {
-  return requestResourceSet ?? defaultResourceSet
-}
-
-function serializeAuthSingleFlightKey(key: AuthSingleFlightKey): string {
-  return JSON.stringify([key.resourceSet ?? null, key.retryKey])
-}
-
-function serializeEffectiveRetryPolicyKey(
-  baseRetry: RetryPolicyOverride | undefined,
-  requestRetry: RetryPolicyOverride | undefined
-): string {
-  const mergedOverride = mergeRetryOverrides(baseRetry, requestRetry)
-  const effectiveRetry = mergeRetryPolicy(mergedOverride)
-
-  return JSON.stringify({
-    enabled: effectiveRetry.enabled,
-    maxAttempts: effectiveRetry.maxAttempts,
-    baseDelayMs: effectiveRetry.baseDelayMs,
-    maxDelayMs: effectiveRetry.maxDelayMs,
-    jitter: effectiveRetry.jitter,
-    retryableStatusCodes: normalizeRetryableStatusCodes(
-      effectiveRetry.retryableStatusCodes
-    )
-  })
-}
-
-function normalizeRetryableStatusCodes(
-  statusCodes: number[] | undefined
-): number[] | undefined {
-  if (!statusCodes || statusCodes.length === 0) {
-    return undefined
-  }
-
-  return [...new Set(statusCodes)].sort((left, right) => left - right)
 }
