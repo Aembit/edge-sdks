@@ -1,0 +1,11 @@
+{
+  "name": "aembit-edge-sdks-repo-tools",
+  "private": true,
+  "scripts": {
+    "lint:md": "markdownlint-cli2",
+    "lint:md:fix": "markdownlint-cli2 --fix"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.18.1"
+  }
+}

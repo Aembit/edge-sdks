@@ -74,6 +74,18 @@ Additional documentation about the architecture and SDK design can be found in:
 - `spec/openapi/` for pinned OpenAPI snapshots used in SDK development
 - official Aembit Edge API docs: <https://docs.aembit.io/api-guide/edge/>
 
+## Quality Checks
+
+Run TypeScript SDK checks from `ts/`:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm test`
+
+Run Markdown checks from repository root:
+
+- `npm run lint:md`
+
 ## License
 
 This project will be released under an open source license prior to public release.
