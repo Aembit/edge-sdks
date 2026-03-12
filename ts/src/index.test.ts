@@ -21,5 +21,6 @@ describe("public type exports", () => {
 
   it("exports built-in trust provider factories", () => {
     expect(typeof trustProviders.awsMetadataService).toBe("function");
+    expect(typeof trustProviders.awsRole).toBe("function");
   });
 });
