@@ -35,9 +35,9 @@
     "example:aws-imds:envfile": "npm run build && npm run check:node:envfile && node --env-file=./examples/aws-imds-ec2/.env ./examples/aws-imds-ec2/index.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.4",
     "@types/node": "^20.19.37",
-    "eslint": "^10.0.3",
+    "eslint": "^9.39.4",
     "globals": "^17.4.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.0",
