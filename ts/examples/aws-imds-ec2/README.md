@@ -4,16 +4,40 @@ Runnable Node.js example for testing the TypeScript SDK on EC2 with AWS IMDSv2.
 
 This directory includes:
 
-- `index.mjs`: canonical integration example (main flow first, helper utilities below)
+- `index.mjs`: integration example
 
 Run from `ts/`.
 
 ## Prerequisites
 
-- Node.js `>=20`
 - EC2 instance with IMDSv2 enabled and reachable at `169.254.169.254`
-- Aembit Edge API base URL and client ID configured for AWS Metadata Service trust
-- A target service host/port that matches your Aembit policy
+- Node.js `>=20` installed on the instance
+- An Aembit Access Policy configured for this SDK flow
+
+### Aembit Access Policy (Required)
+
+Before running this example, configure an Aembit Access Policy that includes:
+
+- a Client Workload for the EC2 instance identity
+- a Server Workload with a Service Endpoint (`host`, `port`) that the SDK request will target
+- an AWS Metadata Service Trust Provider with an Edge SDK Client ID
+- a Credential Provider that returns the requested `AEMBIT_CREDENTIAL_TYPE`
+
+References:
+
+- Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
+- AWS Metadata Service Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/aws-metadata-service-trust-provider/>
+- AWS Metadata Service auth setup: <https://docs.aembit.io/api-guide/edge/auth/aws-metadata-service>
+- Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
+
+Example Server Workload configuration (for this README examples):
+
+- Name: `Test SDK Server`
+- Host: `test.example.com`
+- Transport Protocol: `TCP`
+- Port: `443` (TLS selected)
+- Forward to Port: `443` (TLS selected; not used by SDK flow)
+- Authentication Method: `No Authentication` (not used by SDK flow)
 
 ## Configure Environment
 
@@ -37,6 +61,8 @@ Required variables:
 - `AEMBIT_SERVER_HOST`
 - `AEMBIT_SERVER_PORT`
 - `AEMBIT_CREDENTIAL_TYPE`
+
+`AEMBIT_SERVER_HOST` and `AEMBIT_SERVER_PORT` must match the Service Endpoint values configured in your Access Policy's Server Workload.
 
 Optional variables:
 
