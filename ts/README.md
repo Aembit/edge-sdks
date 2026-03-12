@@ -20,7 +20,7 @@ Planned v1 behavior:
 - high-level Edge client for authentication and credential retrieval
 - automatic token lifecycle management
 - retry logic for transient failures
-- built-in Trust Provider coverage starting with AWS Metadata Service (IMDSv2)
+- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2) and AWS Role
 
 ## Client API (Current)
 
@@ -50,10 +50,12 @@ Notes:
 - `authenticate()` updates SDK session state and does not return raw bearer tokens.
 - `getCredential()` auto-authenticates when no valid token is cached.
 - `trustProviders.awsMetadataService()` collects identity from AWS IMDSv2.
+- `trustProviders.awsRole({ region: "us-east-1" })` builds signed AWS STS `GetCallerIdentity` request data for `/edge/v1/auth`.
 - `clientId` is the Edge SDK Client ID from Trust Provider configuration.
 - `clientId` is not the client workload `Client Identifier` value used in policy configuration.
 - `server.host` and `server.port` are required.
 - `server.transportProtocol` currently supports only `"TCP"` and defaults to `"TCP"` if omitted.
+- AWS Role provider `region` is required.
 
 ## Documentation
 
@@ -148,7 +150,7 @@ export DEPLOY_REMOTE_DIR=~/edge-sdks/ts
 
 ## Roadmap Notes
 
-- Additional Trust Provider support beyond AWS Metadata Service (for example AWS Role and OIDC)
+- Additional Trust Provider support beyond AWS Metadata Service and AWS Role (for example OIDC)
 - Bundler/tooling decision is pending; package output remains ESM-only
 
 ## Security
