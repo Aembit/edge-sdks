@@ -13,8 +13,7 @@ v1 baseline:
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
 - canonical API docs: `https://docs.aembit.io/api-guide/edge/`
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
-- initial Trust Provider coverage: AWS Metadata Service (IMDSv2)
-- next Trust Provider target: AWS Role (IAM role credentials with signed STS GetCallerIdentity request data)
+- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2) and AWS Role
 - test framework: Vitest with colocated tests (`*.test.ts`)
 
 ## Layer Implementation
@@ -62,12 +61,11 @@ Initial implementations:
 
 - `aws-metadata-service.ts`
   - retrieves IMDSv2 token, instance identity document, and signature
-
-Planned implementation:
-
 - `aws-role.ts`
   - resolves IAM role credentials from the AWS runtime
-  - builds signed AWS STS `GetCallerIdentity` request data for `/edge/v1/auth`
+  - builds `client.aws.stsGetCallerIdentity.{headers,region}` for `/edge/v1/auth`
+- `aws-role-signer.ts`
+  - builds SigV4-signed AWS STS `GetCallerIdentity` request headers for AWS Role identity payloads
 
 Design notes:
 
@@ -75,9 +73,9 @@ Design notes:
 - Public API exposes provider selection, not provider internals.
 - Provider failures are wrapped into SDK-defined errors.
 
-### AWS Role Trust Provider Contract (Step 1)
+### AWS Role Trust Provider Contract
 
-This section defines the v1 contract for the planned AWS Role Trust Provider.
+This section defines the v1 contract for the AWS Role Trust Provider.
 
 Public factory target:
 
@@ -324,4 +322,4 @@ ts/
 - bundler/tooling choice for package build remains open
 - naming and typing depth for `GetCredentialInput.server` may be refined after first implementation pass
 - per-call retry override is optional for v1 and can be introduced after base client behavior is stable
-- AWS Role and OIDC Trust Provider implementations remain roadmap items after AWS Metadata Service
+- OIDC and other Trust Provider implementations remain roadmap items
