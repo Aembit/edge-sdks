@@ -1,4 +1,4 @@
-import { EdgeClient, trustProviders } from "../../dist/index.js"
+import { EdgeClient, trustProviders } from "../../src/index.js"
 
 export interface ExampleEvent {
   serverHost?: string
