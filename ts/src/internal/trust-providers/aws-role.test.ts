@@ -157,4 +157,67 @@ describe("createAwsRoleTrustProvider", () => {
       retryable: false
     })
   })
+
+  it("retries exhausted AWS credential-chain failures", async () => {
+    const signer = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Could not load credentials from any providers"))
+      .mockResolvedValueOnce({
+        headers: { host: "sts.us-east-1.amazonaws.com" },
+        region: "us-east-1"
+      })
+
+    const provider = createAwsRoleTrustProvider({
+      region: "us-east-1",
+      signer,
+      retry: {
+        maxAttempts: 2,
+        baseDelayMs: 0,
+        maxDelayMs: 0,
+        jitter: false
+      }
+    })
+
+    const identity = await provider.collectIdentity()
+    expect(identity).toMatchObject({
+      aws: {
+        stsGetCallerIdentity: {
+          region: "us-east-1"
+        }
+      }
+    })
+    expect(signer).toHaveBeenCalledTimes(2)
+  })
+
+  it("does not retry deterministic credential-shape validation errors", async () => {
+    const signer = vi.fn().mockRejectedValue(new Error("AWS credential provider returned an empty accessKeyId"))
+
+    const provider = createAwsRoleTrustProvider({
+      region: "us-east-1",
+      signer,
+      retry: {
+        maxAttempts: 3,
+        baseDelayMs: 0,
+        maxDelayMs: 0,
+        jitter: false
+      }
+    })
+
+    const result = await provider.collectIdentity().then(
+      () => ({ ok: true as const }),
+      (error: unknown) => ({ ok: false as const, error })
+    )
+
+    expect(result.ok).toBe(false)
+    if (result.ok) {
+      throw new Error("Expected collectIdentity() to fail for deterministic credential-shape errors")
+    }
+
+    expect(result.error).toBeInstanceOf(TrustProviderError)
+    expect(result.error).toMatchObject({
+      kind: "trust_provider",
+      retryable: false
+    })
+    expect(signer).toHaveBeenCalledTimes(1)
+  })
 })
