@@ -54,6 +54,7 @@ export async function buildAwsStsGetCallerIdentitySignedData(
   options: AwsRoleSignerOptions
 ): Promise<AwsStsGetCallerIdentitySignedData> {
   const region = resolveRegion(options.region)
+  // Create default provider per call so runtime credential-source changes can be observed.
   const credentialsProvider = options.credentialsProvider ?? defaultProvider()
   const credentials = await credentialsProvider()
   assertCredentials(credentials)

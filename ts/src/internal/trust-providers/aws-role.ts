@@ -154,7 +154,14 @@ function mapRoleSignerError(error: unknown): TrustProviderError {
     })
   }
 
-  if (isCredentialResolutionError(error)) {
+  if (isRetryableCredentialResolutionError(error)) {
+    return new TrustProviderError("AWS Role Trust Provider could not resolve AWS credentials", {
+      retryable: true,
+      cause: error
+    })
+  }
+
+  if (isNonRetryableCredentialValidationError(error)) {
     return new TrustProviderError("AWS Role Trust Provider could not resolve AWS credentials", {
       retryable: false,
       cause: error
@@ -167,15 +174,20 @@ function mapRoleSignerError(error: unknown): TrustProviderError {
   })
 }
 
-function isCredentialResolutionError(error: unknown): boolean {
+function isRetryableCredentialResolutionError(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false
   }
 
   const message = error.message.toLowerCase()
-  return (
-    message.includes("could not load credentials") ||
-    message.includes("accesskeyid") ||
-    message.includes("secretaccesskey")
-  )
+  return message.includes("could not load credentials")
+}
+
+function isNonRetryableCredentialValidationError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const message = error.message.toLowerCase()
+  return message.includes("accesskeyid") || message.includes("secretaccesskey")
 }
