@@ -1,5 +1,26 @@
 import { EdgeClient, trustProviders } from "../../src/index.js"
 
+/**
+ * Minimal AWS Lambda example for the AWS Role Trust Provider.
+ *
+ * Required env vars:
+ * - AEMBIT_EDGE_BASE_URL
+ * - AEMBIT_CLIENT_ID
+ * - AEMBIT_SERVER_HOST
+ * - AEMBIT_SERVER_PORT
+ * - AEMBIT_CREDENTIAL_TYPE
+ *
+ * Optional env vars:
+ * - AEMBIT_RESOURCE_SET_ID
+ * - AEMBIT_PRINT_CREDENTIAL_JSON
+ * - AEMBIT_AWS_REGION
+ * - AWS_REGION
+ * - AWS_DEFAULT_REGION
+ *
+ * The handler reuses a cached EdgeClient across warm Lambda invocations.
+ * Credential requests rely on `getCredential()` to authenticate on demand so
+ * the SDK can reuse cached bearer tokens when they are still valid.
+ */
 export interface ExampleEvent {
   serverHost?: string
   serverPort?: number
@@ -26,8 +47,14 @@ let cachedClient: EdgeClient | undefined
 let cachedTrustProviderId: string | undefined
 
 export async function handler(event: ExampleEvent = {}): Promise<ExampleResponse> {
+  // 1) Reuse the configured client across warm Lambda invocations when possible.
   const client = getClient()
+
+  // 2) Resolve the target service request from the event first, then env vars.
   const request = resolveRequestInput(event)
+
+  // 3) Request credentials for the target service. The SDK authenticates only
+  // when needed and can reuse cached bearer tokens for repeated invocations.
   const credential = await client.getCredential(
     {
       server: {
@@ -48,6 +75,8 @@ export async function handler(event: ExampleEvent = {}): Promise<ExampleResponse
     credentialExpiresAt: credential.expiresAt ?? null
   }
 
+  // 4) Return safe metadata by default, or the full credential only when the
+  // caller explicitly opts in for controlled testing.
   if (parseOptionalBoolean("AEMBIT_PRINT_CREDENTIAL_JSON", false)) {
     return {
       ...baseResponse,
@@ -70,6 +99,8 @@ function getClient(): EdgeClient {
     return cachedClient
   }
 
+  // Resolve the Trust Provider once so the same client can be reused by
+  // subsequent warm invocations in the same Lambda execution environment.
   const trustProvider = trustProviders.awsRole({
     region: resolveAwsRegion()
   })
@@ -93,7 +124,12 @@ function getTrustProviderId(): string {
   return cachedTrustProviderId
 }
 
-function resolveRequestInput(event: ExampleEvent) {
+function resolveRequestInput(event: ExampleEvent): {
+  serverHost: string
+  serverPort: number
+  credentialType: string
+  resourceSet?: string
+} {
   return {
     serverHost: getOptionalString(event.serverHost) ?? getRequiredEnv("AEMBIT_SERVER_HOST"),
     serverPort: parsePortValue(event.serverPort, "event.serverPort")
