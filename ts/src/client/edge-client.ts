@@ -17,6 +17,7 @@ import {
   serializeAuthSingleFlightKey,
   serializeEffectiveRetryPolicyKey
 } from "../internal/client/index.js"
+import { isRecord } from "../internal/shared/type-guards.js"
 import type { AuthSession } from "../types/auth.js"
 import type { EdgeClientConfig } from "../types/client-config.js"
 import type { CredentialResult, GetCredentialInput, GetCredentialOptions } from "../types/credential.js"
@@ -221,7 +222,8 @@ export class EdgeClient {
 
   private async collectIdentity(): Promise<ClientWorkloadDetails> {
     try {
-      return await this.config.trustProvider.collectIdentity()
+      const identity = await this.config.trustProvider.collectIdentity()
+      return mergeClientWorkloadDetails(identity, this.config.clientDetails)
     } catch (error) {
       if (error instanceof TrustProviderError) {
         throw error
@@ -236,4 +238,36 @@ export class EdgeClient {
       )
     }
   }
+}
+
+function mergeClientWorkloadDetails(
+  identity: ClientWorkloadDetails,
+  additionalDetails: ClientWorkloadDetails | undefined
+): ClientWorkloadDetails {
+  if (!additionalDetails) {
+    return identity
+  }
+
+  return mergeRecords(identity, additionalDetails)
+}
+
+function mergeRecords(
+  base: Record<string, unknown>,
+  overlay: Record<string, unknown>
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...base }
+
+  for (const [key, overlayValue] of Object.entries(overlay)) {
+    const baseValue = merged[key]
+    if (isRecord(baseValue) && isRecord(overlayValue)) {
+      merged[key] = mergeRecords(baseValue, overlayValue)
+      continue
+    }
+
+    if (typeof baseValue === "undefined") {
+      merged[key] = overlayValue
+    }
+  }
+
+  return merged
 }

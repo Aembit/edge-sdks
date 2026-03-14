@@ -128,6 +128,59 @@ describe("EdgeClient", () => {
     })
   })
 
+  it("authenticate() merges additional client workload details into auth payload", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          accessToken: "token-merged-auth",
+          tokenType: "Bearer",
+          expiresIn: 120
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-east-1.amazonaws.com" },
+            region: "us-east-1"
+          }
+        }
+      })),
+      clientDetails: {
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: "lambda-workload-1"
+          }
+        }
+      }
+    })
+
+    await client.authenticate()
+
+    expect(parseRequestBody(fetchMock, 0)).toEqual({
+      clientId: "client-id",
+      client: {
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-east-1.amazonaws.com" },
+            region: "us-east-1"
+          }
+        },
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: "lambda-workload-1"
+          }
+        }
+      }
+    })
+  })
+
   it("rejects malformed expiresIn from auth response", async () => {
     const fetchMock = vi.fn(async () =>
       new Response(
@@ -233,6 +286,147 @@ describe("EdgeClient", () => {
         transportProtocol: "TCP"
       },
       credentialType: "ApiKey"
+    })
+  })
+
+  it("getCredential() merges additional client workload details into auth and credentials payloads", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-merged-credential",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            credentialType: "ApiKey",
+            expiresAt: null,
+            data: { apiKey: "abc" }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-east-1.amazonaws.com" },
+            region: "us-east-1"
+          }
+        }
+      })),
+      clientDetails: {
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: "lambda-workload-1"
+          }
+        }
+      }
+    })
+
+    await client.getCredential({
+      server: {
+        host: "db.internal",
+        port: 443
+      },
+      credentialType: "ApiKey"
+    })
+
+    const expectedClient = {
+      aws: {
+        stsGetCallerIdentity: {
+          headers: { host: "sts.us-east-1.amazonaws.com" },
+          region: "us-east-1"
+        }
+      },
+      os: {
+        environment: {
+          CLIENT_WORKLOAD_ID: "lambda-workload-1"
+        }
+      }
+    }
+
+    expect(parseRequestBody(fetchMock, 0)).toEqual({
+      clientId: "client-id",
+      client: expectedClient
+    })
+    expect(parseRequestBody(fetchMock, 1)).toEqual({
+      client: expectedClient,
+      server: {
+        host: "db.internal",
+        port: 443,
+        transportProtocol: "TCP"
+      },
+      credentialType: "ApiKey"
+    })
+  })
+
+  it("does not allow clientDetails to override Trust Provider identity fields", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          accessToken: "token-no-override",
+          tokenType: "Bearer",
+          expiresIn: 120
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-east-1.amazonaws.com" },
+            region: "us-east-1"
+          }
+        }
+      })),
+      clientDetails: {
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-west-2.amazonaws.com" },
+            region: "us-west-2"
+          }
+        },
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: "lambda-workload-1"
+          }
+        }
+      }
+    })
+
+    await client.authenticate()
+
+    expect(parseRequestBody(fetchMock, 0)).toEqual({
+      clientId: "client-id",
+      client: {
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-east-1.amazonaws.com" },
+            region: "us-east-1"
+          }
+        },
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: "lambda-workload-1"
+          }
+        }
+      }
     })
   })
 
