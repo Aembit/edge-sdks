@@ -1,4 +1,5 @@
 import type { RetryPolicyOverride } from "./retry.js";
+import type { ClientWorkloadDetails } from "./trust-provider.js";
 import type { TrustProvider } from "./trust-provider.js";
 
 /**
@@ -19,6 +20,11 @@ export interface EdgeClientConfig {
    * Runtime-specific Trust Provider implementation.
    */
   trustProvider: TrustProvider;
+
+  /**
+   * Optional additional client workload details merged into the payload sent to Edge.
+   */
+  clientWorkloadDetails?: ClientWorkloadDetails;
 
   /**
    * Optional Resource Set value sent with Aembit Edge API requests.
