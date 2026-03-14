@@ -253,7 +253,7 @@ function mergeClientWorkloadDetails(
 
 function mergeRecords(
   base: Record<string, unknown>,
-  overlay: Record<string, unknown>
+  overlay: object
 ): Record<string, unknown> {
   const merged: Record<string, unknown> = { ...base }
 

@@ -141,7 +141,7 @@ type EdgeClientConfig = {
   baseUrl: string;
   clientId: string;
   trustProvider: TrustProvider;
-  clientWorkloadDetails?: ClientWorkloadDetails;
+  clientWorkloadDetails?: EdgeClientWorkloadDetails;
   resourceSet?: string;
   timeoutMs?: number;
   authExpirySkewMs?: number;
@@ -183,6 +183,13 @@ Example:
 This allows additional workload metadata such as `CLIENT_WORKLOAD_ID` to be
 sent alongside attested identity without allowing caller-supplied data to
 override Trust Provider-owned fields.
+
+Roadmap note:
+
+- add runtime validation for `clientWorkloadDetails` against the pinned
+  `ClientWorkloadDetails` schema in `spec/openapi/api-1.yaml`
+- reject unsupported keys locally with SDK errors instead of surfacing Edge `400`
+  responses
 
 ### `authenticate()` return model
 
