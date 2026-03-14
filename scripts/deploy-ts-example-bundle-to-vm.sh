@@ -63,7 +63,7 @@ quote_remote_path() {
       printf '%s' "~"
       ;;
     \~/*)
-      printf "~/%s" "$(quote_for_sh "${value#\~/}")"
+      printf '%s/%s' \~ "$(quote_for_sh "${value#\~/}")"
       ;;
     *)
       quote_for_sh "$value"
@@ -285,6 +285,7 @@ set -- -p "$SSH_PORT"
 if [ "$SSH_HAS_KEY" = "1" ]; then
   set -- "$@" -i "$SSH_KEY"
 fi
+# shellcheck disable=SC2029
 ssh "$@" "$USER_NAME@$HOST" "$REMOTE_CMD"
 
 echo "Done."
