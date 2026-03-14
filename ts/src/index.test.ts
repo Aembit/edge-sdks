@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { EdgeClient, trustProviders } from "./index.js";
+import {
+  EdgeClient,
+  createAwsMetadataServiceTrustProvider,
+  createAwsRoleTrustProvider,
+  trustProviders
+} from "./index.js";
 import type { AuthSession } from "./index.js";
 
 describe("public type exports", () => {
@@ -22,5 +27,7 @@ describe("public type exports", () => {
   it("exports built-in trust provider factories", () => {
     expect(typeof trustProviders.awsMetadataService).toBe("function");
     expect(typeof trustProviders.awsRole).toBe("function");
+    expect(typeof createAwsMetadataServiceTrustProvider).toBe("function");
+    expect(typeof createAwsRoleTrustProvider).toBe("function");
   });
 });
