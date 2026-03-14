@@ -57,6 +57,15 @@ Notes:
 - `server.transportProtocol` currently supports only `"TCP"` and defaults to `"TCP"` if omitted.
 - AWS Role provider `region` is required.
 
+When bundle size matters, import only the Trust Provider factory you need:
+
+```ts
+import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts"
+import { createAwsRoleTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/aws-role"
+```
+
+Use `trustProviders` for convenience when bundle size is not a concern.
+
 ## Documentation
 
 - Implementation and agent guidance: `ts/AGENTS.md`
@@ -88,9 +97,10 @@ Expected TypeScript SDK structure:
 - `ts/examples/` runnable examples
 - colocated tests as `*.test.ts` beside source files
 
-Current runnable example:
+Current runnable examples:
 
 - `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
+- `ts/examples/aws-role-lambda/` for AWS Lambda + AWS Role end-to-end validation
 
 ## Testing
 
@@ -102,41 +112,45 @@ Current runnable example:
 
 Run from `ts/`:
 
-- `npm run example:aws-imds`
-- `npm run example:aws-imds:envfile`
+- `npm run build:example:aws-imds-ec2`
+- `npm run example:aws-imds-ec2`
+- `npm run build:example:aws-role-lambda`
+- `npm run example:aws-role-lambda:zip`
 - example docs: `ts/examples/aws-imds-ec2/README.md`
-- integration example: `ts/examples/aws-imds-ec2/index.mjs`
+- integration example: `ts/examples/aws-imds-ec2/index.ts`
+- Lambda example docs: `ts/examples/aws-role-lambda/README.md`
+- Lambda example source: `ts/examples/aws-role-lambda/index.ts`
 
-Note: `npm run example:aws-imds:envfile` uses `node --env-file` and requires Node `20.6+`.
-Note: current Edge behavior requires setting `credentialType` on `/edge/v1/credentials` requests (the AWS example sets `AEMBIT_CREDENTIAL_TYPE` as required).
+Note: current Edge behavior requires setting `credentialType` on `/edge/v1/credentials` requests, so both examples set it explicitly.
 
-Deploy `ts/` to a VM (from repo root):
+Deploy a bundled example artifact to a VM (from repo root):
 
 ```bash
-./scripts/deploy-ts-to-vm.sh \
+./scripts/deploy-ts-example-bundle-to-vm.sh \
+  --artifact ./ts/examples/aws-imds-ec2/dist/index.mjs \
   --host ec2-xx-xx-xx-xx.compute.amazonaws.com \
   --user ubuntu \
   --key ~/.ssh/your-key.pem \
-  --remote-dir ~/edge-sdks/ts
+  --remote-dir ~/aembit-examples/aws-imds-ec2
 ```
 
-The script uploads `ts/` while excluding `node_modules`, `dist`, `.env*`, and `.DS_Store`.
-It does not delete local `ts/node_modules` or `ts/dist` unless you pass `--clean-local` (or set `DEPLOY_CLEAN_LOCAL=1`).
+The script uploads a built example bundle such as `dist/index.mjs`, not the whole `ts/` workspace.
 
 Use a deploy config file:
 
 ```bash
-cp ./scripts/deploy-ts-to-vm.env.example ./scripts/deploy-ts-to-vm.env
-./scripts/deploy-ts-to-vm.sh --config ./scripts/deploy-ts-to-vm.env
+cp ./scripts/deploy-ts-example-bundle-to-vm.env.example ./scripts/deploy-ts-example-bundle-to-vm.env
+./scripts/deploy-ts-example-bundle-to-vm.sh --config ./scripts/deploy-ts-example-bundle-to-vm.env
 ```
 
 Or via environment variables:
 
 ```bash
+export DEPLOY_ARTIFACT=./ts/examples/aws-imds-ec2/dist/index.mjs
 export DEPLOY_HOST=ec2-xx-xx-xx-xx.compute.amazonaws.com
 export DEPLOY_USER=ubuntu
-export DEPLOY_REMOTE_DIR=~/edge-sdks/ts
-./scripts/deploy-ts-to-vm.sh
+export DEPLOY_REMOTE_DIR=~/aembit-examples/aws-imds-ec2
+./scripts/deploy-ts-example-bundle-to-vm.sh
 ```
 
 ## Troubleshooting

@@ -1,12 +1,13 @@
 # AWS IMDS EC2 Example
 
-Runnable Node.js example for testing the TypeScript SDK on EC2 with AWS IMDSv2.
+Runnable EC2 example for the TypeScript SDK using AWS IMDSv2.
 
-This directory includes:
+This example follows the same pattern as the Lambda example:
 
-- `index.mjs`: integration example
-
-Run from `ts/`.
+- edit a small config block in [`./index.ts`](./index.ts)
+- bundle the example into a single `index.mjs`
+- copy that built file to an EC2 instance
+- run `node index.mjs`
 
 ## Prerequisites
 
@@ -14,14 +15,14 @@ Run from `ts/`.
 - Node.js `>=20` installed on the instance
 - An Aembit Access Policy configured for this SDK flow
 
-### Aembit Access Policy (Required)
+## Aembit Setup
 
 Before running this example, configure an Aembit Access Policy that includes:
 
 - a Client Workload for the EC2 instance identity
-- a Server Workload with a Service Endpoint (`host`, `port`) that the SDK request will target
+- a Server Workload with a Service Endpoint (`host`, `port`) that this example will request
 - an AWS Metadata Service Trust Provider with an Edge SDK Client ID
-- a Credential Provider that returns the requested `AEMBIT_CREDENTIAL_TYPE`
+- a Credential Provider that returns the requested credential type
 
 References:
 
@@ -30,153 +31,97 @@ References:
 - AWS Metadata Service auth setup: <https://docs.aembit.io/api-guide/edge/auth/aws-metadata-service>
 - Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
-Example Server Workload configuration (for this README examples):
+Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
 - Host: `test.example.com`
 - Transport Protocol: `TCP`
-- Port: `443` (TLS selected)
-- Forward to Port: `443` (TLS selected; not used by SDK flow)
-- Authentication Method: `No Authentication` (not used by SDK flow)
+- Port: `443`
 
-## Configure Environment
+## Edit The Example
 
-Copy the example env file and fill in real values:
+Open [`./index.ts`](./index.ts) and update `EXAMPLE_CONFIG`:
+
+- `baseUrl`: your tenant's regional Aembit Edge URL
+- `clientId`: your Edge SDK Client ID from the AWS Metadata Service Trust Provider
+- `serverHost` and `serverPort`: the Service Endpoint from your Server Workload
+- `credentialType`: the credential type returned by your Credential Provider
+- `resourceSet`: optional, only when your tenant flow requires it
+- `printCredentialJson`: set to `true` only when you explicitly want the full credential printed
+
+`serverHost` and `serverPort` must exactly match the Service Endpoint values configured in your Server Workload.
+
+## Build The Bundle
+
+Run from `ts/`:
 
 ```bash
-cp ./examples/aws-imds-ec2/.env.example ./examples/aws-imds-ec2/.env
+npm run build:example:aws-imds-ec2
 ```
 
-Set `AEMBIT_EDGE_BASE_URL` to your tenant's regional Edge hostname by replacing both placeholders:
+This creates:
 
-- `<tenant>`
-- `<region>`
+- `./examples/aws-imds-ec2/dist/index.mjs`
 
-Reference: official Aembit Edge API docs: <https://docs.aembit.io/api-guide/edge/>
-
-Required variables:
-
-- `AEMBIT_EDGE_BASE_URL`
-- `AEMBIT_CLIENT_ID`
-- `AEMBIT_SERVER_HOST`
-- `AEMBIT_SERVER_PORT`
-- `AEMBIT_CREDENTIAL_TYPE`
-
-`AEMBIT_SERVER_HOST` and `AEMBIT_SERVER_PORT` must match the Service Endpoint values configured in your Access Policy's Server Workload.
-
-Optional variables:
-
-- `AEMBIT_RESOURCE_SET_ID`
-- `AEMBIT_PRINT_CREDENTIAL_JSON` (`true`/`false`)
-
-## Run Example
-
-Run these commands from `ts/`.
-
-Path A (recommended): use `.env` directly.
+You can also run the bundled example locally on an EC2 instance with:
 
 ```bash
-npm run example:aws-imds:envfile
+npm run example:aws-imds-ec2
 ```
 
-`--env-file` requires Node `20.6+`.
+## Deploy The Bundle To EC2
 
-Path B: export variables manually, then run.
-
-```bash
-export AEMBIT_EDGE_BASE_URL=https://<tenant>.ec.<region>.aembit.io
-export AEMBIT_CLIENT_ID=your-edge-sdk-client-id
-export AEMBIT_SERVER_HOST=target.example.com
-export AEMBIT_SERVER_PORT=443
-export AEMBIT_CREDENTIAL_TYPE=ApiKey
-
-# Optional:
-# export AEMBIT_RESOURCE_SET_ID=your-resource-set-id
-# export AEMBIT_PRINT_CREDENTIAL_JSON=true
-
-npm run example:aws-imds
-```
-
-This path works on Node `>=20` and does not depend on `--env-file`.
-
-Advanced tuning:
-
-- The default happy path uses `trustProviders.awsMetadataService()` with built-in IMDS timeout/TTL defaults.
-- If you need to tune IMDS timeout or token TTL, use the Trust Provider options in code:
-  - `trustProviders.awsMetadataService({ timeoutMs, tokenTtlSeconds })`
-- `.env.example` includes `AEMBIT_IMDS_TIMEOUT_MS` and `AEMBIT_IMDS_TOKEN_TTL_SECONDS` as template hints for that code-level tuning.
-
-## Copy `ts/` to a Remote VM
-
-From the repository root, use:
+From the repository root, copy the built artifact to your EC2 instance:
 
 ```bash
-./scripts/deploy-ts-to-vm.sh \
+./scripts/deploy-ts-example-bundle-to-vm.sh \
+  --artifact ./ts/examples/aws-imds-ec2/dist/index.mjs \
   --host ec2-xx-xx-xx-xx.compute.amazonaws.com \
   --user ubuntu \
   --key ~/.ssh/your-key.pem \
-  --remote-dir ~/edge-sdks/ts
+  --remote-dir ~/aembit-examples/aws-imds-ec2
 ```
-
-This is useful for EC2 testing of runnable examples and excludes `node_modules`, `dist`, `.env*`, and `.DS_Store`.
-It keeps local `ts/node_modules` and `ts/dist` by default; pass `--clean-local` (or set `DEPLOY_CLEAN_LOCAL=1`) only when you explicitly want local cleanup.
-Because `.env*` is excluded, local example env files are not uploaded to the remote VM.
-
-`DEPLOY_*` variables configure the local deploy script only.
-`AEMBIT_*` variables are runtime inputs for the example on the remote VM.
 
 Using a config file:
 
 ```bash
-cp ./scripts/deploy-ts-to-vm.env.example ./scripts/deploy-ts-to-vm.env
-./scripts/deploy-ts-to-vm.sh --config ./scripts/deploy-ts-to-vm.env
+cp ./scripts/deploy-ts-example-bundle-to-vm.env.example ./scripts/deploy-ts-example-bundle-to-vm.env
+./scripts/deploy-ts-example-bundle-to-vm.sh --config ./scripts/deploy-ts-example-bundle-to-vm.env
 ```
 
-Using environment variables:
+On the EC2 instance:
 
 ```bash
-export DEPLOY_HOST=ec2-xx-xx-xx-xx.compute.amazonaws.com
-export DEPLOY_USER=ubuntu
-export DEPLOY_REMOTE_DIR=~/edge-sdks/ts
-./scripts/deploy-ts-to-vm.sh
-```
-
-After copy, run on the remote VM:
-
-```bash
-cd ~/edge-sdks/ts
-npm install
-npm run build
-cp ./examples/aws-imds-ec2/.env.example ./examples/aws-imds-ec2/.env
-npm run example:aws-imds:envfile
-```
-
-Validate required env entries before running:
-
-```bash
-grep '^AEMBIT_' ./examples/aws-imds-ec2/.env
+cd ~/aembit-examples/aws-imds-ec2
+node index.mjs
 ```
 
 ## Output
 
-The script prints credential metadata and `dataKeys` by default.
+The script first prints a safe authenticated session summary, then prints credential metadata.
 
-Set `AEMBIT_PRINT_CREDENTIAL_JSON=true` to print full credential data.
+By default, the credential output includes:
+
+- `credentialType`
+- `expiresAt`
+- `dataKeys`
+
+If `EXAMPLE_CONFIG.printCredentialJson` is `true`, the script prints the full credential payload instead.
 
 Example successful output:
 
-```text
-Authenticated session: {
-  authenticated: true,
-  expiresAt: '2026-03-10T20:18:09.108Z',
-  trustProviderId: 'aws-metadata-service'
+```json
+{
+  "authenticated": true,
+  "expiresAt": "2026-03-10T20:18:09.108Z",
+  "trustProviderId": "aws-metadata-service"
 }
 {
   "credentialType": "ApiKey",
   "expiresAt": "2026-03-10T19:19:09.2559713Z",
-  "data": {
-    "apiKey": "sekretk3y!"
-  }
+  "dataKeys": [
+    "apiKey"
+  ]
 }
 ```
 
@@ -184,26 +129,26 @@ Authenticated session: {
 
 ### `401` on `/credentials` after successful auth
 
-If `authenticate()` succeeds but credential retrieval returns `401`, verify that `AEMBIT_EDGE_BASE_URL` is the final regional Edge host (no redirect).
+If `authenticate()` succeeds but credential retrieval returns `401`, verify that `baseUrl` is the final regional Edge host and does not redirect.
 
 Example:
 
-- redirected host pattern: `https://<tenant>.ec.<region>.aembit.io`
+- `https://<tenant>.ec.<region>.aembit.io`
 
-Using a base URL that redirects to another host can cause `Authorization` to be dropped on redirect, resulting in `401` for `/credentials`.
+Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
 
-### `200` with `credentialType: "Unknown"` and empty `data`
+### `200` with `credentialType: "Unknown"` and empty `dataKeys`
 
-This indicates that the request reached Edge, but did not match the expected access policy/service request shape.
+This means the request reached Edge but did not match the expected access policy or service request shape.
 
 Verify:
 
-- `AEMBIT_SERVER_HOST` and `AEMBIT_SERVER_PORT`
-- `AEMBIT_CREDENTIAL_TYPE` value for the target provider
-- workload identity mapping for the EC2 instance
-- resource set selection (`AEMBIT_RESOURCE_SET_ID` or tenant default)
+- `serverHost` and `serverPort`
+- `credentialType`
+- EC2 Client Workload matching
+- `resourceSet`, if your tenant flow requires it
 
 ## Security Note
 
 Do not use real secrets in shared logs or screenshots.
-Use `AEMBIT_PRINT_CREDENTIAL_JSON=true` only for controlled testing.
+Enable `printCredentialJson` only for controlled testing.

@@ -1,5 +1,9 @@
 export { EdgeClient } from "./client/edge-client.js";
 export { trustProviders } from "./trust-providers/index.js";
+export {
+  createAwsMetadataServiceTrustProvider,
+  createAwsRoleTrustProvider,
+} from "./trust-providers/index.js";
 export type {
   AwsMetadataServiceTrustProviderOptions,
   AwsRoleTrustProviderOptions,

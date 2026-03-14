@@ -10,6 +10,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./trust-providers/aws-metadata-service": {
+      "types": "./dist/trust-providers/aws-metadata-service.d.ts",
+      "import": "./dist/trust-providers/aws-metadata-service.js"
+    },
+    "./trust-providers/aws-role": {
+      "types": "./dist/trust-providers/aws-role.d.ts",
+      "import": "./dist/trust-providers/aws-role.js"
     }
   },
   "files": [
@@ -20,7 +28,6 @@
   },
   "scripts": {
     "check:node": "node -e \"const major = Number.parseInt(process.versions.node.split('.')[0], 10); if (Number.isNaN(major) || major < 20) { console.error('Node.js >=20 is required. Current:', process.versions.node); process.exit(1); }\"",
-    "check:node:envfile": "node -e \"const [majorRaw, minorRaw] = process.versions.node.split('.'); const major = Number.parseInt(majorRaw, 10); const minor = Number.parseInt(minorRaw, 10); if (Number.isNaN(major) || Number.isNaN(minor) || major < 20 || (major === 20 && minor < 6)) { console.error('Node.js >=20.6 is required for --env-file example commands. Current:', process.versions.node); process.exit(1); }\"",
     "prebuild": "npm run check:node",
     "prelint": "npm run check:node",
     "pretypecheck": "npm run check:node",
@@ -31,8 +38,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "example:aws-imds": "npm run build && node ./examples/aws-imds-ec2/index.mjs",
-    "example:aws-imds:envfile": "npm run build && npm run check:node:envfile && node --env-file=./examples/aws-imds-ec2/.env ./examples/aws-imds-ec2/index.mjs",
+    "build:example:aws-imds-ec2": "npm run build && esbuild ./examples/aws-imds-ec2/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-imds-ec2/dist/index.mjs",
+    "example:aws-imds": "npm run example:aws-imds-ec2",
+    "example:aws-imds-ec2": "npm run build:example:aws-imds-ec2 && node ./examples/aws-imds-ec2/dist/index.mjs",
     "build:example:aws-role-lambda": "npm run build && esbuild ./examples/aws-role-lambda/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-role-lambda/dist/index.mjs",
     "example:aws-role-lambda:zip": "npm run build:example:aws-role-lambda && cd ./examples/aws-role-lambda/dist && zip aws-role-lambda.zip index.mjs"
   },

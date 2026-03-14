@@ -1,5 +1,5 @@
-import { createAwsMetadataServiceTrustProvider } from "../internal/trust-providers/aws-metadata-service.js"
-import { createAwsRoleTrustProvider } from "../internal/trust-providers/aws-role.js"
+import { createAwsMetadataServiceTrustProvider } from "./aws-metadata-service.js"
+import { createAwsRoleTrustProvider } from "./aws-role.js"
 
 /**
  * Built-in Trust Provider factory functions.
@@ -9,5 +9,8 @@ export const trustProviders = {
   awsRole: createAwsRoleTrustProvider
 }
 
-export type { AwsMetadataServiceTrustProviderOptions } from "../internal/trust-providers/aws-metadata-service.js"
-export type { AwsRoleTrustProviderOptions } from "../internal/trust-providers/aws-role.js"
+export { createAwsMetadataServiceTrustProvider } from "./aws-metadata-service.js"
+export { createAwsRoleTrustProvider } from "./aws-role.js"
+
+export type { AwsMetadataServiceTrustProviderOptions } from "./aws-metadata-service.js"
+export type { AwsRoleTrustProviderOptions } from "./aws-role.js"
