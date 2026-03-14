@@ -152,7 +152,7 @@ describe("EdgeClient", () => {
           }
         }
       })),
-      clientDetails: {
+      clientWorkloadDetails: {
         os: {
           environment: {
             CLIENT_WORKLOAD_ID: "lambda-workload-1"
@@ -325,7 +325,7 @@ describe("EdgeClient", () => {
           }
         }
       })),
-      clientDetails: {
+      clientWorkloadDetails: {
         os: {
           environment: {
             CLIENT_WORKLOAD_ID: "lambda-workload-1"
@@ -371,7 +371,7 @@ describe("EdgeClient", () => {
     })
   })
 
-  it("does not allow clientDetails to override Trust Provider identity fields", async () => {
+  it("does not allow clientWorkloadDetails to override Trust Provider identity fields", async () => {
     const fetchMock = vi.fn(async () =>
       new Response(
         JSON.stringify({
@@ -395,7 +395,7 @@ describe("EdgeClient", () => {
           }
         }
       })),
-      clientDetails: {
+      clientWorkloadDetails: {
         aws: {
           stsGetCallerIdentity: {
             headers: { host: "sts.us-west-2.amazonaws.com" },

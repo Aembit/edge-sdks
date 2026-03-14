@@ -223,7 +223,7 @@ export class EdgeClient {
   private async collectIdentity(): Promise<ClientWorkloadDetails> {
     try {
       const identity = await this.config.trustProvider.collectIdentity()
-      return mergeClientWorkloadDetails(identity, this.config.clientDetails)
+      return mergeClientWorkloadDetails(identity, this.config.clientWorkloadDetails)
     } catch (error) {
       if (error instanceof TrustProviderError) {
         throw error

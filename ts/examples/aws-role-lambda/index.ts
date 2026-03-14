@@ -29,11 +29,14 @@ const trustProvider = trustProviders.awsRole({
   region: resolveAwsRegion()
 })
 
+const clientWorkloadDetails = resolveClientWorkloadDetails()
+
 // Create the client once so warm Lambda invocations can reuse it.
 const client = new EdgeClient({
   baseUrl: EXAMPLE_CONFIG.baseUrl,
   clientId: EXAMPLE_CONFIG.clientId,
   trustProvider,
+  clientWorkloadDetails,
   resourceSet: EXAMPLE_CONFIG.resourceSet
 })
 
@@ -86,4 +89,19 @@ function resolveAwsRegion(): string {
   }
 
   return region
+}
+
+function resolveClientWorkloadDetails() {
+  const clientWorkloadId = process.env.CLIENT_WORKLOAD_ID?.trim()
+  if (!clientWorkloadId) {
+    return undefined
+  }
+
+  return {
+    os: {
+      environment: {
+        CLIENT_WORKLOAD_ID: clientWorkloadId
+      }
+    }
+  }
 }

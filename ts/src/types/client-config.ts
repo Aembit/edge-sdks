@@ -24,7 +24,7 @@ export interface EdgeClientConfig {
   /**
    * Optional additional client workload details merged into the payload sent to Edge.
    */
-  clientDetails?: ClientWorkloadDetails;
+  clientWorkloadDetails?: ClientWorkloadDetails;
 
   /**
    * Optional Resource Set value sent with Aembit Edge API requests.

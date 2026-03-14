@@ -55,6 +55,14 @@ Edit [`index.ts`](./index.ts) and replace the placeholder values in `EXAMPLE_CON
 The deployed Lambda runtime should provide `AWS_REGION` automatically.
 For local testing outside Lambda, set `AWS_REGION` or `AWS_DEFAULT_REGION`.
 
+If your Client Workload identification method is `Aembit Client ID`, set the
+Lambda environment variable `CLIENT_WORKLOAD_ID` to the value configured in
+Aembit. The example reads that environment variable and sends it to Edge as
+`client.os.environment.CLIENT_WORKLOAD_ID`.
+
+If your policy does not use `Aembit Client ID`, you do not need to set
+`CLIENT_WORKLOAD_ID`.
+
 ## Build The Lambda Artifact
 
 Run from `ts/`:
@@ -82,6 +90,8 @@ Recommended Lambda settings:
 
 - Runtime: `Node.js 20.x` or newer
 - Handler: `index.handler`
+- Environment variables:
+  - `CLIENT_WORKLOAD_ID` only when your Client Workload uses `Aembit Client ID`
 
 ## Observe The Output
 
@@ -162,6 +172,7 @@ Verify:
 - `serverHost` and `serverPort`
 - `credentialType`
 - Lambda execution role mapping in the Client Workload
+- `CLIENT_WORKLOAD_ID` if your Client Workload identification method is `Aembit Client ID`
 - `resourceSet` if your tenant flow uses it
 
 ## Security Note
