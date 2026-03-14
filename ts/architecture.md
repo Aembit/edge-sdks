@@ -141,6 +141,7 @@ type EdgeClientConfig = {
   baseUrl: string;
   clientId: string;
   trustProvider: TrustProvider;
+  clientWorkloadDetails?: ClientWorkloadDetails;
   resourceSet?: string;
   timeoutMs?: number;
   authExpirySkewMs?: number;
@@ -156,9 +157,32 @@ Required fields:
 
 Optional fields:
 
+- `clientWorkloadDetails`
 - `resourceSet`
 - `authExpirySkewMs` (default `60000`)
 - network and retry configuration
+
+### Client workload detail merge behavior
+
+`EdgeClient` may merge optional `clientWorkloadDetails` into the `client`
+payload sent to `/edge/v1/auth` and `/edge/v1/credentials`.
+
+Merge rules:
+
+- Trust Provider-collected identity is authoritative
+- `clientWorkloadDetails` supplements only missing key paths
+- collisions preserve the Trust Provider value, including explicit `null`
+- nested objects merge recursively when both sides are objects
+
+Example:
+
+- Trust Provider: `aws.stsGetCallerIdentity`
+- caller-supplied details: `os.environment.CLIENT_WORKLOAD_ID`
+- result: both are present in the final `client` payload
+
+This allows additional workload metadata such as `CLIENT_WORKLOAD_ID` to be
+sent alongside attested identity without allowing caller-supplied data to
+override Trust Provider-owned fields.
 
 ### `authenticate()` return model
 

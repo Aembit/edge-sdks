@@ -430,6 +430,64 @@ describe("EdgeClient", () => {
     })
   })
 
+  it("preserves explicit null Trust Provider fields over clientWorkloadDetails", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          accessToken: "token-preserve-null",
+          tokenType: "Bearer",
+          expiresIn: 120
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-east-1.amazonaws.com" },
+            region: "us-east-1"
+          }
+        },
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: null
+          }
+        }
+      })),
+      clientWorkloadDetails: {
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: "lambda-workload-1"
+          }
+        }
+      }
+    })
+
+    await client.authenticate()
+
+    expect(parseRequestBody(fetchMock, 0)).toEqual({
+      clientId: "client-id",
+      client: {
+        aws: {
+          stsGetCallerIdentity: {
+            headers: { host: "sts.us-east-1.amazonaws.com" },
+            region: "us-east-1"
+          }
+        },
+        os: {
+          environment: {
+            CLIENT_WORKLOAD_ID: null
+          }
+        }
+      }
+    })
+  })
+
   it("rejects malformed credential success payload shape", async () => {
     const fetchMock = vi
       .fn()

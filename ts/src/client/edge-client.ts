@@ -264,6 +264,9 @@ function mergeRecords(
       continue
     }
 
+    // Additional client workload details are additive only. Trust Provider
+    // identity remains authoritative for any key path it already populated,
+    // including explicit null values from provider-owned fields.
     if (typeof baseValue === "undefined") {
       merged[key] = overlayValue
     }
