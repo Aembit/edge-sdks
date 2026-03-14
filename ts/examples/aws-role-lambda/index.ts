@@ -3,81 +3,66 @@ import { EdgeClient, trustProviders } from "../../src/index.js"
 /**
  * Minimal AWS Lambda example for the AWS Role Trust Provider.
  *
- * Required env vars:
- * - AEMBIT_EDGE_BASE_URL
- * - AEMBIT_CLIENT_ID
- * - AEMBIT_SERVER_HOST
- * - AEMBIT_SERVER_PORT
- * - AEMBIT_CREDENTIAL_TYPE
+ * What to edit:
+ * - `baseUrl`: your tenant's regional Aembit Edge URL
+ * - `clientId`: your Edge SDK Client ID from the AWS Role Trust Provider
+ * - `serverHost` / `serverPort`: the Service Endpoint from your Server Workload
+ * - `credentialType`: the credential type returned by your Credential Provider
+ * - `resourceSet`: optional, only when your tenant flow requires it
  *
- * Optional env vars:
- * - AEMBIT_RESOURCE_SET_ID
- * - AEMBIT_PRINT_CREDENTIAL_JSON
- * - AEMBIT_AWS_REGION
- * - AWS_REGION
- * - AWS_DEFAULT_REGION
- *
- * The handler reuses a cached EdgeClient across warm Lambda invocations.
- * Credential requests rely on `getCredential()` to authenticate on demand so
- * the SDK can reuse cached bearer tokens when they are still valid.
+ * AWS Lambda usually sets `AWS_REGION` automatically. For local testing, set
+ * either `AWS_REGION` or `AWS_DEFAULT_REGION` before running the bundled file.
  */
-export interface ExampleEvent {
-  serverHost?: string
-  serverPort?: number
-  credentialType?: string
-  resourceSet?: string
+const EXAMPLE_CONFIG = {
+  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  clientId: "your-edge-sdk-client-id",
+  serverHost: "target.example.com",
+  serverPort: 443,
+  credentialType: "ApiKey",
+  resourceSet: undefined as string | undefined,
+  printCredentialJson: false
 }
 
-export interface ExampleCredentialPayload {
-  credentialType: string | null
-  expiresAt: string | null
-  data: Record<string, unknown>
-}
+// Use the built-in AWS Role Trust Provider so the SDK can identify the Lambda
+// execution role by signing an AWS STS GetCallerIdentity request.
+const trustProvider = trustProviders.awsRole({
+  region: resolveAwsRegion()
+})
 
-export interface ExampleResponse {
-  authenticated: true
-  trustProviderId: string
-  credentialType: string | null
-  credentialExpiresAt: string | null
-  dataKeys?: string[]
-  credential?: ExampleCredentialPayload
-}
+// Create the client once so warm Lambda invocations can reuse it.
+const client = new EdgeClient({
+  baseUrl: EXAMPLE_CONFIG.baseUrl,
+  clientId: EXAMPLE_CONFIG.clientId,
+  trustProvider,
+  resourceSet: EXAMPLE_CONFIG.resourceSet
+})
 
-let cachedClient: EdgeClient | undefined
-let cachedTrustProviderId: string | undefined
-
-export async function handler(event: ExampleEvent = {}): Promise<ExampleResponse> {
-  // 1) Reuse the configured client across warm Lambda invocations when possible.
-  const client = getClient()
-
-  // 2) Resolve the target service request from the event first, then env vars.
-  const request = resolveRequestInput(event)
-
-  // 3) Request credentials for the target service. The SDK authenticates only
-  // when needed and can reuse cached bearer tokens for repeated invocations.
+export async function handler() {
+  // 1) Ask Aembit for credentials for the target service. The SDK handles
+  // authentication automatically and reuses cached tokens when possible.
   const credential = await client.getCredential(
     {
       server: {
-        host: request.serverHost,
-        port: request.serverPort
+        host: EXAMPLE_CONFIG.serverHost,
+        port: EXAMPLE_CONFIG.serverPort
       },
-      credentialType: request.credentialType
+      credentialType: EXAMPLE_CONFIG.credentialType
     },
     {
-      resourceSet: request.resourceSet
+      resourceSet: EXAMPLE_CONFIG.resourceSet
     }
   )
 
   const baseResponse = {
     authenticated: true as const,
-    trustProviderId: getTrustProviderId(),
+    trustProviderId: trustProvider.id,
     credentialType: credential.credentialType ?? null,
     credentialExpiresAt: credential.expiresAt ?? null
   }
 
-  // 4) Return safe metadata by default, or the full credential only when the
-  // caller explicitly opts in for controlled testing.
-  if (parseOptionalBoolean("AEMBIT_PRINT_CREDENTIAL_JSON", false)) {
+  // 2) Return safe metadata by default. Enable full credential output only for
+  // controlled testing when you explicitly want to inspect the credential data.
+  if (EXAMPLE_CONFIG.printCredentialJson) {
     return {
       ...baseResponse,
       credential: {
@@ -94,144 +79,10 @@ export async function handler(event: ExampleEvent = {}): Promise<ExampleResponse
   }
 }
 
-function getClient(): EdgeClient {
-  if (cachedClient) {
-    return cachedClient
-  }
-
-  // Resolve the Trust Provider once so the same client can be reused by
-  // subsequent warm invocations in the same Lambda execution environment.
-  const trustProvider = trustProviders.awsRole({
-    region: resolveAwsRegion()
-  })
-  cachedTrustProviderId = trustProvider.id
-
-  cachedClient = new EdgeClient({
-    baseUrl: getRequiredEnv("AEMBIT_EDGE_BASE_URL"),
-    clientId: getRequiredEnv("AEMBIT_CLIENT_ID"),
-    trustProvider,
-    resourceSet: getOptionalEnv("AEMBIT_RESOURCE_SET_ID")
-  })
-
-  return cachedClient
-}
-
-function getTrustProviderId(): string {
-  if (!cachedTrustProviderId) {
-    throw new Error("Trust Provider id is unavailable before client initialization")
-  }
-
-  return cachedTrustProviderId
-}
-
-function resolveRequestInput(event: ExampleEvent): {
-  serverHost: string
-  serverPort: number
-  credentialType: string
-  resourceSet?: string
-} {
-  return {
-    serverHost: getOptionalString(event.serverHost) ?? getRequiredEnv("AEMBIT_SERVER_HOST"),
-    serverPort: parsePortValue(event.serverPort, "event.serverPort")
-      ?? parseRequiredPort("AEMBIT_SERVER_PORT"),
-    credentialType:
-      getOptionalString(event.credentialType) ?? getRequiredEnv("AEMBIT_CREDENTIAL_TYPE"),
-    resourceSet: getOptionalString(event.resourceSet) ?? getOptionalEnv("AEMBIT_RESOURCE_SET_ID")
-  }
-}
-
-function getRequiredEnv(name: string): string {
-  const value = getOptionalEnv(name)
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`)
-  }
-
-  return value
-}
-
-function parseRequiredPort(name: string): number {
-  const parsed = parsePortValue(getRequiredEnv(name), name)
-  if (typeof parsed !== "number") {
-    throw new Error(`${name} must be an integer between 1 and 65535`)
-  }
-
-  return parsed
-}
-
-function getOptionalEnv(name: string): string | undefined {
-  const value = process.env[name]
-  return getOptionalString(value)
-}
-
-function getOptionalString(value: unknown): string | undefined {
-  if (typeof value !== "string") {
-    return undefined
-  }
-
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : undefined
-}
-
-function parsePortValue(value: unknown, label: string): number | undefined {
-  if (typeof value === "undefined") {
-    return undefined
-  }
-
-  if (typeof value === "number") {
-    if (Number.isInteger(value) && value >= 1 && value <= 65535) {
-      return value
-    }
-
-    throw new Error(`${label} must be an integer between 1 and 65535`)
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim()
-    if (trimmed.length === 0) {
-      return undefined
-    }
-
-    if (!/^[0-9]+$/.test(trimmed)) {
-      throw new Error(`${label} must be an integer between 1 and 65535`)
-    }
-
-    const parsed = Number.parseInt(trimmed, 10)
-    if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 65535) {
-      return parsed
-    }
-  }
-
-  throw new Error(`${label} must be an integer between 1 and 65535`)
-}
-
-function parseOptionalBoolean(name: string, defaultValue: boolean): boolean {
-  const value = getOptionalEnv(name)
-  if (!value) {
-    return defaultValue
-  }
-
-  const normalized = value.toLowerCase()
-  if (normalized === "1" || normalized === "true" || normalized === "yes") {
-    return true
-  }
-
-  if (normalized === "0" || normalized === "false" || normalized === "no") {
-    return false
-  }
-
-  throw new Error(`${name} must be one of: true/false, 1/0, yes/no`)
-}
-
 function resolveAwsRegion(): string {
-  const region =
-    getOptionalEnv("AEMBIT_AWS_REGION")
-    ?? getOptionalEnv("AWS_REGION")
-    ?? getOptionalEnv("AWS_DEFAULT_REGION")
-
+  const region = process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION
   if (!region) {
-    throw new Error(
-      "Missing AWS region. Set AEMBIT_AWS_REGION, AWS_REGION, or AWS_DEFAULT_REGION."
-    )
+    throw new Error("Missing AWS region. Set AWS_REGION or AWS_DEFAULT_REGION.")
   }
 
   return region
