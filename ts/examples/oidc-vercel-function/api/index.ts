@@ -1,4 +1,5 @@
 import { EdgeClient } from "../../../src/index.js"
+import { TrustProviderError } from "../../../src/internal/protocol/errors.js"
 import { createOidcIdTokenTrustProvider } from "../../../src/trust-providers/oidc-id-token.js"
 
 /**
@@ -26,6 +27,8 @@ const EXAMPLE_CONFIG = {
 }
 
 export default {
+  // Vercel's current file-based Functions docs use `export default { fetch() }`
+  // as the handler shape for Request/Response-style functions under `api/`.
   async fetch(request: Request) {
     // Build the Trust Provider and client inside the handler because the OIDC
     // token is request-scoped in production Vercel Functions.
@@ -89,7 +92,11 @@ function resolveOidcIdentityToken(request: Request): string {
     return envToken
   }
 
-  throw new Error(
+  throw new TrustProviderError(
     "Missing Vercel OIDC token. Use the x-vercel-oidc-token request header in production or set VERCEL_OIDC_TOKEN for local development."
+    ,
+    {
+      retryable: false
+    }
   )
 }
