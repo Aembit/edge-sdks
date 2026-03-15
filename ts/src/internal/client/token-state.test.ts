@@ -73,7 +73,15 @@ describe("token-state", () => {
         resourceSet: "rs-1",
         retryKey: "retry-1"
       })
-    ).toBe(JSON.stringify(["rs-1", "retry-1"]));
+    ).toBe(JSON.stringify(["rs-1", null, "retry-1"]));
+
+    expect(
+      serializeAuthSingleFlightKey({
+        resourceSet: "rs-1",
+        authCacheKey: "oidc:cache-a",
+        retryKey: "retry-1"
+      })
+    ).toBe(JSON.stringify(["rs-1", "oidc:cache-a", "retry-1"]));
   });
 
   it("normalizes retryable status codes for effective retry key", () => {

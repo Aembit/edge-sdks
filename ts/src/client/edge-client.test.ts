@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { AuthError, CredentialError, TrustProviderError } from "../internal/protocol/errors.js"
-import type { TrustProvider } from "../types/trust-provider.js"
+import type {
+  CollectedTrustProviderIdentity,
+  TrustProvider
+} from "../types/trust-provider.js"
 import { EdgeClient } from "./edge-client.js"
 
 function asFetchMock(
@@ -78,12 +81,14 @@ function getRequestPath(fetchMock: ReturnType<typeof vi.fn>, callIndex: number):
 }
 
 function createTrustProvider(
-  collectIdentity: () => Promise<Record<string, unknown>>
+  collectIdentity: () => Promise<Record<string, unknown>>,
+  collectIdentityWithMetadata?: () => Promise<CollectedTrustProviderIdentity>
 ): TrustProvider {
   return {
     id: "tp-1",
     kind: "aws_metadata_service",
-    collectIdentity
+    collectIdentity,
+    collectIdentityWithMetadata
   }
 }
 
@@ -630,6 +635,160 @@ describe("EdgeClient", () => {
       "/edge/v1/credentials",
       "/edge/v1/credentials"
     ])
+  })
+
+  it("does not reuse cached auth token when trust-provider auth cache key changes", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-a",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            credentialType: "ApiKey",
+            expiresAt: null,
+            data: { apiKey: "a" }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-b",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            credentialType: "ApiKey",
+            expiresAt: null,
+            data: { apiKey: "b" }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const collectedIdentities: CollectedTrustProviderIdentity[] = [
+      {
+        client: {
+          oidc: {
+            identityToken: "token-source-a"
+          }
+        },
+        authCacheKey: "oidc:cache-a"
+      },
+      {
+        client: {
+          oidc: {
+            identityToken: "token-source-b"
+          }
+        },
+        authCacheKey: "oidc:cache-b"
+      }
+    ]
+
+    const collectIdentityWithMetadata = vi.fn(async () => {
+      const identity = collectedIdentities.shift()
+      if (!identity) {
+        throw new Error("No more collected identities available")
+      }
+
+      return identity
+    })
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(
+        async () => ({
+          oidc: {
+            identityToken: "unused"
+          }
+        }),
+        collectIdentityWithMetadata
+      )
+    })
+
+    const firstCredential = await client.getCredential({
+      server: {
+        host: "db.internal",
+        port: 443
+      },
+      credentialType: "ApiKey"
+    })
+    const secondCredential = await client.getCredential({
+      server: {
+        host: "db.internal",
+        port: 443
+      },
+      credentialType: "ApiKey"
+    })
+
+    expect(firstCredential.data).toEqual({ apiKey: "a" })
+    expect(secondCredential.data).toEqual({ apiKey: "b" })
+    expect(fetchMock.mock.calls.map((_, idx) => getRequestPath(fetchMock, idx))).toEqual([
+      "/edge/v1/auth",
+      "/edge/v1/credentials",
+      "/edge/v1/auth",
+      "/edge/v1/credentials"
+    ])
+    expect(parseRequestBody(fetchMock, 0)).toEqual({
+      clientId: "client-id",
+      client: {
+        oidc: {
+          identityToken: "token-source-a"
+        }
+      }
+    })
+    expect(parseRequestBody(fetchMock, 1)).toEqual({
+      client: {
+        oidc: {
+          identityToken: "token-source-a"
+        }
+      },
+      server: {
+        host: "db.internal",
+        port: 443,
+        transportProtocol: "TCP"
+      },
+      credentialType: "ApiKey"
+    })
+    expect(parseRequestBody(fetchMock, 2)).toEqual({
+      clientId: "client-id",
+      client: {
+        oidc: {
+          identityToken: "token-source-b"
+        }
+      }
+    })
+    expect(parseRequestBody(fetchMock, 3)).toEqual({
+      client: {
+        oidc: {
+          identityToken: "token-source-b"
+        }
+      },
+      server: {
+        host: "db.internal",
+        port: 443,
+        transportProtocol: "TCP"
+      },
+      credentialType: "ApiKey"
+    })
+    expect(collectIdentityWithMetadata).toHaveBeenCalledTimes(2)
   })
 
   it("uses auth expiry skew and refreshes token before edge expiry", async () => {

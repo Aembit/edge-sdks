@@ -22,7 +22,10 @@ import type { AuthSession } from "../types/auth.js"
 import type { EdgeClientConfig } from "../types/client-config.js"
 import type { CredentialResult, GetCredentialInput, GetCredentialOptions } from "../types/credential.js"
 import type { RetryPolicyOverride } from "../types/retry.js"
-import type { ClientWorkloadDetails } from "../types/trust-provider.js"
+import type {
+  ClientWorkloadDetails,
+  CollectedTrustProviderIdentity
+} from "../types/trust-provider.js"
 import type { CachedTokenState } from "../internal/client/index.js"
 
 /**
@@ -54,11 +57,13 @@ export class EdgeClient {
    */
   async authenticate(): Promise<AuthSession> {
     const effectiveResourceSet = resolveEffectiveResourceSet(this.config.resourceSet, undefined)
+    const identity = await this.collectIdentityWithMetadata()
     const tokenState = await this.authenticateWithSingleFlight(
       {},
       true,
       effectiveResourceSet,
-      undefined
+      undefined,
+      identity
     )
     return {
       authenticated: true,
@@ -98,10 +103,14 @@ export class EdgeClient {
       this.config.resourceSet,
       options.resourceSet
     )
-    const bearerToken = await this.getValidAccessToken(options, effectiveResourceSet)
-    const identity = await this.collectIdentity()
+    const identity = await this.collectIdentityWithMetadata()
+    const bearerToken = await this.getValidAccessToken(
+      options,
+      effectiveResourceSet,
+      identity
+    )
     const body = {
-      client: identity,
+      client: identity.client,
       server,
       credentialType: input.credentialType
     }
@@ -120,12 +129,14 @@ export class EdgeClient {
 
   private async getValidAccessToken(
     options: GetCredentialOptions,
-    effectiveResourceSet?: string
+    effectiveResourceSet: string | undefined,
+    identity: CollectedTrustProviderIdentity
   ): Promise<string> {
     const currentState = this.tokenState
     if (
       isTokenValid(currentState, Date.now(), this.authExpirySkewMs) &&
-      currentState.resourceSet === effectiveResourceSet
+      currentState.resourceSet === effectiveResourceSet &&
+      currentState.authCacheKey === identity.authCacheKey
     ) {
       return currentState.accessToken
     }
@@ -137,7 +148,8 @@ export class EdgeClient {
       },
       false,
       effectiveResourceSet,
-      options.retry
+      options.retry,
+      identity
     )
     return nextState.accessToken
   }
@@ -146,19 +158,22 @@ export class EdgeClient {
     options: { resourceSet?: string; retry?: EdgeClientConfig["retry"] },
     force: boolean,
     expectedResourceSet?: string,
-    expectedRetry?: RetryPolicyOverride
+    expectedRetry?: RetryPolicyOverride,
+    identity?: CollectedTrustProviderIdentity
   ): Promise<CachedTokenState> {
     const currentState = this.tokenState
     if (
       !force &&
       isTokenValid(currentState, Date.now(), this.authExpirySkewMs) &&
-      currentState.resourceSet === expectedResourceSet
+      currentState.resourceSet === expectedResourceSet &&
+      currentState.authCacheKey === identity?.authCacheKey
     ) {
       return currentState
     }
 
     const key = serializeAuthSingleFlightKey({
       resourceSet: expectedResourceSet,
+      authCacheKey: identity?.authCacheKey,
       retryKey: serializeEffectiveRetryPolicyKey(this.config.retry, expectedRetry)
     })
     const inFlight = this.inFlightAuthByKey.get(key)
@@ -166,7 +181,7 @@ export class EdgeClient {
       return inFlight
     }
 
-    const request = this.runAuthentication(options, expectedResourceSet)
+    const request = this.runAuthentication(options, expectedResourceSet, identity)
     this.inFlightAuthByKey.set(key, request)
 
     try {
@@ -182,14 +197,15 @@ export class EdgeClient {
     resourceSet?: string
     retry?: EdgeClientConfig["retry"]
   },
-    expectedResourceSet?: string
+    expectedResourceSet?: string,
+    identity?: CollectedTrustProviderIdentity
   ): Promise<CachedTokenState> {
     try {
-      const identity = await this.collectIdentity()
+      const collectedIdentity = identity ?? (await this.collectIdentityWithMetadata())
       const response = await this.api.auth(
         {
           clientId: this.config.clientId,
-          client: identity
+          client: collectedIdentity.client
         },
         {
           resourceSet: options.resourceSet,
@@ -203,7 +219,8 @@ export class EdgeClient {
       const tokenState: CachedTokenState = {
         accessToken,
         expiresAtMs,
-        resourceSet: resolveEffectiveResourceSet(this.config.resourceSet, options.resourceSet)
+        resourceSet: resolveEffectiveResourceSet(this.config.resourceSet, options.resourceSet),
+        authCacheKey: collectedIdentity.authCacheKey
       }
       this.tokenState = tokenState
       return tokenState
@@ -221,9 +238,23 @@ export class EdgeClient {
   }
 
   private async collectIdentity(): Promise<ClientWorkloadDetails> {
+    const identity = await this.collectIdentityWithMetadata()
+    return identity.client
+  }
+
+  private async collectIdentityWithMetadata(): Promise<CollectedTrustProviderIdentity> {
     try {
-      const identity = await this.config.trustProvider.collectIdentity()
-      return mergeClientWorkloadDetails(identity, this.config.clientWorkloadDetails)
+      const collected =
+        typeof this.config.trustProvider.collectIdentityWithMetadata === "function"
+          ? await this.config.trustProvider.collectIdentityWithMetadata()
+          : {
+              client: await this.config.trustProvider.collectIdentity()
+            }
+
+      return {
+        client: mergeClientWorkloadDetails(collected.client, this.config.clientWorkloadDetails),
+        authCacheKey: collected.authCacheKey
+      }
     } catch (error) {
       if (error instanceof TrustProviderError) {
         throw error

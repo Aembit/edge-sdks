@@ -1,7 +1,11 @@
 import { TrustProviderError } from "../protocol/errors.js"
 import { executeWithRetry } from "../protocol/retry.js"
 import type { RetryPolicyOverride } from "../../types/retry.js"
-import type { ClientWorkloadDetails, TrustProvider } from "../../types/trust-provider.js"
+import type {
+  ClientWorkloadDetails,
+  CollectedTrustProviderIdentity,
+  TrustProvider
+} from "../../types/trust-provider.js"
 
 const DEFAULT_PROVIDER_ID = "oidc-id-token"
 
@@ -56,6 +60,11 @@ class OidcIdTokenTrustProvider implements TrustProvider {
    * `oidc.identityToken`.
    */
   async collectIdentity(): Promise<ClientWorkloadDetails> {
+    const identity = await this.collectIdentityWithMetadata()
+    return identity.client
+  }
+
+  async collectIdentityWithMetadata(): Promise<CollectedTrustProviderIdentity> {
     return executeWithRetry(
       async () => this.collectIdentityOnce(),
       {
@@ -66,13 +75,17 @@ class OidcIdTokenTrustProvider implements TrustProvider {
     )
   }
 
-  private async collectIdentityOnce(): Promise<ClientWorkloadDetails> {
+  private async collectIdentityOnce(): Promise<CollectedTrustProviderIdentity> {
     const identityToken = await resolveIdentityToken(this.identityToken)
+    const authCacheKey = await buildAuthCacheKey(identityToken)
 
     return {
-      oidc: {
-        identityToken
-      }
+      client: {
+        oidc: {
+          identityToken
+        }
+      },
+      authCacheKey
     }
   }
 }
@@ -127,4 +140,12 @@ async function resolveIdentityToken(source: IdentityTokenSource | undefined): Pr
       }
     )
   }
+}
+
+async function buildAuthCacheKey(identityToken: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", encoder.encode(identityToken))
+  const bytes = new Uint8Array(digest)
+  const hex = Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("")
+  return `oidc:${hex}`
 }

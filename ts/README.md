@@ -78,6 +78,12 @@ Use `trustProviders` for convenience when bundle size is not a concern.
 - Cross-language architecture: `docs/architecture.md`
 - Official Aembit Edge API docs (canonical API semantics): <https://docs.aembit.io/api-guide/edge/>
 
+Caching note:
+
+- `EdgeClient` caches the bearer token from `/edge/v1/auth` in memory
+- the SDK does not cache credentials returned by `/edge/v1/credentials`
+- see `ts/architecture.md` for the current caching model, including OIDC auth-session scoping
+
 ## Local Development
 
 Run from `ts/`:

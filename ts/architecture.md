@@ -318,12 +318,87 @@ Per-client in-memory token state:
 - apply expiry skew before treating token as valid (default `60s`)
 - use a single in-flight authentication promise to prevent duplicate concurrent auth calls
 - allow caller override of expiry skew through client configuration
+- scope auth-session reuse by:
+  - `resourceSet`
+  - Trust Provider `authCacheKey` when the provider supplies one
 
 Suggested internal model:
 
 - `TokenManager` owned by each `EdgeClient` instance
 - `getValidToken()` used by `getCredential()` path
 - explicit invalidation on unrecoverable auth failures
+
+## Caching Behavior
+
+This section describes what the SDK caches today in plain terms.
+
+### Authentication token caching
+
+`EdgeClient` caches the Aembit bearer token returned by `/edge/v1/auth` in
+memory.
+
+Current behavior:
+
+- the cache is per `EdgeClient` instance
+- the cached token is reused until it expires
+- expiry handling uses the configured auth-expiry skew (default `60s`)
+- auth-session reuse is scoped by `resourceSet`
+- auth-session reuse is also scoped by Trust Provider `authCacheKey` when the
+  provider supplies one
+
+Example:
+
+- AWS IMDS and AWS Role identities are usually stable for the life of the
+  client instance, so the cached auth session can normally be reused
+- OIDC token sources may be request-scoped, so the OIDC Trust Provider supplies
+  an `authCacheKey` derived from the resolved token to prevent reuse across
+  different OIDC identities
+
+### Credential caching
+
+The SDK does not cache credentials returned by `/edge/v1/credentials`.
+
+Current behavior:
+
+- every `getCredential()` call sends a fresh `/edge/v1/credentials` request
+- the SDK reuses the cached auth session when valid, but it does not cache the
+  credential payload itself
+
+This keeps credential handling simple and avoids making assumptions about
+credential lifetime, rotation semantics, or credential format.
+
+### Trust Provider identity caching
+
+The SDK does not implement a general cache for Trust Provider identity
+documents or tokens.
+
+Current behavior:
+
+- Trust Providers may collect identity during authentication and credential
+  retrieval flows
+- the SDK may reuse the resulting auth session, but it does not keep a generic
+  reusable cache of:
+  - IMDS instance identity documents
+  - AWS STS signed identity payloads
+  - OIDC identity tokens
+
+One exception:
+
+- a Trust Provider may supply `authCacheKey` metadata so the SDK can decide
+  whether an existing auth session is safe to reuse
+- for OIDC, this is currently a fingerprint of the resolved identity token
+- the fingerprint is used only for auth-session reuse scoping; it is not a
+  general identity cache
+
+### Operational guidance
+
+- Reusing one `EdgeClient` instance is appropriate for stable workload
+  identities such as EC2 IMDS or Lambda execution-role identity.
+- Request-scoped identity sources are safe only when the Trust Provider
+  supplies cache metadata that scopes auth-session reuse correctly.
+- If an application needs credential caching above `/edge/v1/credentials`, that
+  should currently be implemented in the application layer rather than assumed
+  from the SDK.
 
 ## Retry Policy
 
