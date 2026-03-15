@@ -70,6 +70,10 @@ class AwsMetadataServiceTrustProvider implements TrustProvider {
     this.fetchImpl = options.fetchImpl ?? fetch
   }
 
+  getIdentitySingleFlightKey(): string {
+    return `${this.kind}:${this.id}`
+  }
+
   async collectIdentity(): Promise<ClientWorkloadDetails> {
     const effectiveRetryPolicy = mergeRetryPolicy(this.retry)
 

@@ -37,6 +37,7 @@ export class EdgeClient {
   private readonly authExpirySkewMs: number
   private tokenState?: CachedTokenState
   private readonly inFlightAuthByKey = new Map<string, Promise<CachedTokenState>>()
+  private readonly inFlightIdentityByKey = new Map<string, Promise<CollectedTrustProviderIdentity>>()
 
   constructor(config: EdgeClientConfig) {
     this.config = config
@@ -242,7 +243,44 @@ export class EdgeClient {
     return identity.client
   }
 
-  private async collectIdentityWithMetadata(): Promise<CollectedTrustProviderIdentity> {
+  private collectIdentityWithMetadata(): Promise<CollectedTrustProviderIdentity> {
+    let singleFlightKey: string | undefined
+    try {
+      singleFlightKey = this.config.trustProvider.getIdentitySingleFlightKey?.()
+    } catch (error) {
+      if (error instanceof TrustProviderError) {
+        throw error
+      }
+
+      throw new TrustProviderError(
+        `Trust Provider '${this.config.trustProvider.id}' failed to collect identity`,
+        {
+          retryable: false,
+          cause: error
+        }
+      )
+    }
+
+    if (!singleFlightKey) {
+      return this.collectIdentityWithMetadataOnce()
+    }
+
+    const inFlight = this.inFlightIdentityByKey.get(singleFlightKey)
+    if (inFlight) {
+      return inFlight
+    }
+
+    const request = this.collectIdentityWithMetadataOnce()
+    this.inFlightIdentityByKey.set(singleFlightKey, request)
+
+    return request.finally(() => {
+      if (this.inFlightIdentityByKey.get(singleFlightKey) === request) {
+        this.inFlightIdentityByKey.delete(singleFlightKey)
+      }
+    })
+  }
+
+  private async collectIdentityWithMetadataOnce(): Promise<CollectedTrustProviderIdentity> {
     try {
       const collected =
         typeof this.config.trustProvider.collectIdentityWithMetadata === "function"

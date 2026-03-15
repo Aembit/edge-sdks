@@ -82,13 +82,15 @@ function getRequestPath(fetchMock: ReturnType<typeof vi.fn>, callIndex: number):
 
 function createTrustProvider(
   collectIdentity: () => Promise<Record<string, unknown>>,
-  collectIdentityWithMetadata?: () => Promise<CollectedTrustProviderIdentity>
+  collectIdentityWithMetadata?: () => Promise<CollectedTrustProviderIdentity>,
+  getIdentitySingleFlightKey?: () => string | undefined
 ): TrustProvider {
   return {
     id: "tp-1",
     kind: "aws_metadata_service",
     collectIdentity,
-    collectIdentityWithMetadata
+    collectIdentityWithMetadata,
+    getIdentitySingleFlightKey
   }
 }
 
@@ -791,6 +793,101 @@ describe("EdgeClient", () => {
     expect(collectIdentityWithMetadata).toHaveBeenCalledTimes(2)
   })
 
+  it("reuses in-flight stable identity collection across concurrent credential requests", async () => {
+    let resolveIdentity:
+      | ((identity: CollectedTrustProviderIdentity) => void)
+      | undefined
+    const identityPromise = new Promise<CollectedTrustProviderIdentity>((resolve) => {
+      resolveIdentity = resolve
+    })
+
+    const collectIdentityWithMetadata = vi.fn(() => identityPromise)
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-shared",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockImplementation(async () =>
+        new Response(
+          JSON.stringify({
+            credentialType: "ApiKey",
+            expiresAt: null,
+            data: { apiKey: "shared" }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(
+        async () => ({
+          aws: {
+            instanceIdentityDocument: "unused"
+          }
+        }),
+        collectIdentityWithMetadata,
+        () => "stable:tp-1"
+      )
+    })
+
+    const firstRequest = client.getCredential({
+      server: {
+        host: "db.internal",
+        port: 443
+      },
+      credentialType: "ApiKey"
+    })
+    const secondRequest = client.getCredential({
+      server: {
+        host: "db.internal",
+        port: 443
+      },
+      credentialType: "ApiKey"
+    })
+
+    expect(collectIdentityWithMetadata).toHaveBeenCalledTimes(1)
+    resolveIdentity?.({
+      client: {
+        aws: {
+          instanceIdentityDocument: "doc"
+        }
+      },
+      authCacheKey: "aws:stable"
+    })
+
+    const [firstCredential, secondCredential] = await Promise.all([
+      firstRequest,
+      secondRequest
+    ])
+
+    expect(firstCredential.data).toEqual({ apiKey: "shared" })
+    expect(secondCredential.data).toEqual({ apiKey: "shared" })
+    expect(fetchMock.mock.calls.map((_, idx) => getRequestPath(fetchMock, idx))).toEqual([
+      "/edge/v1/auth",
+      "/edge/v1/credentials",
+      "/edge/v1/credentials"
+    ])
+    expect(parseRequestBody(fetchMock, 0)).toEqual({
+      clientId: "client-id",
+      client: {
+        aws: {
+          instanceIdentityDocument: "doc"
+        }
+      }
+    })
+    expect(collectIdentityWithMetadata).toHaveBeenCalledTimes(1)
+  })
+
   it("uses auth expiry skew and refreshes token before edge expiry", async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date("2026-03-09T12:00:00Z"))
@@ -931,6 +1028,39 @@ describe("EdgeClient", () => {
       trustProvider: createTrustProvider(async () => {
         throw new Error("identity unavailable")
       })
+    })
+
+    await expect(client.authenticate()).rejects.toBeInstanceOf(TrustProviderError)
+    await expect(client.authenticate()).rejects.toMatchObject({
+      kind: "trust_provider",
+      retryable: false
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("wraps identity single-flight key failures as TrustProviderError", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          accessToken: "unused",
+          tokenType: "Bearer",
+          expiresIn: 3600
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(
+        async () => ({ aws: { instanceIdentityDocument: "doc" } }),
+        undefined,
+        () => {
+          throw new Error("single-flight key unavailable")
+        }
+      )
     })
 
     await expect(client.authenticate()).rejects.toBeInstanceOf(TrustProviderError)

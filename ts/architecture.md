@@ -354,6 +354,28 @@ Example:
   an `authCacheKey` derived from the resolved token to prevent reuse across
   different OIDC identities
 
+### In-flight de-duplication
+
+`EdgeClient` also de-duplicates concurrent work inside a single client
+instance.
+
+Current behavior:
+
+- concurrent `/edge/v1/auth` requests with the same effective `resourceSet`,
+  retry policy, and Trust Provider `authCacheKey` share one in-flight auth
+  request
+- concurrent Trust Provider identity collection can also share one in-flight
+  collection, but only when the Trust Provider declares that its identity is
+  stable for the lifetime of the client instance
+
+Examples:
+
+- AWS IMDS and AWS Role identity collection are stable per client instance, so
+  concurrent calls can share the same in-flight identity collection
+- OIDC with a static string token is also stable per client instance
+- OIDC with a function token source is treated as request-scoped, so identity
+  collection is not single-flighted across concurrent requests
+
 ### Credential caching
 
 The SDK does not cache credentials returned by `/edge/v1/credentials`.

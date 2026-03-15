@@ -53,6 +53,10 @@ class OidcIdTokenTrustProvider implements TrustProvider {
     this.retry = options?.retry
   }
 
+  getIdentitySingleFlightKey(): string | undefined {
+    return typeof this.identityToken === "string" ? `${this.kind}:${this.id}` : undefined
+  }
+
   /**
    * Collects OIDC ID token identity data for `/edge/v1/auth`.
    *

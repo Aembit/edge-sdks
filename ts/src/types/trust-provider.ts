@@ -45,6 +45,13 @@ export interface TrustProvider {
   collectIdentity(): Promise<ClientWorkloadDetails>;
 
   /**
+   * Optionally return a stable key that allows `EdgeClient` to de-duplicate
+   * concurrent identity collection for providers whose identity is stable for
+   * the lifetime of the client instance.
+   */
+  getIdentitySingleFlightKey?(): string | undefined;
+
+  /**
    * Optionally collect provider-specific identity data together with metadata
    * that scopes auth-session reuse for dynamic identities.
    */
