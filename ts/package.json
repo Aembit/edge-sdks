@@ -18,6 +18,10 @@
     "./trust-providers/aws-role": {
       "types": "./dist/trust-providers/aws-role.d.ts",
       "import": "./dist/trust-providers/aws-role.js"
+    },
+    "./trust-providers/oidc-id-token": {
+      "types": "./dist/trust-providers/oidc-id-token.d.ts",
+      "import": "./dist/trust-providers/oidc-id-token.js"
     }
   },
   "files": [
