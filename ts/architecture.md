@@ -13,7 +13,7 @@ v1 baseline:
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
 - canonical API docs: `https://docs.aembit.io/api-guide/edge/`
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
-- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2) and AWS Role
+- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, and OIDC ID Token
 - test framework: Vitest with colocated tests (`*.test.ts`)
 
 ## Layer Implementation
@@ -66,6 +66,9 @@ Initial implementations:
   - builds `client.aws.stsGetCallerIdentity.{headers,region}` for `/edge/v1/auth`
 - `aws-role-signer.ts`
   - builds SigV4-signed AWS STS `GetCallerIdentity` request headers for AWS Role identity payloads
+- `oidc-id-token.ts`
+  - resolves a caller-supplied OIDC identity token source
+  - builds `client.oidc.identityToken` for `/edge/v1/auth`
 
 Design notes:
 
@@ -109,6 +112,77 @@ Identity payload contract returned by `collectIdentity()`:
 ```
 
 This matches the `AwsDTO.stsGetCallerIdentity` schema in `spec/openapi/api-1.yaml`.
+
+### OIDC ID Token Trust Provider Contract
+
+This section defines the v1 contract for the OIDC ID Token Trust Provider.
+
+Public factory target:
+
+```ts
+trustProviders.oidcIdToken(options)
+```
+
+Planned options contract:
+
+```ts
+type OidcIdTokenTrustProviderOptions = {
+  id?: string;
+  identityToken: string | (() => string | Promise<string>);
+  retry?: Partial<RetryPolicy>;
+};
+```
+
+`identityToken` is caller-supplied by design.
+
+The SDK does not attempt to discover OIDC tokens automatically because token
+retrieval is runtime-specific. Depending on the platform, the token may come
+from a request header, an environment variable, a metadata endpoint, or a
+platform SDK call. The application is therefore responsible for providing the
+raw token value or a lazy token source, and the Trust Provider is responsible
+for sending it in the Aembit request shape.
+
+Examples:
+
+```ts
+createOidcIdTokenTrustProvider({
+  identityToken: process.env.VERCEL_OIDC_TOKEN ?? ""
+})
+```
+
+```ts
+createOidcIdTokenTrustProvider({
+  identityToken: () => request.headers.get("x-vercel-oidc-token") ?? ""
+})
+```
+
+```ts
+createOidcIdTokenTrustProvider({
+  identityToken: async () => await getPlatformOidcToken()
+})
+```
+
+Identity payload contract returned by `collectIdentity()`:
+
+```ts
+{
+  oidc: {
+    identityToken: string;
+  };
+}
+```
+
+This matches the `ClientWorkloadDetails.oidc -> IdentityTokenAttestationDTO`
+schema in `spec/openapi/api-1.yaml`.
+
+Roadmap note:
+
+- `oidc`, `github`, `terraform`, and `gitlab` all use
+  `IdentityTokenAttestationDTO`
+- add a shared internal abstraction for JWT identity-token-based Trust Providers
+  when those additional providers are implemented
+- keep `gcp` separate even though it overlaps on `identityToken`, because
+  `GcpAttestationDTO` also supports `instanceDocument`
 
 ### 3) Developer Client Layer (`ts/src/client`)
 
