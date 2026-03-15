@@ -105,6 +105,7 @@ Current runnable examples:
 
 - `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
 - `ts/examples/aws-role-lambda/` for AWS Lambda + AWS Role end-to-end validation
+- `ts/examples/oidc-vercel-function/` for Vercel Functions + OIDC ID Token end-to-end validation
 
 ## Testing
 
@@ -120,10 +121,13 @@ Run from `ts/`:
 - `npm run example:aws-imds-ec2`
 - `npm run build:example:aws-role-lambda`
 - `npm run example:aws-role-lambda:zip`
+- `npm run build:example:oidc-vercel-function`
 - example docs: `ts/examples/aws-imds-ec2/README.md`
 - integration example: `ts/examples/aws-imds-ec2/index.ts`
 - Lambda example docs: `ts/examples/aws-role-lambda/README.md`
 - Lambda example source: `ts/examples/aws-role-lambda/index.ts`
+- Vercel example docs: `ts/examples/oidc-vercel-function/README.md`
+- Vercel example source: `ts/examples/oidc-vercel-function/api/index.ts`
 
 Note: current Edge behavior requires setting `credentialType` on `/edge/v1/credentials` requests, so both examples set it explicitly.
 
