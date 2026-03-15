@@ -40,13 +40,13 @@ class OidcIdTokenTrustProvider implements TrustProvider {
   readonly id: string
   readonly kind = "oidc_id_token" as const
 
-  private readonly identityToken: IdentityTokenSource
+  private readonly identityToken?: IdentityTokenSource
   private readonly retry?: RetryPolicyOverride
 
-  constructor(options: OidcIdTokenTrustProviderOptions) {
-    this.id = resolveProviderId(options.id)
-    this.identityToken = options.identityToken
-    this.retry = options.retry
+  constructor(options?: OidcIdTokenTrustProviderOptions) {
+    this.id = resolveProviderId(options?.id)
+    this.identityToken = options?.identityToken
+    this.retry = options?.retry
   }
 
   /**
@@ -85,12 +85,6 @@ export function createOidcIdTokenTrustProvider(
   options: OidcIdTokenTrustProviderOptions
 ): TrustProvider {
   const runtimeOptions = options && typeof options === "object" ? options : undefined
-  if (!runtimeOptions) {
-    throw new TrustProviderError("OIDC ID Token Trust Provider requires configuration", {
-      retryable: false
-    })
-  }
-
   return new OidcIdTokenTrustProvider(runtimeOptions)
 }
 
@@ -99,7 +93,13 @@ function resolveProviderId(value: string | undefined): string {
   return id.length > 0 ? id : DEFAULT_PROVIDER_ID
 }
 
-async function resolveIdentityToken(source: IdentityTokenSource): Promise<string> {
+async function resolveIdentityToken(source: IdentityTokenSource | undefined): Promise<string> {
+  if (typeof source === "undefined") {
+    throw new TrustProviderError("OIDC ID Token Trust Provider requires configuration", {
+      retryable: false
+    })
+  }
+
   try {
     const rawValue = typeof source === "function" ? await source() : source
     const identityToken = typeof rawValue === "string" ? rawValue.trim() : ""
