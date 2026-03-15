@@ -127,7 +127,8 @@ Run from `ts/`:
 - `npm run example:aws-imds-ec2`
 - `npm run build:example:aws-role-lambda`
 - `npm run example:aws-role-lambda:zip`
-- `npm run build:example:oidc-vercel-function`
+- `cd examples/oidc-vercel-function && vercel env pull`
+- `cd examples/oidc-vercel-function && vercel dev`
 - example docs: `ts/examples/aws-imds-ec2/README.md`
 - integration example: `ts/examples/aws-imds-ec2/index.ts`
 - Lambda example docs: `ts/examples/aws-role-lambda/README.md`
