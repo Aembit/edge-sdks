@@ -4,6 +4,7 @@
 export type TrustProviderKind =
   | "aws_metadata_service"
   | "aws_role"
+  | "oidc_id_token"
   | (string & {});
 
 /**
@@ -11,6 +12,21 @@ export type TrustProviderKind =
  * This remains flexible to preserve compatibility with Trust Provider-specific fields.
  */
 export type ClientWorkloadDetails = Record<string, unknown>;
+
+export interface CollectedTrustProviderIdentity {
+  /**
+   * Provider-specific client workload identity payload.
+   */
+  readonly client: ClientWorkloadDetails;
+
+  /**
+   * Optional cache key that scopes auth-session reuse for this identity.
+   *
+   * When omitted, `EdgeClient` falls back to the previous behavior of caching
+   * only by Resource Set and retry policy.
+   */
+  readonly authCacheKey?: string;
+}
 
 export interface TrustProvider {
   /**
@@ -27,4 +43,17 @@ export interface TrustProvider {
    * Collect provider-specific client workload identity data.
    */
   collectIdentity(): Promise<ClientWorkloadDetails>;
+
+  /**
+   * Optionally return a stable key that allows `EdgeClient` to de-duplicate
+   * concurrent identity collection for providers whose identity is stable for
+   * the lifetime of the client instance.
+   */
+  getIdentitySingleFlightKey?(): string | undefined;
+
+  /**
+   * Optionally collect provider-specific identity data together with metadata
+   * that scopes auth-session reuse for dynamic identities.
+   */
+  collectIdentityWithMetadata?(): Promise<CollectedTrustProviderIdentity>;
 }

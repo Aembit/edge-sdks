@@ -70,6 +70,10 @@ class AwsRoleTrustProvider implements TrustProvider {
     this.now = options?.now
   }
 
+  getIdentitySingleFlightKey(): string {
+    return `${this.kind}:${this.id}`
+  }
+
   /**
    * Collects AWS role identity data for `/edge/v1/auth`.
    *

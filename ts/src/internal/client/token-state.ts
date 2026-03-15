@@ -8,10 +8,12 @@ export interface CachedTokenState {
   accessToken: string;
   expiresAtMs: number | null;
   resourceSet?: string;
+  authCacheKey?: string;
 }
 
 interface AuthSingleFlightKey {
   resourceSet?: string;
+  authCacheKey?: string;
   retryKey: string;
 }
 
@@ -70,7 +72,7 @@ export function resolveEffectiveResourceSet(
  * Serializes single-flight key for in-flight auth de-duplication.
  */
 export function serializeAuthSingleFlightKey(key: AuthSingleFlightKey): string {
-  return JSON.stringify([key.resourceSet ?? null, key.retryKey]);
+  return JSON.stringify([key.resourceSet ?? null, key.authCacheKey ?? null, key.retryKey]);
 }
 
 /**

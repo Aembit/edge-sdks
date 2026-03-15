@@ -1,6 +1,6 @@
 {
   "name": "@aembit/edge-sdk-ts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "TypeScript SDK for the Aembit Edge API",
   "type": "module",
@@ -18,6 +18,10 @@
     "./trust-providers/aws-role": {
       "types": "./dist/trust-providers/aws-role.d.ts",
       "import": "./dist/trust-providers/aws-role.js"
+    },
+    "./trust-providers/oidc-id-token": {
+      "types": "./dist/trust-providers/oidc-id-token.d.ts",
+      "import": "./dist/trust-providers/oidc-id-token.js"
     }
   },
   "files": [
@@ -42,7 +46,8 @@
     "example:aws-imds": "npm run example:aws-imds-ec2",
     "example:aws-imds-ec2": "npm run build:example:aws-imds-ec2 && node ./examples/aws-imds-ec2/dist/index.mjs",
     "build:example:aws-role-lambda": "npm run build && esbuild ./examples/aws-role-lambda/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-role-lambda/dist/index.mjs",
-    "example:aws-role-lambda:zip": "npm run build:example:aws-role-lambda && cd ./examples/aws-role-lambda/dist && zip aws-role-lambda.zip index.mjs"
+    "example:aws-role-lambda:zip": "npm run build:example:aws-role-lambda && cd ./examples/aws-role-lambda/dist && zip aws-role-lambda.zip index.mjs",
+    "build:example:oidc-vercel-function": "npm run build && esbuild ./examples/oidc-vercel-function/api/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/oidc-vercel-function/dist/api/index.js && mkdir -p ./examples/oidc-vercel-function/dist && cp ./examples/oidc-vercel-function/package.json ./examples/oidc-vercel-function/dist/package.json"
   },
   "dependencies": {
     "@aws-sdk/credential-provider-node": "3.972.19",

@@ -20,7 +20,7 @@ Planned v1 behavior:
 - high-level Edge client for authentication and credential retrieval
 - automatic token lifecycle management
 - retry logic for transient failures
-- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2) and AWS Role
+- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, and OIDC ID Token
 
 ## Client API (Current)
 
@@ -51,17 +51,21 @@ Notes:
 - `getCredential()` auto-authenticates when no valid token is cached.
 - `trustProviders.awsMetadataService()` collects identity from AWS IMDSv2.
 - `trustProviders.awsRole({ region: "us-east-1" })` builds signed AWS STS `GetCallerIdentity` request data for `/edge/v1/auth`.
+- `trustProviders.oidcIdToken({ identityToken })` sends `client.oidc.identityToken` in `/edge/v1/auth`.
 - `clientId` is the Edge SDK Client ID from Trust Provider configuration.
 - `clientId` is not the client workload `Client Identifier` value used in policy configuration.
 - `server.host` and `server.port` are required.
 - `server.transportProtocol` currently supports only `"TCP"` and defaults to `"TCP"` if omitted.
 - AWS Role provider `region` is required.
+- For OIDC, the application must supply the token value or a lazy token source.
+  The SDK does not auto-discover OIDC tokens because token retrieval is runtime-specific.
 
 When bundle size matters, import only the Trust Provider factory you need:
 
 ```ts
 import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts"
 import { createAwsRoleTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/aws-role"
+import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/oidc-id-token"
 ```
 
 Use `trustProviders` for convenience when bundle size is not a concern.
@@ -73,6 +77,12 @@ Use `trustProviders` for convenience when bundle size is not a concern.
 - Cross-language contracts and API snapshots: `spec/` and `spec/openapi/`
 - Cross-language architecture: `docs/architecture.md`
 - Official Aembit Edge API docs (canonical API semantics): <https://docs.aembit.io/api-guide/edge/>
+
+Caching note:
+
+- `EdgeClient` caches the bearer token from `/edge/v1/auth` in memory
+- the SDK does not cache credentials returned by `/edge/v1/credentials`
+- see `ts/architecture.md` for the current caching model, including OIDC auth-session scoping
 
 ## Local Development
 
@@ -101,6 +111,7 @@ Current runnable examples:
 
 - `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
 - `ts/examples/aws-role-lambda/` for AWS Lambda + AWS Role end-to-end validation
+- `ts/examples/oidc-vercel-function/` for Vercel Functions + OIDC ID Token end-to-end validation
 
 ## Testing
 
@@ -116,10 +127,13 @@ Run from `ts/`:
 - `npm run example:aws-imds-ec2`
 - `npm run build:example:aws-role-lambda`
 - `npm run example:aws-role-lambda:zip`
+- `npm run build:example:oidc-vercel-function`
 - example docs: `ts/examples/aws-imds-ec2/README.md`
 - integration example: `ts/examples/aws-imds-ec2/index.ts`
 - Lambda example docs: `ts/examples/aws-role-lambda/README.md`
 - Lambda example source: `ts/examples/aws-role-lambda/index.ts`
+- Vercel example docs: `ts/examples/oidc-vercel-function/README.md`
+- Vercel example source: `ts/examples/oidc-vercel-function/api/index.ts`
 
 Note: current Edge behavior requires setting `credentialType` on `/edge/v1/credentials` requests, so both examples set it explicitly.
 
@@ -164,7 +178,6 @@ export DEPLOY_REMOTE_DIR=~/aembit-examples/aws-imds-ec2
 
 ## Roadmap Notes
 
-- Additional Trust Provider support beyond AWS Metadata Service and AWS Role (for example OIDC)
 - Bundler/tooling decision is pending; package output remains ESM-only
 
 ## Security
