@@ -26,59 +26,55 @@ const EXAMPLE_CONFIG = {
   printCredentialJson: false
 }
 
-export default {
-  // Vercel's current file-based Functions docs use `export default { fetch() }`
-  // as the handler shape for Request/Response-style functions under `api/`.
-  async fetch(request: Request) {
-    // Build the Trust Provider and client inside the handler because the OIDC
-    // token is request-scoped in production Vercel Functions.
-    const trustProvider = createOidcIdTokenTrustProvider({
-      identityToken: () => resolveOidcIdentityToken(request)
-    })
+export async function GET(request: Request) {
+  // Build the Trust Provider and client inside the handler because the OIDC
+  // token is request-scoped in production Vercel Functions.
+  const trustProvider = createOidcIdTokenTrustProvider({
+    identityToken: () => resolveOidcIdentityToken(request)
+  })
 
-    const client = new EdgeClient({
-      baseUrl: EXAMPLE_CONFIG.baseUrl,
-      clientId: EXAMPLE_CONFIG.clientId,
-      trustProvider,
-      resourceSet: EXAMPLE_CONFIG.resourceSet
-    })
+  const client = new EdgeClient({
+    baseUrl: EXAMPLE_CONFIG.baseUrl,
+    clientId: EXAMPLE_CONFIG.clientId,
+    trustProvider,
+    resourceSet: EXAMPLE_CONFIG.resourceSet
+  })
 
-    const credential = await client.getCredential(
-      {
-        server: {
-          host: EXAMPLE_CONFIG.serverHost,
-          port: EXAMPLE_CONFIG.serverPort
-        },
-        credentialType: EXAMPLE_CONFIG.credentialType
+  const credential = await client.getCredential(
+    {
+      server: {
+        host: EXAMPLE_CONFIG.serverHost,
+        port: EXAMPLE_CONFIG.serverPort
       },
-      {
-        resourceSet: EXAMPLE_CONFIG.resourceSet
-      }
-    )
-
-    const baseResponse = {
-      authenticated: true as const,
-      trustProviderId: trustProvider.id,
-      credentialType: credential.credentialType ?? null,
-      credentialExpiresAt: credential.expiresAt ?? null
+      credentialType: EXAMPLE_CONFIG.credentialType
+    },
+    {
+      resourceSet: EXAMPLE_CONFIG.resourceSet
     }
+  )
 
-    if (EXAMPLE_CONFIG.printCredentialJson) {
-      return Response.json({
-        ...baseResponse,
-        credential: {
-          credentialType: credential.credentialType ?? null,
-          expiresAt: credential.expiresAt ?? null,
-          data: credential.data
-        }
-      })
-    }
+  const baseResponse = {
+    authenticated: true as const,
+    trustProviderId: trustProvider.id,
+    credentialType: credential.credentialType ?? null,
+    credentialExpiresAt: credential.expiresAt ?? null
+  }
 
+  if (EXAMPLE_CONFIG.printCredentialJson) {
     return Response.json({
       ...baseResponse,
-      dataKeys: Object.keys(credential.data)
+      credential: {
+        credentialType: credential.credentialType ?? null,
+        expiresAt: credential.expiresAt ?? null,
+        data: credential.data
+      }
     })
   }
+
+  return Response.json({
+    ...baseResponse,
+    dataKeys: Object.keys(credential.data)
+  })
 }
 
 function resolveOidcIdentityToken(request: Request): string {
