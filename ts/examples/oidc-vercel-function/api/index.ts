@@ -14,7 +14,8 @@ import { createOidcIdTokenTrustProvider } from "../../../src/trust-providers/oid
  *
  * Token sourcing:
  * - production on Vercel: `x-vercel-oidc-token` request header
- * - local development: `VERCEL_OIDC_TOKEN` environment variable
+ * - local development: `vercel env pull` writes `.env.local`, and Vercel
+ *   loads `VERCEL_OIDC_TOKEN` from that file during `vercel dev`
  */
 const EXAMPLE_CONFIG = {
   baseUrl: "https://<tenant>.ec.<region>.aembit.io",
