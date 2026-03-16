@@ -61,8 +61,9 @@ example keeps that value explicit in `EXAMPLE_CONFIG` as
 Important:
 
 - Google requires the audience to mint the token
+- use the Aembit identity host for this value, for example:
+  `https://<tenant>.id.<region>.aembit.io`
 - Aembit policy matching for this flow is based on the token's `email` claim
-- the audience is not the Client Identifier that Aembit matches
 
 References:
 
@@ -90,6 +91,11 @@ Edit [`index.ts`](./index.ts) and replace the placeholder values in
 
 `serverHost` and `serverPort` must exactly match the Service Endpoint values
 configured in your Server Workload.
+
+Use:
+
+- `baseUrl`: `https://<tenant>.ec.<region>.aembit.io`
+- `gcpIdentityTokenAudience`: `https://<tenant>.id.<region>.aembit.io`
 
 ## Function Entry Point
 
