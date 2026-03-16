@@ -13,7 +13,7 @@ v1 baseline:
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
 - canonical API docs: `https://docs.aembit.io/api-guide/edge/`
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
-- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, and OIDC ID Token
+- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
 - test framework: Vitest with colocated tests (`*.test.ts`)
 
 ## Layer Implementation
@@ -69,6 +69,9 @@ Initial implementations:
 - `oidc-id-token.ts`
   - resolves a caller-supplied OIDC identity token source
   - builds `client.oidc.identityToken` for `/edge/v1/auth`
+- `gcp-identity-token.ts`
+  - resolves a caller-supplied GCP identity token source
+  - builds `client.gcp.identityToken` for `/edge/v1/auth`
 
 Design notes:
 
@@ -183,6 +186,46 @@ Roadmap note:
   when those additional providers are implemented
 - keep `gcp` separate even though it overlaps on `identityToken`, because
   `GcpAttestationDTO` also supports `instanceDocument`
+
+### GCP Identity Token Trust Provider Contract
+
+This section defines the v1 contract for the GCP Identity Token Trust Provider.
+
+Public factory target:
+
+```ts
+trustProviders.gcpIdentityToken(options)
+```
+
+Planned options contract:
+
+```ts
+type GcpIdentityTokenTrustProviderOptions = {
+  id?: string;
+  identityToken: string | (() => string | Promise<string>);
+  retry?: Partial<RetryPolicy>;
+};
+```
+
+`identityToken` is caller-supplied by design.
+
+The SDK does not attempt to discover GCP identity tokens automatically because
+retrieval is runtime-specific. In Google Cloud runtimes, the token may come
+from the metadata server. For local testing, applications may instead provide a
+pre-fetched token through environment or test scaffolding.
+
+Identity payload contract returned by `collectIdentity()`:
+
+```ts
+{
+  gcp: {
+    identityToken: string;
+  };
+}
+```
+
+This matches the `ClientWorkloadDetails.gcp -> GcpAttestationDTO` schema in
+`spec/openapi/api-1.yaml` for the identity-token-based flow.
 
 ### 3) Developer Client Layer (`ts/src/client`)
 

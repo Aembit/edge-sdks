@@ -20,7 +20,7 @@ Planned v1 behavior:
 - high-level Edge client for authentication and credential retrieval
 - automatic token lifecycle management
 - retry logic for transient failures
-- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, and OIDC ID Token
+- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
 
 ## Client API (Current)
 
@@ -52,6 +52,7 @@ Notes:
 - `trustProviders.awsMetadataService()` collects identity from AWS IMDSv2.
 - `trustProviders.awsRole({ region: "us-east-1" })` builds signed AWS STS `GetCallerIdentity` request data for `/edge/v1/auth`.
 - `trustProviders.oidcIdToken({ identityToken })` sends `client.oidc.identityToken` in `/edge/v1/auth`.
+- `trustProviders.gcpIdentityToken({ identityToken })` sends `client.gcp.identityToken` in `/edge/v1/auth`.
 - `clientId` is the Edge SDK Client ID from Trust Provider configuration.
 - `clientId` is not the client workload `Client Identifier` value used in policy configuration.
 - `server.host` and `server.port` are required.
@@ -65,6 +66,7 @@ When bundle size matters, import only the Trust Provider factory you need:
 ```ts
 import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts"
 import { createAwsRoleTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/aws-role"
+import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/gcp-identity-token"
 import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/oidc-id-token"
 ```
 
@@ -112,6 +114,7 @@ Current runnable examples:
 - `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
 - `ts/examples/aws-role-lambda/` for AWS Lambda + AWS Role end-to-end validation
 - `ts/examples/oidc-vercel-function/` for Vercel Functions + OIDC ID Token end-to-end validation
+- `ts/examples/gcp-identity-token-function/` for Google Cloud function-style GCP Identity Token validation
 
 ## Testing
 
@@ -129,14 +132,21 @@ Run from `ts/`:
 - `npm run example:aws-role-lambda:zip`
 - `cd examples/oidc-vercel-function && vercel env pull`
 - `cd examples/oidc-vercel-function && vercel dev`
+- `npm run build:example:gcp-identity-token-function`
 - example docs: `ts/examples/aws-imds-ec2/README.md`
 - integration example: `ts/examples/aws-imds-ec2/index.ts`
 - Lambda example docs: `ts/examples/aws-role-lambda/README.md`
 - Lambda example source: `ts/examples/aws-role-lambda/index.ts`
 - Vercel example docs: `ts/examples/oidc-vercel-function/README.md`
 - Vercel example source: `ts/examples/oidc-vercel-function/api/index.ts`
+- GCP example docs: `ts/examples/gcp-identity-token-function/README.md`
+- GCP example source: `ts/examples/gcp-identity-token-function/index.ts`
 
 Note: current Edge behavior requires setting `credentialType` on `/edge/v1/credentials` requests, so both examples set it explicitly.
+
+For the current GCP example, `npm run build:example:gcp-identity-token-function`
+produces a bundled `dist/index.js` and `dist/package.json` that can be copied
+into the Google Cloud console editor as a temporary testing workaround.
 
 Deploy a bundled example artifact to a VM (from repo root):
 
