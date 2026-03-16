@@ -4,6 +4,7 @@ import {
   EdgeClient,
   createAwsMetadataServiceTrustProvider,
   createAwsRoleTrustProvider,
+  createGcpIdentityTokenTrustProvider,
   createOidcIdTokenTrustProvider,
   trustProviders
 } from "./index.js";
@@ -28,9 +29,11 @@ describe("public type exports", () => {
   it("exports built-in trust provider factories", () => {
     expect(typeof trustProviders.awsMetadataService).toBe("function");
     expect(typeof trustProviders.awsRole).toBe("function");
+    expect(typeof trustProviders.gcpIdentityToken).toBe("function");
     expect(typeof trustProviders.oidcIdToken).toBe("function");
     expect(typeof createAwsMetadataServiceTrustProvider).toBe("function");
     expect(typeof createAwsRoleTrustProvider).toBe("function");
+    expect(typeof createGcpIdentityTokenTrustProvider).toBe("function");
     expect(typeof createOidcIdTokenTrustProvider).toBe("function");
   });
 });
