@@ -3,12 +3,14 @@ export { trustProviders } from "./trust-providers/index.js";
 export {
   createAwsMetadataServiceTrustProvider,
   createAwsRoleTrustProvider,
+  createAzureMetadataServiceTrustProvider,
   createGcpIdentityTokenTrustProvider,
   createOidcIdTokenTrustProvider,
 } from "./trust-providers/index.js";
 export type {
   AwsMetadataServiceTrustProviderOptions,
   AwsRoleTrustProviderOptions,
+  AzureMetadataServiceTrustProviderOptions,
   GcpIdentityTokenTrustProviderOptions,
   OidcIdTokenTrustProviderOptions,
 } from "./trust-providers/index.js";

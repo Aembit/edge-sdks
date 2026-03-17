@@ -19,6 +19,10 @@
       "types": "./dist/trust-providers/aws-role.d.ts",
       "import": "./dist/trust-providers/aws-role.js"
     },
+    "./trust-providers/azure-metadata-service": {
+      "types": "./dist/trust-providers/azure-metadata-service.d.ts",
+      "import": "./dist/trust-providers/azure-metadata-service.js"
+    },
     "./trust-providers/gcp-identity-token": {
       "types": "./dist/trust-providers/gcp-identity-token.d.ts",
       "import": "./dist/trust-providers/gcp-identity-token.js"
