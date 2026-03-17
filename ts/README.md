@@ -20,7 +20,7 @@ Planned v1 behavior:
 - high-level Edge client for authentication and credential retrieval
 - automatic token lifecycle management
 - retry logic for transient failures
-- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
+- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, Azure Metadata Service, OIDC ID Token, and GCP Identity Token
 
 ## Client API (Current)
 
@@ -51,6 +51,7 @@ Notes:
 - `getCredential()` auto-authenticates when no valid token is cached.
 - `trustProviders.awsMetadataService()` collects identity from AWS IMDSv2.
 - `trustProviders.awsRole({ region: "us-east-1" })` builds signed AWS STS `GetCallerIdentity` request data for `/edge/v1/auth`.
+- `trustProviders.azureMetadataService()` collects Azure VM identity from Azure IMDS attested data.
 - `trustProviders.oidcIdToken({ identityToken })` sends `client.oidc.identityToken` in `/edge/v1/auth`.
 - `trustProviders.gcpIdentityToken({ identityToken })` sends `client.gcp.identityToken` in `/edge/v1/auth`.
 - `clientId` is the Edge SDK Client ID from Trust Provider configuration.
@@ -66,6 +67,7 @@ When bundle size matters, import only the Trust Provider factory you need:
 ```ts
 import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts"
 import { createAwsRoleTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/aws-role"
+import { createAzureMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/azure-metadata-service"
 import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/gcp-identity-token"
 import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/oidc-id-token"
 ```
@@ -113,6 +115,7 @@ Current runnable examples:
 
 - `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
 - `ts/examples/aws-role-lambda/` for AWS Lambda + AWS Role end-to-end validation
+- `ts/examples/azure-imds-vm/` for Azure VM + Azure IMDS attested-data validation
 - `ts/examples/oidc-vercel-function/` for Vercel Functions + OIDC ID Token end-to-end validation
 - `ts/examples/gcp-identity-token-function/` for Google Cloud function-style GCP Identity Token validation
 
@@ -130,6 +133,8 @@ Run from `ts/`:
 - `npm run example:aws-imds-ec2`
 - `npm run build:example:aws-role-lambda`
 - `npm run example:aws-role-lambda:zip`
+- `npm run build:example:azure-imds-vm`
+- `npm run example:azure-imds-vm`
 - `cd examples/oidc-vercel-function && vercel env pull`
 - `cd examples/oidc-vercel-function && vercel dev`
 - `npm run build:example:gcp-identity-token-function`
@@ -137,6 +142,8 @@ Run from `ts/`:
 - integration example: `ts/examples/aws-imds-ec2/index.ts`
 - Lambda example docs: `ts/examples/aws-role-lambda/README.md`
 - Lambda example source: `ts/examples/aws-role-lambda/index.ts`
+- Azure VM example docs: `ts/examples/azure-imds-vm/README.md`
+- Azure VM example source: `ts/examples/azure-imds-vm/index.ts`
 - Vercel example docs: `ts/examples/oidc-vercel-function/README.md`
 - Vercel example source: `ts/examples/oidc-vercel-function/api/index.ts`
 - GCP example docs: `ts/examples/gcp-identity-token-function/README.md`

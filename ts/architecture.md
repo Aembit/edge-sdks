@@ -13,7 +13,7 @@ v1 baseline:
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
 - canonical API docs: `https://docs.aembit.io/api-guide/edge/`
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
-- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
+- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, Azure Metadata Service, OIDC ID Token, and GCP Identity Token
 - test framework: Vitest with colocated tests (`*.test.ts`)
 
 ## Layer Implementation
@@ -66,6 +66,9 @@ Initial implementations:
   - builds `client.aws.stsGetCallerIdentity.{headers,region}` for `/edge/v1/auth`
 - `aws-role-signer.ts`
   - builds SigV4-signed AWS STS `GetCallerIdentity` request headers for AWS Role identity payloads
+- `azure-metadata-service.ts`
+  - retrieves Azure IMDS attested data
+  - builds `client.azure.attestedDocument.{encoding,signature,nonce}` for `/edge/v1/auth`
 - `oidc-id-token.ts`
   - resolves a caller-supplied OIDC identity token source
   - builds `client.oidc.identityToken` for `/edge/v1/auth`
@@ -186,6 +189,49 @@ Roadmap note:
   when those additional providers are implemented
 - keep `gcp` separate even though it overlaps on `identityToken`, because
   `GcpAttestationDTO` also supports `instanceDocument`
+
+### Azure Metadata Service Trust Provider Contract
+
+This section defines the v1 contract for the Azure Metadata Service Trust Provider.
+
+Public factory target:
+
+```ts
+trustProviders.azureMetadataService(options)
+```
+
+Planned options contract:
+
+```ts
+type AzureMetadataServiceTrustProviderOptions = {
+  id?: string;
+  baseUrl?: string;
+  apiVersion?: string;
+  timeoutMs?: number;
+  retry?: Partial<RetryPolicy>;
+};
+```
+
+Identity payload contract returned by `collectIdentity()`:
+
+```ts
+{
+  azure: {
+    attestedDocument: {
+      encoding: string;
+      signature: string;
+      nonce: string;
+    };
+  };
+}
+```
+
+This matches the `ClientWorkloadDetails.azure -> AzureAttestationDTO` schema in
+`spec/openapi/api-1.yaml`.
+
+The Azure IMDS PKCS#7 signature blob contains the signed attested document and
+certificate chain, so the SDK sends the signature blob together with the
+encoding and request nonce.
 
 ### GCP Identity Token Trust Provider Contract
 
