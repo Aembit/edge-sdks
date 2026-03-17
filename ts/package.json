@@ -19,6 +19,10 @@
       "types": "./dist/trust-providers/aws-role.d.ts",
       "import": "./dist/trust-providers/aws-role.js"
     },
+    "./trust-providers/azure-metadata-service": {
+      "types": "./dist/trust-providers/azure-metadata-service.d.ts",
+      "import": "./dist/trust-providers/azure-metadata-service.js"
+    },
     "./trust-providers/gcp-identity-token": {
       "types": "./dist/trust-providers/gcp-identity-token.d.ts",
       "import": "./dist/trust-providers/gcp-identity-token.js"
@@ -47,8 +51,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:example:aws-imds-ec2": "npm run build && esbuild ./examples/aws-imds-ec2/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-imds-ec2/dist/index.mjs",
+    "build:example:azure-imds-vm": "npm run build && esbuild ./examples/azure-imds-vm/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/azure-imds-vm/dist/index.mjs",
     "example:aws-imds": "npm run example:aws-imds-ec2",
     "example:aws-imds-ec2": "npm run build:example:aws-imds-ec2 && node ./examples/aws-imds-ec2/dist/index.mjs",
+    "example:azure-imds-vm": "npm run build:example:azure-imds-vm && node ./examples/azure-imds-vm/dist/index.mjs",
     "build:example:gcp-identity-token-function": "npm run build && esbuild ./examples/gcp-identity-token-function/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/gcp-identity-token-function/dist/index.js && mkdir -p ./examples/gcp-identity-token-function/dist && cp ./examples/gcp-identity-token-function/package.deploy.json ./examples/gcp-identity-token-function/dist/package.json",
     "build:example:aws-role-lambda": "npm run build && esbuild ./examples/aws-role-lambda/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-role-lambda/dist/index.mjs",
     "example:aws-role-lambda:zip": "npm run build:example:aws-role-lambda && cd ./examples/aws-role-lambda/dist && zip aws-role-lambda.zip index.mjs"

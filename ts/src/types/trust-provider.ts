@@ -4,6 +4,7 @@
 export type TrustProviderKind =
   | "aws_metadata_service"
   | "aws_role"
+  | "azure_metadata_service"
   | "gcp_identity_token"
   | "oidc_id_token"
   | (string & {});
