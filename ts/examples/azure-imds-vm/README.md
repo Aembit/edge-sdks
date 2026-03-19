@@ -8,8 +8,8 @@ This example is intentionally kept in the repository, but it is not currently ru
 
 Current known gaps outside the SDK:
 
-- the Aembit UI does not currently expose an Edge SDK Client ID in the Azure IMDS Trust Provider view
-- the Aembit API/backend does not currently extract the nonce from the Azure IMDS PKCS#7 signature blob even though backend logic expects the nonce
+- the Aembit Admin UI does not currently expose an Edge SDK Client ID in the Azure IMDS Trust Provider view
+- the Aembit Edge API/backend does not currently extract the nonce from the Azure IMDS PKCS#7 signature blob even though backend logic expects the nonce
 
 So:
 

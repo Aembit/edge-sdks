@@ -66,7 +66,6 @@ When bundle size matters, import only the Trust Provider factory you need:
 ```ts
 import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts"
 import { createAwsRoleTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/aws-role"
-import { createAzureMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/azure-metadata-service"
 import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/gcp-identity-token"
 import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/oidc-id-token"
 ```
@@ -76,10 +75,8 @@ Use `trustProviders` for convenience when bundle size is not a concern.
 Preview note:
 
 - `trustProviders.azureMetadataService()` is implemented in the SDK, but the current Aembit Edge API does not yet fully support the Azure IMDS flow.
-- Current gaps:
-  - the UI does not expose an Edge SDK Client ID for Azure IMDS Trust Providers
-  - the API/backend does not currently extract the nonce from the Azure IMDS PKCS#7 signature blob
 - Keep the Azure provider and example as reference implementations for when backend support lands.
+- See `ts/examples/azure-imds-vm/README.md` for current limitations and example status.
 
 ## Documentation
 
