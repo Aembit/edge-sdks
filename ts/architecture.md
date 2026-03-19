@@ -13,7 +13,7 @@ v1 baseline:
 - target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
 - canonical API docs: `https://docs.aembit.io/api-guide/edge/`
 - OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
-- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, Azure Metadata Service, OIDC ID Token, and GCP Identity Token
+- built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
 - test framework: Vitest with colocated tests (`*.test.ts`)
 
 ## Layer Implementation
@@ -232,6 +232,19 @@ This matches the `ClientWorkloadDetails.azure -> AzureAttestationDTO` schema in
 The Azure IMDS PKCS#7 signature blob contains the signed attested document and
 certificate chain, so the SDK sends the signature blob together with the
 encoding and request nonce.
+
+Current backend support gap:
+
+- the TypeScript SDK implements this provider as a reference implementation
+- the current Aembit Edge API does not yet fully support the Azure IMDS flow
+- current known blockers:
+  - the UI does not expose an Edge SDK Client ID in the Azure IMDS Trust Provider view
+  - the API/backend does not currently extract the nonce from the Azure IMDS PKCS#7 signature blob even though backend logic expects the nonce
+
+Roadmap note:
+
+- keep the Azure Metadata Service Trust Provider and Azure VM example in the SDK
+- treat them as preview/reference implementations until the Edge API and UI support the full Azure IMDS flow
 
 ### GCP Identity Token Trust Provider Contract
 

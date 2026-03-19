@@ -1,6 +1,21 @@
 # Azure IMDS VM Example
 
-Runnable Azure VM example for the TypeScript SDK using Azure Instance Metadata Service attested data.
+Azure VM reference example for the TypeScript SDK using Azure Instance Metadata Service attested data.
+
+## Current Support Status
+
+This example is intentionally kept in the repository, but it is not currently runnable end-to-end against the current Aembit Edge API.
+
+Current known gaps outside the SDK:
+
+- the Aembit Admin UI does not currently expose an Edge SDK Client ID in the Azure IMDS Trust Provider view
+- the Aembit Edge API/backend does not currently extract the nonce from the Azure IMDS PKCS#7 signature blob even though backend logic expects the nonce
+
+So:
+
+- keep this example as a reference implementation
+- use it for SDK development and future validation
+- do not treat it as a currently supported production flow until the Edge API and UI catch up
 
 This example follows the same pattern as the EC2 example:
 
@@ -13,16 +28,18 @@ This example follows the same pattern as the EC2 example:
 
 - Azure VM with Instance Metadata Service reachable at `169.254.169.254`
 - Node.js `>=20` installed on the VM
-- An Aembit Access Policy configured for this SDK flow
+- A future Aembit Access Policy flow that supports Azure IMDS end-to-end
 
 ## Aembit Setup
 
-Before running this example, configure an Aembit Access Policy that includes:
+The intended Aembit setup for this flow is:
 
 - a Client Workload for the Azure VM identity
 - a Server Workload with a Service Endpoint (`host`, `port`) that this example will request
 - an Azure Metadata Service Trust Provider with an Edge SDK Client ID
 - a Credential Provider that returns the requested credential type
+
+At the moment, that setup cannot be completed end-to-end because of the current Aembit UI and API gaps described above.
 
 References:
 
@@ -62,13 +79,15 @@ This creates:
 
 - `./examples/azure-imds-vm/dist/index.mjs`
 
-You can also run the bundled example locally on an Azure VM with:
+You can also build and run the bundled example locally on an Azure VM for SDK development once backend support is available:
 
 ```bash
 npm run example:azure-imds-vm
 ```
 
 ## Deploy The Bundle To An Azure VM
+
+This deploy workflow is kept as a reference for when the backend feature gap is closed.
 
 From the repository root, copy the built artifact to your VM:
 
@@ -95,9 +114,9 @@ cd ~/aembit-examples/azure-imds-vm
 node index.mjs
 ```
 
-## Output
+## Expected Output
 
-The script first prints a safe authenticated session summary, then prints credential metadata.
+Once the backend feature gap is closed, the script will first print a safe authenticated session summary, then print credential metadata.
 
 By default, the credential output includes:
 
