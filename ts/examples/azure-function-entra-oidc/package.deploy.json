@@ -3,6 +3,7 @@
   "type": "module",
   "main": "src/functions/*.js",
   "dependencies": {
-    "@azure/functions": "^4.0.0"
+    "@azure/functions": "^4.0.0",
+    "@azure/identity": "^4.0.0"
   }
 }

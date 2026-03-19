@@ -2,14 +2,14 @@
 
 Runnable Azure Functions example for using an Entra managed identity token with the existing Aembit OIDC Trust Provider flow.
 
-This example keeps the Azure Functions source layout idiomatic and also supports a manual zip deployment workflow.
+This example keeps the Azure Functions source layout idiomatic and also supports a manual zip deployment workflow with local packaging of runtime dependencies.
 
 This directory includes:
 
 - `src/functions/aembitAzureEntraOidc.ts`: Azure Functions v4 HTTP trigger source
 - `host.json`: Azure Functions host configuration
 - `package.json`: example project metadata
-- `package.deploy.json`: template used to generate the deployable package manifest
+- `package.deploy.json`: template used to generate the deployable package manifest for the packaged app
 
 ## Prerequisites
 
@@ -80,15 +80,18 @@ Run from `ts/`:
 npm run build:example:azure-function-entra-oidc
 ```
 
-This creates a deployable Azure Functions app under:
+This creates a self-contained Azure Functions app under:
 
 - `./examples/azure-function-entra-oidc/dist/deploy/`
 
-Files included there:
+Contents include:
 
 - `host.json`
 - `package.json`
 - `src/functions/aembitAzureEntraOidc.js`
+- production `node_modules/` installed from `package.deploy.json`
+
+The build step runs a local `npm install --omit=dev` in `dist/deploy`, so the zip artifact contains the runtime dependencies Azure Functions needs at startup.
 
 ## Build The Zip Artifact
 
@@ -102,7 +105,7 @@ This creates:
 
 - `./examples/azure-function-entra-oidc/dist/azure-function-entra-oidc.zip`
 
-The zip is structured so `host.json` is at the archive root, which matches Azure zip deployment expectations.
+The zip is structured so `host.json` is at the archive root, which matches Azure zip deployment expectations. Because the runtime dependencies are packaged locally, this artifact is ready for a normal zip deployment without requiring Azure-side remote build.
 
 ## Manual Zip Deployment
 
