@@ -119,6 +119,7 @@ Current runnable examples:
 
 - `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
 - `ts/examples/aws-role-lambda/` for AWS Lambda + AWS Role end-to-end validation
+- `ts/examples/azure-function-entra-oidc/` for Azure Functions + Entra managed identity token validation through the OIDC Trust Provider
 - `ts/examples/oidc-vercel-function/` for Vercel Functions + OIDC ID Token end-to-end validation
 - `ts/examples/gcp-identity-token-function/` for Google Cloud function-style GCP Identity Token validation
 
@@ -140,6 +141,8 @@ Run from `ts/`:
 - `npm run example:aws-imds-ec2`
 - `npm run build:example:aws-role-lambda`
 - `npm run example:aws-role-lambda:zip`
+- `npm run build:example:azure-function-entra-oidc`
+- `npm run example:azure-function-entra-oidc:zip`
 - `cd examples/oidc-vercel-function && vercel env pull`
 - `cd examples/oidc-vercel-function && vercel dev`
 - `npm run build:example:gcp-identity-token-function`
@@ -147,6 +150,8 @@ Run from `ts/`:
 - integration example: `ts/examples/aws-imds-ec2/index.ts`
 - Lambda example docs: `ts/examples/aws-role-lambda/README.md`
 - Lambda example source: `ts/examples/aws-role-lambda/index.ts`
+- Azure Functions example docs: `ts/examples/azure-function-entra-oidc/README.md`
+- Azure Functions example source: `ts/examples/azure-function-entra-oidc/src/functions/aembitAzureEntraOidc.ts`
 - Vercel example docs: `ts/examples/oidc-vercel-function/README.md`
 - Vercel example source: `ts/examples/oidc-vercel-function/api/index.ts`
 - GCP example docs: `ts/examples/gcp-identity-token-function/README.md`
