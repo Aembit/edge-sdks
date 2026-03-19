@@ -4,6 +4,8 @@ Runnable Azure Functions example for using an Entra managed identity token with 
 
 This example keeps the Azure Functions source layout idiomatic and also supports a manual zip deployment workflow with local packaging of runtime dependencies.
 
+This endpoint is intended for controlled testing only and should not be exposed as a general credential proxy.
+
 This directory includes:
 
 - `src/functions/aembitAzureEntraOidc.ts`: Azure Functions v4 HTTP trigger source
@@ -15,7 +17,7 @@ This directory includes:
 
 - An Azure Function App running the Node.js v4 programming model
 - Managed identity enabled for the function app
-- An Entra app registration or application ID URI that represents the Aembit audience for this flow
+- An Entra app registration whose Application ID URI represents the Aembit audience for this flow
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Access Policy (Required)
@@ -30,7 +32,7 @@ Before deploying this example, configure an Aembit Access Policy that includes:
 Recommended Aembit OIDC Trust Provider matching for this example:
 
 - issuer (`iss`): your Entra tenant issuer
-- audience (`aud`): the Entra app registration or Application ID URI used by this example
+- audience (`aud`): the Entra Application ID URI used by this example
 
 References:
 
@@ -70,7 +72,7 @@ Edit [`src/functions/aembitAzureEntraOidc.ts`](./src/functions/aembitAzureEntraO
 - `managedIdentityClientId` when using a user-assigned managed identity
 - `printCredentialJson` if you want the full credential in the function response
 
-`entraAudience` should stay stable for this flow because the Entra token `sub` is audience-dependent and the Client Workload identifier is expected to match that `sub`.
+Set `entraAudience` to the Entra Application ID URI for the audience you want the function's managed identity to request. The default Azure pattern is `api://<Application (client) ID>`. Do not include `/.default` in `EXAMPLE_CONFIG`; the example appends that scope suffix for you. `entraAudience` should stay stable for this flow because the Entra token `sub` is audience-dependent and the Client Workload identifier is expected to match that `sub`.
 
 ## Build The Deploy Package
 
@@ -118,15 +120,25 @@ az functionapp deployment source config-zip \
   --src ./ts/examples/azure-function-entra-oidc/dist/azure-function-entra-oidc.zip
 ```
 
+The function uses `authLevel: "function"`, so callers must present a valid function key, such as with the `x-functions-key` header or a `code` query parameter.
+
 ## Local Development
 
-For local testing, set `AZURE_ENTRA_ACCESS_TOKEN` yourself and then run the function through your preferred Azure Functions local workflow.
+For local testing, set `AZURE_ENTRA_ACCESS_TOKEN`, build the example, and then run Azure Functions Core Tools from this example directory:
+
+```bash
+npm run build:example:azure-function-entra-oidc
+cd examples/azure-function-entra-oidc
+func start
+```
+
+The example package points the Functions host at `dist/deploy/src/functions/*.js`, so you must rebuild after source changes before restarting the local host.
 
 This example does not attempt to emulate managed identity locally.
 
 ## Observe The Output
 
-Invoke the function and inspect the returned JSON response.
+Invoke the function with a valid function key and inspect the returned JSON response.
 
 By default, the handler returns safe metadata only:
 
@@ -174,3 +186,4 @@ Verify:
 
 Do not use real secrets in shared logs or screenshots.
 Set `printCredentialJson` to `true` only for controlled testing.
+Do not expose this example as a general credential broker for arbitrary callers.

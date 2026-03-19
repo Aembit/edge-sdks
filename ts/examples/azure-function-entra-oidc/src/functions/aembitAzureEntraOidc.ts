@@ -14,7 +14,7 @@ import { createOidcIdTokenTrustProvider } from "../../../../src/trust-providers/
  * - `serverHost` / `serverPort`: the Service Endpoint from your Server Workload
  * - `credentialType`: the credential type returned by your Credential Provider
  * - `resourceSet`: optional, only when your tenant flow requires it
- * - `entraAudience`: the Entra application ID URI used to mint the managed
+ * - `entraAudience`: the Entra Application ID URI used to mint the managed
  *   identity token for Aembit attestation
  * - `managedIdentityClientId`: optional, only when you use a user-assigned
  *   managed identity instead of the default system-assigned identity
@@ -39,7 +39,7 @@ const EXAMPLE_CONFIG = {
 // Register the Azure Functions HTTP entry point at module load.
 app.http("aembitAzureEntraOidc", {
   methods: ["GET"],
-  authLevel: "anonymous",
+  authLevel: "function",
   handler: aembitAzureEntraOidc
 })
 
@@ -138,7 +138,7 @@ async function resolveAzureEntraToken(): Promise<string> {
     throw new TrustProviderError(
       "Azure managed identity token request failed",
       {
-        retryable: true,
+        retryable: false,
         cause: error
       }
     )
@@ -159,7 +159,9 @@ async function resolveAzureEntraToken(): Promise<string> {
 
 function normalizeEntraScope(audience: string): string {
   const trimmedAudience = audience.trim()
-  if (!trimmedAudience) {
+  const normalizedAudience = trimmedAudience.replace(/\/+$/, "")
+
+  if (!normalizedAudience) {
     throw new TrustProviderError(
       "Azure Functions example requires EXAMPLE_CONFIG.entraAudience",
       {
@@ -168,7 +170,9 @@ function normalizeEntraScope(audience: string): string {
     )
   }
 
-  return trimmedAudience.endsWith("/.default") ? trimmedAudience : `${trimmedAudience}/.default`
+  return normalizedAudience.endsWith("/.default")
+    ? normalizedAudience
+    : `${normalizedAudience}/.default`
 }
 
 async function createManagedIdentityCredential(): Promise<{
