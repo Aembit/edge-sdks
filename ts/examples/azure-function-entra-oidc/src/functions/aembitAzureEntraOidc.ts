@@ -25,15 +25,15 @@ import { createOidcIdTokenTrustProvider } from "../../../../src/trust-providers/
  *   to exercise the SDK flow outside Azure
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
-  clientId: "your-edge-sdk-client-id",
-  serverHost: "target.example.com",
+  baseUrl: "https://14303c.ec.useast2.aembit.io",
+  clientId: "aembit:useast2:14303c:identity:oidc_id_token:e725cf73-5f39-42ff-9ce6-a786952b4461",
+  serverHost: "test.example.com",
   serverPort: 443,
   credentialType: "ApiKey",
-  resourceSet: undefined as string | undefined,
-  entraAudience: "api://your-aembit-tenant-app-id-uri",
-  managedIdentityClientId: undefined as string | undefined,
-  printCredentialJson: false
+  resourceSet: "4d17f5ce-c7cd-4d02-8444-aa5d50b97854",
+  entraAudience: "api://4597cb7c-6510-410b-bc36-61e7d8547e92",
+  managedIdentityClientId: "3a68ad05-9a61-4592-a7a3-f39b6839902b",
+  printCredentialJson: true
 }
 
 // Register the Azure Functions HTTP entry point at module load.
