@@ -48,6 +48,8 @@ app.http("aembitAzureEntraOidc", {
   handler: aembitAzureEntraOidc
 })
 
+// Handle the HTTP request by authenticating with Edge and returning a small
+// summary of the credential response.
 export async function aembitAzureEntraOidc(
   request: HttpRequest,
   context: InvocationContext
@@ -116,12 +118,16 @@ export async function aembitAzureEntraOidc(
   }
 }
 
+// Create a Trust Provider for this invocation so token-resolution logs can use
+// the current Azure Functions invocation context.
 function createTrustProvider(context: InvocationContext) {
   return createOidcIdTokenTrustProvider({
     identityToken: () => resolveAzureEntraToken(context)
   })
 }
 
+// Build an Edge client using the example's static configuration and the
+// invocation-scoped Trust Provider.
 function createClient(trustProvider: ReturnType<typeof createOidcIdTokenTrustProvider>) {
   return new EdgeClient({
     baseUrl: EXAMPLE_CONFIG.baseUrl,
@@ -131,6 +137,8 @@ function createClient(trustProvider: ReturnType<typeof createOidcIdTokenTrustPro
   })
 }
 
+// Resolve the Entra token from either local environment override or Azure
+// managed identity, with Azure Functions logs at each step.
 async function resolveAzureEntraToken(context: InvocationContext): Promise<string> {
   const envToken = process.env.AZURE_ENTRA_ACCESS_TOKEN?.trim()
   if (envToken) {
@@ -172,6 +180,8 @@ async function resolveAzureEntraToken(context: InvocationContext): Promise<strin
   return token
 }
 
+// Convert the configured Entra audience into the scope string expected by
+// ManagedIdentityCredential.
 function normalizeEntraScope(audience: string): string {
   const trimmedAudience = audience.trim()
   const normalizedAudience = trimmedAudience.replace(/\/+$/, "")
@@ -190,6 +200,8 @@ function normalizeEntraScope(audience: string): string {
     : `${normalizedAudience}/.default`
 }
 
+// Lazily load Azure Identity so local workflows can still run with an injected
+// environment token even if Azure packages are unavailable.
 async function createManagedIdentityCredential(): Promise<{
   getToken(scope: string | string[]): Promise<{ token: string } | null>
 }> {
