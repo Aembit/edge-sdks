@@ -9,13 +9,21 @@ declare module "@azure/functions" {
     jsonBody?: unknown
   }
 
+  export interface InvocationContext {
+    log(...args: unknown[]): void
+    error(...args: unknown[]): void
+  }
+
   export const app: {
     http(
       name: string,
       options: {
         methods: string[]
         authLevel: "anonymous" | "function" | "admin"
-        handler: (request: HttpRequest) => Promise<HttpResponseInit> | HttpResponseInit
+        handler: (
+          request: HttpRequest,
+          context: InvocationContext
+        ) => Promise<HttpResponseInit> | HttpResponseInit
       }
     ): void
   }

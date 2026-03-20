@@ -1,4 +1,9 @@
-import { app, type HttpRequest, type HttpResponseInit } from "@azure/functions"
+import {
+  app,
+  type HttpRequest,
+  type HttpResponseInit,
+  type InvocationContext
+} from "@azure/functions"
 
 import { EdgeClient } from "../../../../src/index.js"
 import { TrustProviderError } from "../../../../src/internal/protocol/errors.js"
@@ -43,22 +48,9 @@ app.http("aembitAzureEntraOidc", {
   handler: aembitAzureEntraOidc
 })
 
-// Create the Trust Provider and client once so warm function instances can
-// reuse the SDK's in-memory auth cache while still resolving the Entra token
-// lazily for each authentication flow.
-const trustProvider = createOidcIdTokenTrustProvider({
-  identityToken: () => resolveAzureEntraToken()
-})
-
-const client = new EdgeClient({
-  baseUrl: EXAMPLE_CONFIG.baseUrl,
-  clientId: EXAMPLE_CONFIG.clientId,
-  trustProvider,
-  resourceSet: EXAMPLE_CONFIG.resourceSet
-})
-
 export async function aembitAzureEntraOidc(
-  request: HttpRequest
+  request: HttpRequest,
+  context: InvocationContext
 ): Promise<HttpResponseInit> {
   if (request.method && request.method !== "GET") {
     return {
@@ -71,6 +63,9 @@ export async function aembitAzureEntraOidc(
       }
     }
   }
+
+  const trustProvider = createTrustProvider(context)
+  const client = createClient(trustProvider)
 
   const credential = await client.getCredential(
     {
@@ -121,13 +116,30 @@ export async function aembitAzureEntraOidc(
   }
 }
 
-async function resolveAzureEntraToken(): Promise<string> {
+function createTrustProvider(context: InvocationContext) {
+  return createOidcIdTokenTrustProvider({
+    identityToken: () => resolveAzureEntraToken(context)
+  })
+}
+
+function createClient(trustProvider: ReturnType<typeof createOidcIdTokenTrustProvider>) {
+  return new EdgeClient({
+    baseUrl: EXAMPLE_CONFIG.baseUrl,
+    clientId: EXAMPLE_CONFIG.clientId,
+    trustProvider,
+    resourceSet: EXAMPLE_CONFIG.resourceSet
+  })
+}
+
+async function resolveAzureEntraToken(context: InvocationContext): Promise<string> {
   const envToken = process.env.AZURE_ENTRA_ACCESS_TOKEN?.trim()
   if (envToken) {
+    context.log("Using AZURE_ENTRA_ACCESS_TOKEN from environment")
     return envToken
   }
 
   const scope = normalizeEntraScope(EXAMPLE_CONFIG.entraAudience)
+  context.log(`Requesting managed identity token for scope ${scope}`)
   const managedIdentityCredential = await createManagedIdentityCredential()
 
   let accessToken: { token: string } | null
@@ -135,6 +147,7 @@ async function resolveAzureEntraToken(): Promise<string> {
   try {
     accessToken = await managedIdentityCredential.getToken(scope)
   } catch (error) {
+    context.error("Azure managed identity token request failed", error)
     throw new TrustProviderError(
       "Azure managed identity token request failed",
       {
@@ -146,6 +159,7 @@ async function resolveAzureEntraToken(): Promise<string> {
 
   const token = accessToken?.token?.trim()
   if (!token) {
+    context.error("Azure managed identity returned an empty Entra access token")
     throw new TrustProviderError(
       "Azure managed identity returned an empty Entra access token",
       {
@@ -154,6 +168,7 @@ async function resolveAzureEntraToken(): Promise<string> {
     )
   }
 
+  context.log("Azure managed identity token request succeeded")
   return token
 }
 
