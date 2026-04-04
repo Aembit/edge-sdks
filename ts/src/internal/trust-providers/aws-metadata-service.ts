@@ -1,8 +1,14 @@
 import { TrustProviderError } from "../protocol/errors.js"
-import { executeWithRetry, isRetryableHttpStatus, mergeRetryPolicy } from "../protocol/retry.js"
+import { executeWithRetry, mergeRetryPolicy } from "../protocol/retry.js"
 import { isAbortError, resolveRequestUrl } from "../shared/http-utils.js"
 import type { RetryPolicyOverride } from "../../types/retry.js"
 import type { ClientWorkloadDetails, TrustProvider } from "../../types/trust-provider.js"
+import {
+  createMetadataServiceHttpError,
+  isMetadataServiceNetworkError,
+  resolveMetadataServiceProviderId,
+  resolveMetadataServiceTimeoutMs
+} from "./metadata-service-utils.js"
 
 const DEFAULT_PROVIDER_ID = "aws-metadata-service"
 const DEFAULT_IMDS_BASE_URL = "http://169.254.169.254"
@@ -62,9 +68,9 @@ class AwsMetadataServiceTrustProvider implements TrustProvider {
   private readonly fetchImpl: typeof fetch
 
   constructor(options: AwsMetadataServiceTrustProviderOptions = {}) {
-    this.id = resolveProviderId(options.id)
+    this.id = resolveMetadataServiceProviderId(options.id, DEFAULT_PROVIDER_ID)
     this.baseUrl = options.baseUrl ?? DEFAULT_IMDS_BASE_URL
-    this.timeoutMs = resolveTimeoutMs(options.timeoutMs)
+    this.timeoutMs = resolveMetadataServiceTimeoutMs(options.timeoutMs, DEFAULT_IMDS_TIMEOUT_MS)
     this.tokenTtlSeconds = resolveTokenTtlSeconds(options.tokenTtlSeconds)
     this.retry = options.retry
     this.fetchImpl = options.fetchImpl ?? fetch
@@ -159,11 +165,12 @@ class AwsMetadataServiceTrustProvider implements TrustProvider {
       })
 
       if (!response.ok) {
-        throw createImdsHttpError(
-          response.status,
-          options.operationName,
-          options.retryableStatusCodes
-        )
+        throw createMetadataServiceHttpError({
+          providerLabel: "AWS Metadata Service",
+          statusCode: response.status,
+          operationName: options.operationName,
+          retryableStatusCodes: options.retryableStatusCodes
+        })
       }
 
       const body = await response.text()
@@ -192,7 +199,7 @@ class AwsMetadataServiceTrustProvider implements TrustProvider {
         )
       }
 
-      if (isNetworkError(error)) {
+      if (isMetadataServiceNetworkError(error)) {
         throw new TrustProviderError(
           `AWS Metadata Service ${options.operationName} request failed`,
           {
@@ -224,19 +231,6 @@ export function createAwsMetadataServiceTrustProvider(
   return new AwsMetadataServiceTrustProvider(options)
 }
 
-function resolveProviderId(value: string | undefined): string {
-  const id = typeof value === "string" ? value.trim() : ""
-  return id.length > 0 ? id : DEFAULT_PROVIDER_ID
-}
-
-function resolveTimeoutMs(value: number | undefined): number {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-    return Math.max(1, Math.floor(value))
-  }
-
-  return DEFAULT_IMDS_TIMEOUT_MS
-}
-
 function resolveTokenTtlSeconds(value: number | undefined): number {
   if (typeof value === "number" && Number.isFinite(value)) {
     const ttl = Math.floor(value)
@@ -246,20 +240,6 @@ function resolveTokenTtlSeconds(value: number | undefined): number {
   }
 
   return DEFAULT_IMDS_TOKEN_TTL_SECONDS
-}
-
-function createImdsHttpError(
-  statusCode: number,
-  operationName: string,
-  retryableStatusCodes: number[] = []
-): TrustProviderError {
-  return new TrustProviderError(
-    `AWS Metadata Service ${operationName} request failed with status ${String(statusCode)}`,
-    {
-      statusCode,
-      retryable: isRetryableHttpStatus(statusCode, retryableStatusCodes)
-    }
-  )
 }
 
 function encodeBase64(value: string): string {
@@ -275,8 +255,4 @@ function parseMetadataToken(value: string): string {
   }
 
   return token
-}
-
-function isNetworkError(error: unknown): boolean {
-  return error instanceof TypeError
 }
