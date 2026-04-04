@@ -3,6 +3,7 @@ from dataclasses import asdict
 import pytest
 
 from aembit_edge import (
+    AsyncTrustProvider,
     AuthSession,
     CredentialResult,
     CredentialServerRef,
@@ -20,6 +21,14 @@ class StubTrustProvider:
     kind = "aws_role"
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
+        return CollectedTrustProviderIdentity(client={"aws": {"region": "us-east-1"}})
+
+
+class StubAsyncTrustProvider:
+    id = "stub-async"
+    kind = "aws_role"
+
+    async def collect_identity(self) -> CollectedTrustProviderIdentity:
         return CollectedTrustProviderIdentity(client={"aws": {"region": "us-east-1"}})
 
 
@@ -66,6 +75,12 @@ def test_trust_provider_protocol_is_runtime_checkable() -> None:
     provider = StubTrustProvider()
 
     assert isinstance(provider, TrustProvider)
+
+
+def test_async_trust_provider_protocol_is_exported_for_typing() -> None:
+    provider: AsyncTrustProvider = StubAsyncTrustProvider()
+
+    assert provider.kind == "aws_role"
 
 
 def test_edge_client_methods_are_stubbed() -> None:

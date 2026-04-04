@@ -1,6 +1,7 @@
 """Public Trust Provider exports."""
 
 from .base import (
+    AsyncTrustProvider,
     ClientWorkloadDetails,
     CollectedTrustProviderIdentity,
     TrustProvider,
@@ -8,6 +9,7 @@ from .base import (
 )
 
 __all__ = [
+    "AsyncTrustProvider",
     "ClientWorkloadDetails",
     "CollectedTrustProviderIdentity",
     "TrustProvider",

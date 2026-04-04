@@ -39,6 +39,7 @@ The package now exposes the initial public sync API surface:
 ```python
 from aembit_edge import EdgeClient, EdgeClientConfig
 from aembit_edge import CredentialResult, CredentialServerRef, GetCredentialInput
+from aembit_edge import AsyncTrustProvider, TrustProvider
 ```
 
 Current public concepts:

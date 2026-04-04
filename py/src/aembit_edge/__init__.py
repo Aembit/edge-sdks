@@ -19,6 +19,7 @@ from .errors import (
 )
 from .retry import RetryPolicy
 from .trust_providers import (
+    AsyncTrustProvider,
     ClientWorkloadDetails,
     CollectedTrustProviderIdentity,
     TrustProvider,
@@ -28,6 +29,7 @@ from .types import JsonObject, JsonPrimitive, JsonValue
 
 __all__ = [
     "ApiError",
+    "AsyncTrustProvider",
     "AuthError",
     "AuthSession",
     "CredentialError",
