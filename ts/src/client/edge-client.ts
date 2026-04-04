@@ -238,11 +238,6 @@ export class EdgeClient {
     }
   }
 
-  private async collectIdentity(): Promise<ClientWorkloadDetails> {
-    const identity = await this.collectIdentityWithMetadata()
-    return identity.client
-  }
-
   private collectIdentityWithMetadata(): Promise<CollectedTrustProviderIdentity> {
     let singleFlightKey: string | undefined
     try {
