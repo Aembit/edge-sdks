@@ -1,0 +1,86 @@
+from dataclasses import asdict
+
+import pytest
+
+from aembit_edge import (
+    AuthSession,
+    CredentialResult,
+    CredentialServerRef,
+    EdgeClient,
+    EdgeClientConfig,
+    GetCredentialInput,
+    GetCredentialOptions,
+    RetryPolicy,
+)
+from aembit_edge.trust_providers import CollectedTrustProviderIdentity, TrustProvider
+
+
+class StubTrustProvider:
+    id = "stub"
+    kind = "aws_role"
+
+    def collect_identity(self) -> CollectedTrustProviderIdentity:
+        return CollectedTrustProviderIdentity(client={"aws": {"region": "us-east-1"}})
+
+
+def test_edge_client_is_constructible() -> None:
+    config = EdgeClientConfig(
+        base_url="https://tenant.aembit.io",
+        client_id="edge-sdk-client-id",
+        trust_provider=StubTrustProvider(),
+        retry=RetryPolicy(max_attempts=3),
+    )
+
+    client = EdgeClient(config)
+
+    assert client.config is config
+
+
+def test_public_models_are_constructible() -> None:
+    server = CredentialServerRef(host="db.internal", port=443)
+    request = GetCredentialInput(server=server, credential_type="api_key")
+    options = GetCredentialOptions(resource_set="example")
+    payload = {"token": "value"}
+    result = CredentialResult(data=payload, credential_type="api_key")
+    session = AuthSession(
+        expires_at=None,
+        trust_provider_id="aws-role",
+    )
+
+    assert asdict(request) == {
+        "server": {"host": "db.internal", "port": 443, "transport_protocol": "TCP"},
+        "credential_type": "api_key",
+    }
+    assert options.resource_set == "example"
+    assert result.data["token"] == "value"
+    assert session.expires_at is None
+    assert session.trust_provider_id == "aws-role"
+
+
+def test_retry_policy_preserves_unset_vs_empty_status_codes() -> None:
+    assert RetryPolicy(max_attempts=3).retry_on_status_codes is None
+    assert RetryPolicy(retry_on_status_codes=()).retry_on_status_codes == ()
+
+
+def test_trust_provider_protocol_is_runtime_checkable() -> None:
+    provider = StubTrustProvider()
+
+    assert isinstance(provider, TrustProvider)
+
+
+def test_edge_client_methods_are_stubbed() -> None:
+    client = EdgeClient(
+        EdgeClientConfig(
+            base_url="https://tenant.aembit.io",
+            client_id="edge-sdk-client-id",
+            trust_provider=StubTrustProvider(),
+        )
+    )
+
+    with pytest.raises(NotImplementedError):
+        client.authenticate()
+
+    with pytest.raises(NotImplementedError):
+        client.get_credential(
+            GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
+        )

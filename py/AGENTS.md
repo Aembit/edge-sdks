@@ -138,7 +138,7 @@ Before handing work back to the user:
 
 - run `uv run ruff check .` for Python file changes and confirm it passes
 - run `uv run ruff format --check .`
-- run `uv run mypy .`
+- run `uv run mypy`
 - run `uv run pytest`
 - ensure API and README changes are aligned
 - verify examples still reflect recommended usage
