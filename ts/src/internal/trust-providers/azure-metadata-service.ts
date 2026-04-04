@@ -1,9 +1,15 @@
 import { TrustProviderError } from "../protocol/errors.js"
-import { executeWithRetry, isRetryableHttpStatus, mergeRetryPolicy } from "../protocol/retry.js"
+import { executeWithRetry, mergeRetryPolicy } from "../protocol/retry.js"
 import { isAbortError, resolveRequestUrl } from "../shared/http-utils.js"
 import { isRecord } from "../shared/type-guards.js"
 import type { RetryPolicyOverride } from "../../types/retry.js"
 import type { ClientWorkloadDetails, TrustProvider } from "../../types/trust-provider.js"
+import {
+  createMetadataServiceHttpError,
+  isMetadataServiceNetworkError,
+  resolveMetadataServiceProviderId,
+  resolveMetadataServiceTimeoutMs
+} from "./metadata-service-utils.js"
 
 const DEFAULT_PROVIDER_ID = "azure-metadata-service"
 const DEFAULT_IMDS_BASE_URL = "http://169.254.169.254"
@@ -72,10 +78,10 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
   private readonly nonce: () => string
 
   constructor(options: AzureMetadataServiceTrustProviderOptions = {}) {
-    this.id = resolveProviderId(options.id)
+    this.id = resolveMetadataServiceProviderId(options.id, DEFAULT_PROVIDER_ID)
     this.baseUrl = options.baseUrl ?? DEFAULT_IMDS_BASE_URL
     this.apiVersion = resolveApiVersion(options.apiVersion)
-    this.timeoutMs = resolveTimeoutMs(options.timeoutMs)
+    this.timeoutMs = resolveMetadataServiceTimeoutMs(options.timeoutMs, DEFAULT_IMDS_TIMEOUT_MS)
     this.retry = options.retry
     this.fetchImpl = options.fetchImpl ?? fetch
     this.nonce = options.nonce ?? createNonce
@@ -149,11 +155,12 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
       })
 
       if (!response.ok) {
-        throw createImdsHttpError(
-          response.status,
-          "attested document",
+        throw createMetadataServiceHttpError({
+          providerLabel: "Azure Metadata Service",
+          statusCode: response.status,
+          operationName: "attested document",
           retryableStatusCodes
-        )
+        })
       }
 
       return parseAttestedDocument(await response.json())
@@ -172,7 +179,7 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
         )
       }
 
-      if (isNetworkError(error)) {
+      if (isMetadataServiceNetworkError(error)) {
         throw new TrustProviderError(
           "Azure Metadata Service attested document request failed",
           {
@@ -205,22 +212,9 @@ export function createAzureMetadataServiceTrustProvider(
   return new AzureMetadataServiceTrustProvider(options)
 }
 
-function resolveProviderId(value: string | undefined): string {
-  const id = typeof value === "string" ? value.trim() : ""
-  return id.length > 0 ? id : DEFAULT_PROVIDER_ID
-}
-
 function resolveApiVersion(value: string | undefined): string {
   const apiVersion = typeof value === "string" ? value.trim() : ""
   return apiVersion.length > 0 ? apiVersion : DEFAULT_IMDS_API_VERSION
-}
-
-function resolveTimeoutMs(value: number | undefined): number {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-    return Math.max(1, Math.floor(value))
-  }
-
-  return DEFAULT_IMDS_TIMEOUT_MS
 }
 
 function resolveNonce(value: string): string {
@@ -267,22 +261,4 @@ function parseAttestedDocument(body: unknown): { encoding: string; signature: st
     encoding: encoding.length > 0 ? encoding : "pkcs7",
     signature
   }
-}
-
-function createImdsHttpError(
-  statusCode: number,
-  operationName: string,
-  retryableStatusCodes: number[] = []
-): TrustProviderError {
-  return new TrustProviderError(
-    `Azure Metadata Service ${operationName} request failed with status ${String(statusCode)}`,
-    {
-      statusCode,
-      retryable: isRetryableHttpStatus(statusCode, retryableStatusCodes)
-    }
-  )
-}
-
-function isNetworkError(error: unknown): boolean {
-  return error instanceof TypeError
 }
