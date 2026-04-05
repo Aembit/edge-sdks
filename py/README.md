@@ -52,7 +52,7 @@ Current public concepts:
 
 Current limitation:
 
-- `EdgeClient` is intentionally stubbed and raises `NotImplementedError`
+- `EdgeClient` is implemented for synchronous authentication and credential retrieval
 - async client support is still planned but not yet exposed
 
 ## Documentation

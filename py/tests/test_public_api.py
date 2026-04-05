@@ -1,7 +1,5 @@
 from dataclasses import asdict
 
-import pytest
-
 from aembit_edge import (
     AsyncTrustProvider,
     AuthSession,
@@ -83,7 +81,7 @@ def test_async_trust_provider_protocol_is_exported_for_typing() -> None:
     assert provider.kind == "aws_role"
 
 
-def test_edge_client_methods_are_stubbed() -> None:
+def test_edge_client_methods_are_exposed() -> None:
     client = EdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
@@ -92,10 +90,5 @@ def test_edge_client_methods_are_stubbed() -> None:
         )
     )
 
-    with pytest.raises(NotImplementedError):
-        client.authenticate()
-
-    with pytest.raises(NotImplementedError):
-        client.get_credential(
-            GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
-        )
+    assert callable(client.authenticate)
+    assert callable(client.get_credential)
