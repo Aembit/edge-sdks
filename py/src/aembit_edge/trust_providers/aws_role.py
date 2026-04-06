@@ -6,6 +6,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
+from botocore.exceptions import (
+    CredentialRetrievalError,
+    NoCredentialsError,
+    PartialCredentialsError,
+)
+
 from ..errors import TrustProviderError
 from ..internal.trust_providers import (
     AwsRoleSignedRequestData,
@@ -58,10 +64,7 @@ class AwsRoleTrustProvider:
         except TrustProviderError:
             raise
         except Exception as error:
-            raise TrustProviderError(
-                "AWS Role Trust Provider failed to build STS GetCallerIdentity request data",
-                retryable=False,
-            ) from error
+            raise _map_role_signer_error(error) from error
 
         return CollectedTrustProviderIdentity(
             client={
@@ -101,3 +104,33 @@ def _normalize_headers(headers: Mapping[str, object]) -> dict[str, str]:
             retryable=False,
         )
     return normalized
+
+
+def _map_role_signer_error(error: Exception) -> TrustProviderError:
+    if isinstance(error, TrustProviderError):
+        return error
+
+    if isinstance(error, (NoCredentialsError, CredentialRetrievalError)):
+        return TrustProviderError(
+            "AWS Role Trust Provider could not resolve AWS credentials",
+            retryable=True,
+        )
+
+    if isinstance(error, PartialCredentialsError) or _is_non_retryable_credential_error(error):
+        return TrustProviderError(
+            "AWS Role Trust Provider could not resolve AWS credentials",
+            retryable=False,
+        )
+
+    return TrustProviderError(
+        "AWS Role Trust Provider failed to build STS GetCallerIdentity request data",
+        retryable=False,
+    )
+
+
+def _is_non_retryable_credential_error(error: Exception) -> bool:
+    if not isinstance(error, ValueError):
+        return False
+
+    message = str(error).lower()
+    return "accesskeyid" in message or "secretaccesskey" in message
