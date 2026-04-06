@@ -147,8 +147,9 @@ def test_collect_identity_maps_partial_credentials_as_non_retryable() -> None:
     assert str(exc_info.value) == "AWS Role Trust Provider could not resolve AWS credentials"
 
 
-def test_collect_identity_maps_deterministic_credential_validation_errors_as_non_retryable(
-) -> None:
+def test_collect_identity_maps_deterministic_credential_validation_errors_as_non_retryable() -> (
+    None
+):
     """Local credential validation failures should not be retried."""
 
     provider = AwsRoleTrustProvider(
