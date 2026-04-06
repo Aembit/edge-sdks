@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol
@@ -13,6 +14,11 @@ from botocore.exceptions import (
 )
 
 from ..errors import TrustProviderError
+from ..internal.retry import (
+    calculate_backoff_delay_ms,
+    is_retryable_error,
+    merge_retry_policy,
+)
 from ..internal.trust_providers import (
     AwsRoleSignedRequestData,
     build_aws_sts_get_caller_identity_signed_data,
@@ -29,6 +35,12 @@ class AwsRoleSigner(Protocol):
     def __call__(self, *, region: str) -> AwsRoleSignedRequestData: ...
 
 
+class SleepFn(Protocol):
+    """Sleep hook for retry backoff."""
+
+    def __call__(self, seconds: float, /) -> None: ...
+
+
 @dataclass(slots=True)
 class AwsRoleTrustProvider:
     """Built-in AWS Role Trust Provider surface.
@@ -43,6 +55,7 @@ class AwsRoleTrustProvider:
     id: str = DEFAULT_PROVIDER_ID
     retry: RetryPolicy | None = None
     signer: AwsRoleSigner = build_aws_sts_get_caller_identity_signed_data
+    sleep: SleepFn = time.sleep
 
     kind = "aws_role"
 
@@ -58,13 +71,35 @@ class AwsRoleTrustProvider:
         """Collect signed STS request data for `/edge/v1/auth`."""
 
         region = _resolve_region(self.region)
+        effective_retry_policy = merge_retry_policy(self.retry)
+        max_attempts = effective_retry_policy.max_attempts if effective_retry_policy.enabled else 1
 
-        try:
-            signed_data = self.signer(region=region)
-        except TrustProviderError:
-            raise
-        except Exception as error:
-            raise _map_role_signer_error(error) from error
+        last_error: Exception | None = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                signed_data = self.signer(region=region)
+                break
+            except TrustProviderError as error:
+                last_error = error
+                if not is_retryable_error(error) or attempt >= max_attempts:
+                    raise
+
+                delay_ms = calculate_backoff_delay_ms(attempt, effective_retry_policy)
+                if delay_ms > 0:
+                    self.sleep(delay_ms / 1000)
+            except Exception as error:
+                mapped_error = _map_role_signer_error(error)
+                last_error = mapped_error
+                if not is_retryable_error(mapped_error) or attempt >= max_attempts:
+                    raise mapped_error from error
+
+                delay_ms = calculate_backoff_delay_ms(attempt, effective_retry_policy)
+                if delay_ms > 0:
+                    self.sleep(delay_ms / 1000)
+        else:  # pragma: no cover - defensive state
+            if last_error is not None:
+                raise last_error
+            raise RuntimeError("unreachable retry state")
 
         return CollectedTrustProviderIdentity(
             client={

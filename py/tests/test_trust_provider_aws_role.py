@@ -9,6 +9,7 @@ from botocore.exceptions import (
 
 from aembit_edge.errors import TrustProviderError
 from aembit_edge.internal.trust_providers import AwsRoleSignedRequestData
+from aembit_edge.retry import RetryPolicy
 from aembit_edge.trust_providers import AwsRoleTrustProvider
 
 
@@ -156,6 +157,78 @@ def test_collect_identity_maps_unexpected_signer_failures_as_non_retryable() -> 
         str(exc_info.value)
         == "AWS Role Trust Provider failed to build STS GetCallerIdentity request data"
     )
+
+
+def test_collect_identity_retries_retryable_failures() -> None:
+    calls = {"count": 0}
+
+    def signer(*, region: str) -> AwsRoleSignedRequestData:
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise NoCredentialsError()
+
+        return AwsRoleSignedRequestData(
+            headers={"host": f"sts.{region}.amazonaws.com"},
+            region=region,
+        )
+
+    provider = AwsRoleTrustProvider(
+        region="us-east-1",
+        retry=RetryPolicy(max_attempts=2, base_delay_ms=0, max_delay_ms=0),
+        signer=signer,
+    )
+
+    identity = provider.collect_identity()
+
+    assert calls["count"] == 2
+    assert identity.client == {
+        "aws": {
+            "stsGetCallerIdentity": {
+                "headers": {"host": "sts.us-east-1.amazonaws.com"},
+                "region": "us-east-1",
+            }
+        }
+    }
+
+
+def test_collect_identity_does_not_retry_non_retryable_failures() -> None:
+    calls = {"count": 0}
+
+    def signer(*, region: str) -> AwsRoleSignedRequestData:
+        del region
+        calls["count"] += 1
+        raise PartialCredentialsError(provider="env", cred_var="AWS_SECRET_ACCESS_KEY")
+
+    provider = AwsRoleTrustProvider(
+        region="us-east-1",
+        retry=RetryPolicy(max_attempts=3, base_delay_ms=0, max_delay_ms=0),
+        signer=signer,
+    )
+
+    with pytest.raises(TrustProviderError):
+        provider.collect_identity()
+
+    assert calls["count"] == 1
+
+
+def test_collect_identity_respects_disabled_retry_setting() -> None:
+    calls = {"count": 0}
+
+    def signer(*, region: str) -> AwsRoleSignedRequestData:
+        del region
+        calls["count"] += 1
+        raise NoCredentialsError()
+
+    provider = AwsRoleTrustProvider(
+        region="us-east-1",
+        retry=RetryPolicy(enabled=False, max_attempts=5, base_delay_ms=0, max_delay_ms=0),
+        signer=signer,
+    )
+
+    with pytest.raises(TrustProviderError):
+        provider.collect_identity()
+
+    assert calls["count"] == 1
 
 
 def _capture_signed_request(
