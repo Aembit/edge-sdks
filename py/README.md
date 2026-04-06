@@ -51,10 +51,16 @@ Current public concepts:
 - `resource_set`
 - `Trust Provider`
 
+Current built-in Trust Provider surface:
+
+- `AwsRoleTrustProvider(region=...)` from `aembit_edge.trust_providers`
+
 Current limitation:
 
 - `EdgeClient` is implemented for synchronous authentication and credential retrieval
 - async client support is still planned but not yet exposed
+- AWS Role Trust Provider signing internals are still landing; the public
+  provider surface is defined in this step
 
 ## Documentation
 

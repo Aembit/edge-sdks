@@ -11,7 +11,12 @@ from aembit_edge import (
     GetCredentialOptions,
     RetryPolicy,
 )
-from aembit_edge.trust_providers import CollectedTrustProviderIdentity, TrustProvider
+from aembit_edge.internal.trust_providers import AwsRoleSignedRequestData
+from aembit_edge.trust_providers import (
+    AwsRoleTrustProvider,
+    CollectedTrustProviderIdentity,
+    TrustProvider,
+)
 
 
 class StubTrustProvider:
@@ -92,3 +97,18 @@ def test_edge_client_methods_are_exposed() -> None:
 
     assert callable(client.authenticate)
     assert callable(client.get_credential)
+
+
+def test_aws_role_trust_provider_surface_is_exported() -> None:
+    provider = AwsRoleTrustProvider(
+        region="us-east-1",
+        signer=lambda region: AwsRoleSignedRequestData(
+            headers={"host": f"sts.{region}.amazonaws.com"},
+            region=region,
+        ),
+    )
+
+    assert provider.id == "aws-role"
+    assert provider.kind == "aws_role"
+    assert provider.get_identity_single_flight_key() == "aws_role:aws-role"
+    assert isinstance(provider, TrustProvider)
