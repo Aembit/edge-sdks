@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pytest import MonkeyPatch
 
-from aembit_edge.internal.protocol.http_transport import _default_http_sender
+from aembit_edge.internal.protocol.http_transport import default_http_sender
 
 
 class _FakeHeaders:
@@ -39,7 +39,7 @@ def test_default_http_sender_clamps_zero_timeout_to_none(monkeypatch: MonkeyPatc
         fake_urlopen,
     )
 
-    _default_http_sender(
+    default_http_sender(
         url="https://tenant.aembit.io/edge/v1/auth",
         method="POST",
         headers={},
@@ -63,7 +63,7 @@ def test_default_http_sender_clamps_negative_timeout_to_none(monkeypatch: Monkey
         fake_urlopen,
     )
 
-    _default_http_sender(
+    default_http_sender(
         url="https://tenant.aembit.io/edge/v1/auth",
         method="POST",
         headers={},

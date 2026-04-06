@@ -5,7 +5,7 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from threading import Event, Lock
-from typing import cast
+from typing import TypeGuard, cast
 
 from .auth import AuthSession
 from .config import EdgeClientConfig
@@ -84,11 +84,15 @@ class EdgeClient:
         options: GetCredentialOptions | None = None,
     ) -> CredentialResult:
         """Retrieve credentials for a target server."""
-        if not isinstance(request, GetCredentialInput):
+        request_value = cast(object, request)
+        if not isinstance(request_value, GetCredentialInput):
             raise CredentialError("get_credential() requires a valid input object", retryable=False)
+        request = request_value
 
-        if options is not None and not isinstance(options, GetCredentialOptions):
+        options_value = cast(object, options)
+        if options_value is not None and not isinstance(options_value, GetCredentialOptions):
             raise CredentialError("get_credential() options must be an object", retryable=False)
+        options = options_value
 
         effective_options = options or GetCredentialOptions()
         self._validate_retry_override(self._config.retry, operation="get_credential")
@@ -313,7 +317,8 @@ class EdgeClient:
 
     def _collect_identity_uncached(self) -> CollectedTrustProviderIdentity:
         try:
-            collected = self._config.trust_provider.collect_identity()
+            collector = cast(Callable[[], object], self._config.trust_provider.collect_identity)
+            collected_value = collector()
         except TrustProviderError:
             raise
         except Exception as error:
@@ -322,17 +327,20 @@ class EdgeClient:
                 retryable=False,
             ) from error
 
-        if not isinstance(collected, CollectedTrustProviderIdentity):
+        if not isinstance(collected_value, CollectedTrustProviderIdentity):
             raise TrustProviderError(
                 f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
                 retryable=False,
             )
-        if not isinstance(collected.client, Mapping):
+        collected = collected_value
+        client_value = cast(object, collected.client)
+        if not isinstance(client_value, Mapping):
             raise TrustProviderError(
                 f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
                 retryable=False,
             )
-        if collected.auth_cache_key is not None and not isinstance(collected.auth_cache_key, str):
+        auth_cache_key_value = cast(object, collected.auth_cache_key)
+        if auth_cache_key_value is not None and not isinstance(auth_cache_key_value, str):
             raise TrustProviderError(
                 f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
                 retryable=False,
@@ -368,13 +376,14 @@ class EdgeClient:
                 f"{operation}() retry configuration must be a RetryPolicy instance",
                 retryable=False,
             )
-        if retry.enabled is not None and not isinstance(retry.enabled, bool):
+        enabled_value = cast(object, retry.enabled)
+        if enabled_value is not None and not isinstance(enabled_value, bool):
             raise CredentialError(
                 f"{operation}() retry configuration contains an invalid enabled value",
                 retryable=False,
             )
         for field_name in ("max_attempts", "base_delay_ms", "max_delay_ms"):
-            value = getattr(retry, field_name)
+            value = cast(object, getattr(retry, field_name))
             if value is None:
                 continue
             if not _is_valid_retry_numeric(value):
@@ -383,7 +392,7 @@ class EdgeClient:
                     retryable=False,
                 )
 
-        status_codes = retry.retry_on_status_codes
+        status_codes = cast(object, retry.retry_on_status_codes)
         if status_codes is None:
             return
         if not isinstance(status_codes, (tuple, list)):
@@ -391,7 +400,8 @@ class EdgeClient:
                 f"{operation}() retry configuration contains invalid retry_on_status_codes",
                 retryable=False,
             )
-        for code in status_codes:
+        normalized_status_codes = cast(tuple[object, ...] | list[object], status_codes)
+        for code in normalized_status_codes:
             if isinstance(code, bool) or not isinstance(code, int):
                 raise CredentialError(
                     f"{operation}() retry configuration contains invalid retry_on_status_codes",
@@ -410,14 +420,14 @@ def _merge_client_workload_details(
 
 
 def _merge_mappings(
-    base: Mapping[str, object],
-    overlay: Mapping[str, object],
+    base: Mapping[str, JsonValue],
+    overlay: Mapping[str, JsonValue],
 ) -> ClientWorkloadDetails:
-    merged: dict[str, object] = dict(base)
+    merged: dict[str, JsonValue] = dict(base)
 
     for key, overlay_value in overlay.items():
         base_value = merged.get(key)
-        if isinstance(base_value, Mapping) and isinstance(overlay_value, Mapping):
+        if _is_json_mapping_value(base_value) and _is_json_mapping_value(overlay_value):
             merged[key] = _merge_mappings(base_value, overlay_value)
             continue
 
@@ -445,6 +455,10 @@ def _is_valid_retry_numeric(value: object) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value)
 
 
+def _is_json_mapping_value(value: JsonValue | None) -> TypeGuard[Mapping[str, JsonValue]]:
+    return isinstance(value, Mapping)
+
+
 def _normalize_client_workload_details(
     additional_details: object,
 ) -> ClientWorkloadDetails | None:
@@ -467,9 +481,10 @@ def _normalize_json_object(
 ) -> ClientWorkloadDetails:
     if not isinstance(value, Mapping):
         raise error_factory()
+    mapping = cast(Mapping[object, object], value)
 
     normalized: dict[str, JsonValue] = {}
-    for key, item in value.items():
+    for key, item in mapping.items():
         if not isinstance(key, str):
             raise error_factory()
         normalized[key] = _normalize_json_value(item, error_factory=error_factory)
@@ -489,10 +504,17 @@ def _normalize_json_value(
             raise error_factory()
         return value
     if isinstance(value, Mapping):
-        return _normalize_json_object(value, error_factory=error_factory)
+        return _normalize_json_object(
+            cast(Mapping[object, object], value),
+            error_factory=error_factory,
+        )
     if isinstance(value, list):
-        return [_normalize_json_value(item, error_factory=error_factory) for item in value]
+        sequence = cast(list[object], value)
+        return [_normalize_json_value(item, error_factory=error_factory) for item in sequence]
     if isinstance(value, tuple):
-        return tuple(_normalize_json_value(item, error_factory=error_factory) for item in value)
+        tuple_sequence = cast(tuple[object, ...], value)
+        return tuple(
+            _normalize_json_value(item, error_factory=error_factory) for item in tuple_sequence
+        )
 
     raise error_factory()

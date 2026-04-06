@@ -185,7 +185,7 @@ def _normalize_max_delay_ms(value: int | None, base_delay_ms: int) -> int:
     return max(0, int(value))
 
 
-def _is_invalid_numeric(value: int | None) -> bool:
+def _is_invalid_numeric(value: object) -> bool:
     return (
         value is None
         or isinstance(value, bool)

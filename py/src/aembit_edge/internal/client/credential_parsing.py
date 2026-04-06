@@ -1,6 +1,6 @@
 """Credential request and response parsing helpers."""
 
-from typing import cast
+from typing import Literal, cast
 
 from ...credentials import CredentialServerRef
 from ...errors import CredentialError
@@ -8,34 +8,37 @@ from ..protocol.types import EdgeCredentialsSuccessBody, EdgeServerWorkloadDetai
 from ..shared import is_string_key_mapping
 
 
-def normalize_server_ref(server: CredentialServerRef) -> EdgeServerWorkloadDetails:
+def normalize_server_ref(server: object) -> EdgeServerWorkloadDetails:
     """Validate and normalize the public server reference."""
 
     if not isinstance(server, CredentialServerRef):
         raise CredentialError("get_credential() requires a valid server object", retryable=False)
 
-    if not isinstance(server.host, str):
+    host_value = cast(object, server.host)
+    if not isinstance(host_value, str):
         raise CredentialError("get_credential() requires server.host", retryable=False)
 
-    host = server.host.strip()
+    host = host_value.strip()
     if not host:
         raise CredentialError("get_credential() requires server.host", retryable=False)
 
-    port = server.port
+    port = cast(object, server.port)
     if isinstance(port, bool) or not isinstance(port, int) or port <= 0 or port > 65535:
         raise CredentialError("get_credential() requires a valid server.port", retryable=False)
 
-    transport_protocol = "TCP" if server.transport_protocol is None else server.transport_protocol
+    transport_protocol_value = cast(object, server.transport_protocol)
+    transport_protocol = "TCP" if transport_protocol_value is None else transport_protocol_value
     if transport_protocol != "TCP":
         raise CredentialError(
             "Unsupported server.transport_protocol. Only 'TCP' is supported",
             retryable=False,
         )
+    normalized_transport_protocol: Literal["TCP"] = "TCP"
 
     return {
         "host": host,
         "port": port,
-        "transportProtocol": transport_protocol,
+        "transportProtocol": normalized_transport_protocol,
     }
 
 

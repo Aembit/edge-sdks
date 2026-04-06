@@ -6,15 +6,16 @@ This SDK should follow the conceptual design established by the TypeScript SDK w
 
 ## Status
 
-The Python SDK is in early public API setup.
+The Python SDK is in early implementation.
 
 Current scope in this directory:
 
 - package and tooling setup
 - Python-specific documentation and architecture notes
-- public sync client API skeleton and shared model types
+- working sync `EdgeClient` authentication and credential retrieval
+- shared protocol, retry, token lifecycle, and error-mapping internals
 
-Functional SDK behavior will be added incrementally in follow-up changes.
+Async client support and built-in Trust Provider implementations will be added incrementally.
 
 ## Runtime And Packaging
 
@@ -70,7 +71,7 @@ Run from `py/`:
 - `uv sync --extra dev --locked`
 - `uv run ruff check .`
 - `uv run ruff format --check .`
-- `uv run mypy`
+- `uv run pyright`
 - `uv run pytest`
 
 Auto-format locally when needed:
@@ -92,7 +93,7 @@ Planned testing and quality stack:
 
 - test runner: `pytest`
 - linter and formatter: `ruff`
-- static type checking: `mypy`
+- static type checking: `pyright`
 - environment and dependency management: `uv`
 
 ## Security

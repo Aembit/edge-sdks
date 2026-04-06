@@ -17,7 +17,7 @@ Initial baseline:
 - initial Trust Provider priority: AWS Role first, AWS Metadata Service next
 - test framework: `pytest`
 - lint and format: `ruff`
-- static type checking: `mypy`
+- static type checking: `pyright`
 - local workflow: `uv`
 
 ## Design Goals

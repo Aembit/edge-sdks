@@ -32,6 +32,7 @@ class TrustProvider(Protocol):
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect provider-specific client workload identity data."""
+        ...
 
 
 class AsyncTrustProvider(Protocol):
@@ -42,3 +43,4 @@ class AsyncTrustProvider(Protocol):
 
     async def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect provider-specific client workload identity data."""
+        ...

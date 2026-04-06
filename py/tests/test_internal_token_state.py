@@ -16,12 +16,12 @@ def test_resolve_auth_expiry_skew_ms_defaults_to_sixty_seconds() -> None:
 
 def test_resolve_auth_expiry_skew_ms_falls_back_on_negative_values() -> None:
     assert resolve_auth_expiry_skew_ms(-1) == 60_000
-    assert resolve_auth_expiry_skew_ms(-0.5) == 60_000  # type: ignore[arg-type]
+    assert resolve_auth_expiry_skew_ms(-0.5) == 60_000
 
 
 def test_resolve_auth_expiry_skew_ms_falls_back_on_non_finite_values() -> None:
-    assert resolve_auth_expiry_skew_ms(float("nan")) == 60_000  # type: ignore[arg-type]
-    assert resolve_auth_expiry_skew_ms(float("inf")) == 60_000  # type: ignore[arg-type]
+    assert resolve_auth_expiry_skew_ms(float("nan")) == 60_000
+    assert resolve_auth_expiry_skew_ms(float("inf")) == 60_000
 
 
 def test_is_token_valid_accepts_non_expiring_tokens() -> None:

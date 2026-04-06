@@ -9,6 +9,10 @@ from .types import JsonObject
 CredentialPayload = JsonObject
 
 
+def _empty_credential_payload() -> CredentialPayload:
+    return {}
+
+
 @dataclass(slots=True, kw_only=True)
 class CredentialServerRef:
     """Server reference used by :meth:`aembit_edge.EdgeClient.get_credential`."""
@@ -38,6 +42,6 @@ class GetCredentialOptions:
 class CredentialResult:
     """Credential payload returned by the Aembit Edge API."""
 
-    data: CredentialPayload = field(default_factory=dict)
+    data: CredentialPayload = field(default_factory=_empty_credential_payload)
     credential_type: str | None = None
     expires_at: str | None = None

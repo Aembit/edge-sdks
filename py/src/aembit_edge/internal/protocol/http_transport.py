@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Protocol, TypeVar, cast
+from typing import Protocol
 from urllib import error as urllib_error
 from urllib import parse as urllib_parse
 from urllib import request as urllib_request
@@ -21,8 +21,6 @@ from .retry import (
     merge_retry_policy,
 )
 from .types import EdgeOperation, EdgeResponseHeaders, EdgeSuccessResponse
-
-TSuccessBody = TypeVar("TSuccessBody")
 
 
 @dataclass(slots=True, kw_only=True)
@@ -62,13 +60,13 @@ class EdgeHttpTransport:
         self._base_url = base_url
         self._timeout_ms = timeout_ms
         self._retry = retry
-        self._sender = sender or _default_http_sender
+        self._sender = sender or default_http_sender
         self._sleep = sleep or time.sleep
 
     def request_json(
         self,
         request: EdgeTransportRequest,
-    ) -> EdgeSuccessResponse[TSuccessBody]:
+    ) -> EdgeSuccessResponse[object]:
         """Execute an HTTP request, parse JSON, and apply retry/error mapping."""
 
         effective_retry_override = merge_retry_overrides(self._retry, request.retry)
@@ -100,7 +98,7 @@ class EdgeHttpTransport:
         request: EdgeTransportRequest,
         *,
         retry_on_status_codes: tuple[int, ...],
-    ) -> EdgeSuccessResponse[TSuccessBody]:
+    ) -> EdgeSuccessResponse[object]:
         try:
             url = _resolve_request_url(self._base_url, request.path)
             method = request.method.upper()
@@ -113,7 +111,7 @@ class EdgeHttpTransport:
                 headers["content-type"] = "application/json"
         except Exception as error:
             raise map_transport_error(
-                error if isinstance(error, Exception) else Exception(str(error)),
+                error,
                 message="Edge transport request failed",
                 retryable=False,
             ) from error
@@ -140,7 +138,7 @@ class EdgeHttpTransport:
 
                 return EdgeSuccessResponse(
                     status=response.status,
-                    body=cast(TSuccessBody, parsed.value),
+                    body=parsed.value,
                     headers=response.headers,
                 )
 
@@ -171,10 +169,7 @@ class HttpSender(Protocol):
     ) -> RawHttpResponse: ...
 
 
-class SleepFn(Protocol):
-    """Callable protocol for sleep implementations."""
-
-    def __call__(self, seconds: float) -> None: ...
+SleepFn = Callable[[float], None]
 
 
 @dataclass(slots=True, kw_only=True)
@@ -183,7 +178,7 @@ class _ParsedJsonBody:
     value: object = None
 
 
-def _default_http_sender(
+def default_http_sender(
     *,
     url: str,
     method: str,

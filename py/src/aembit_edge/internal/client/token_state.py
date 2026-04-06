@@ -27,7 +27,7 @@ class CachedTokenState:
     auth_cache_key: str | None = None
 
 
-def resolve_auth_expiry_skew_ms(value: int | None) -> int:
+def resolve_auth_expiry_skew_ms(value: object) -> int:
     """Resolve configured token expiry skew in milliseconds."""
 
     if value is None:

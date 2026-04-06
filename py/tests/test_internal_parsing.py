@@ -68,10 +68,10 @@ def test_normalize_server_ref_rejects_invalid_port() -> None:
 
 def test_normalize_server_ref_rejects_invalid_runtime_types() -> None:
     with pytest.raises(CredentialError):
-        normalize_server_ref(None)  # type: ignore[arg-type]
+        normalize_server_ref(None)
 
     with pytest.raises(CredentialError):
-        normalize_server_ref({"host": "db.internal", "port": 443})  # type: ignore[arg-type]
+        normalize_server_ref({"host": "db.internal", "port": 443})
 
     with pytest.raises(CredentialError):
         normalize_server_ref(CredentialServerRef(host=None, port=443))  # type: ignore[arg-type]

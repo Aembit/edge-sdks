@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from collections.abc import Callable
 from types import MappingProxyType
 
 import pytest
@@ -13,7 +14,15 @@ from aembit_edge.errors import AuthError, CredentialError, TrustProviderError
 from aembit_edge.internal.protocol import EdgeApi, EdgeHttpTransport, RawHttpResponse
 from aembit_edge.internal.protocol.http_transport import HttpSender
 from aembit_edge.retry import RetryPolicy
-from aembit_edge.trust_providers import CollectedTrustProviderIdentity
+from aembit_edge.trust_providers import CollectedTrustProviderIdentity, TrustProvider
+
+
+class HarnessEdgeClient(EdgeClient):
+    def set_api_for_test(self, api: EdgeApi) -> None:
+        self._api = api
+
+    def set_now_ms_for_test(self, now_ms: Callable[[], int]) -> None:
+        self._now_ms = now_ms
 
 
 class StubTrustProvider:
@@ -193,28 +202,30 @@ class BlankSingleFlightKeyTrustProvider(DynamicIdentityTrustProvider):
 def build_client(
     *,
     sender: HttpSender,
-    provider: StubTrustProvider | None = None,
-) -> EdgeClient:
+    provider: TrustProvider | None = None,
+) -> HarnessEdgeClient:
     trust_provider = provider or StubTrustProvider(
         CollectedTrustProviderIdentity(client={"aws": {"region": "us-east-1"}})
     )
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
             trust_provider=trust_provider,
         )
     )
-    client._api = EdgeApi(
-        transport=EdgeHttpTransport(
-            base_url="https://tenant.aembit.io",
-            sender=sender,
-            retry=RetryPolicy(base_delay_ms=0, max_delay_ms=0, max_attempts=3),
-            sleep=lambda _seconds: None,
-        ),
-        resource_set=client.config.resource_set,
+    client.set_api_for_test(
+        EdgeApi(
+            transport=EdgeHttpTransport(
+                base_url="https://tenant.aembit.io",
+                sender=sender,
+                retry=RetryPolicy(base_delay_ms=0, max_delay_ms=0, max_attempts=3),
+                sleep=lambda _seconds: None,
+            ),
+            resource_set=client.config.resource_set,
+        )
     )
-    client._now_ms = lambda: 1_000_000
+    client.set_now_ms_for_test(lambda: 1_000_000)
     return client
 
 
@@ -247,7 +258,7 @@ def test_authenticate_merges_additional_client_workload_details_additively() -> 
             )
         ]
     )
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -262,15 +273,17 @@ def test_authenticate_merges_additional_client_workload_details_additively() -> 
             },
         )
     )
-    client._api = EdgeApi(
-        transport=EdgeHttpTransport(
-            base_url="https://tenant.aembit.io",
-            sender=sender,
-            sleep=lambda _seconds: None,
-        ),
-        resource_set=client.config.resource_set,
+    client.set_api_for_test(
+        EdgeApi(
+            transport=EdgeHttpTransport(
+                base_url="https://tenant.aembit.io",
+                sender=sender,
+                sleep=lambda _seconds: None,
+            ),
+            resource_set=client.config.resource_set,
+        )
     )
-    client._now_ms = lambda: 1_000_000
+    client.set_now_ms_for_test(lambda: 1_000_000)
 
     client.authenticate()
 
@@ -375,7 +388,7 @@ def test_get_credential_refreshes_expired_token_using_skew() -> None:
     )
     client = build_client(sender=sender)
     times = iter([1_000_000, 1_000_000, 1_029_500, 1_029_500, 1_029_500, 1_029_500])
-    client._now_ms = lambda: next(times)
+    client.set_now_ms_for_test(lambda: next(times))
 
     client.get_credential(
         GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
@@ -478,7 +491,7 @@ def test_get_credential_deduplicates_concurrent_auth_refreshes() -> None:
 def test_get_credential_deduplicates_concurrent_identity_collection() -> None:
     sender = BlockingAuthSender()
     provider = BlockingIdentityTrustProvider()
-    client = build_client(sender=sender, provider=provider)  # type: ignore[arg-type]
+    client = build_client(sender=sender, provider=provider)
     results: list[str] = []
     errors: list[Exception] = []
 
@@ -527,22 +540,24 @@ def test_authenticate_does_not_deduplicate_dynamic_identity_collection() -> None
         ]
     )
     provider = DynamicIdentityTrustProvider()
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
             trust_provider=provider,
         )
     )
-    client._api = EdgeApi(
-        transport=EdgeHttpTransport(
-            base_url="https://tenant.aembit.io",
-            sender=sender,
-            sleep=lambda _seconds: None,
-        ),
-        resource_set=client.config.resource_set,
+    client.set_api_for_test(
+        EdgeApi(
+            transport=EdgeHttpTransport(
+                base_url="https://tenant.aembit.io",
+                sender=sender,
+                sleep=lambda _seconds: None,
+            ),
+            resource_set=client.config.resource_set,
+        )
     )
-    client._now_ms = lambda: 1_000_000
+    client.set_now_ms_for_test(lambda: 1_000_000)
     errors: list[Exception] = []
 
     def run_auth() -> None:
@@ -565,9 +580,7 @@ def test_authenticate_does_not_deduplicate_dynamic_identity_collection() -> None
     assert not errors
     assert provider.calls == 2
     request_bodies = [call["body"] for call in sender.calls]
-    assert {
-        json.dumps(body, sort_keys=True) for body in request_bodies
-    } == {
+    assert {json.dumps(body, sort_keys=True) for body in request_bodies} == {
         json.dumps(
             {
                 "clientId": "edge-sdk-client-id",
@@ -601,22 +614,24 @@ def test_authenticate_does_not_deduplicate_blank_identity_single_flight_key() ->
         ]
     )
     provider = BlankSingleFlightKeyTrustProvider()
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
             trust_provider=provider,
         )
     )
-    client._api = EdgeApi(
-        transport=EdgeHttpTransport(
-            base_url="https://tenant.aembit.io",
-            sender=sender,
-            sleep=lambda _seconds: None,
-        ),
-        resource_set=client.config.resource_set,
+    client.set_api_for_test(
+        EdgeApi(
+            transport=EdgeHttpTransport(
+                base_url="https://tenant.aembit.io",
+                sender=sender,
+                sleep=lambda _seconds: None,
+            ),
+            resource_set=client.config.resource_set,
+        )
     )
-    client._now_ms = lambda: 1_000_000
+    client.set_now_ms_for_test(lambda: 1_000_000)
     errors: list[Exception] = []
 
     def run_auth() -> None:
@@ -693,7 +708,7 @@ def test_trust_provider_errors_are_wrapped() -> None:
 
 
 def test_invalid_trust_provider_output_is_wrapped() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -706,7 +721,7 @@ def test_invalid_trust_provider_output_is_wrapped() -> None:
 
 
 def test_invalid_trust_provider_auth_cache_key_is_wrapped() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -728,22 +743,24 @@ def test_mapping_proxy_trust_provider_payload_is_normalized() -> None:
             )
         ]
     )
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
             trust_provider=MappingProxyTrustProvider(),
         )
     )
-    client._api = EdgeApi(
-        transport=EdgeHttpTransport(
-            base_url="https://tenant.aembit.io",
-            sender=sender,
-            sleep=lambda _seconds: None,
-        ),
-        resource_set=client.config.resource_set,
+    client.set_api_for_test(
+        EdgeApi(
+            transport=EdgeHttpTransport(
+                base_url="https://tenant.aembit.io",
+                sender=sender,
+                sleep=lambda _seconds: None,
+            ),
+            resource_set=client.config.resource_set,
+        )
     )
-    client._now_ms = lambda: 1_000_000
+    client.set_now_ms_for_test(lambda: 1_000_000)
 
     client.authenticate()
 
@@ -754,7 +771,7 @@ def test_mapping_proxy_trust_provider_payload_is_normalized() -> None:
 
 
 def test_invalid_trust_provider_client_payload_is_wrapped() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -767,7 +784,7 @@ def test_invalid_trust_provider_client_payload_is_wrapped() -> None:
 
 
 def test_authenticate_rejects_invalid_retry_config_type() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -783,7 +800,7 @@ def test_authenticate_rejects_invalid_retry_config_type() -> None:
 
 
 def test_get_credential_rejects_invalid_retry_option_type() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -801,7 +818,7 @@ def test_get_credential_rejects_invalid_retry_option_type() -> None:
 
 
 def test_authenticate_rejects_invalid_retry_status_codes() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -817,7 +834,7 @@ def test_authenticate_rejects_invalid_retry_status_codes() -> None:
 
 
 def test_get_credential_rejects_invalid_retry_status_codes() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",
@@ -837,7 +854,7 @@ def test_get_credential_rejects_invalid_retry_status_codes() -> None:
 
 
 def test_authenticate_rejects_invalid_client_workload_details() -> None:
-    client = EdgeClient(
+    client = HarnessEdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",
             client_id="edge-sdk-client-id",

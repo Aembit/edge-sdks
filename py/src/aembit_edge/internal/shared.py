@@ -1,7 +1,7 @@
 """Internal shared helpers."""
 
 from collections.abc import Mapping
-from typing import TypeGuard
+from typing import TypeGuard, cast
 
 
 def is_string_key_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
@@ -10,4 +10,8 @@ def is_string_key_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
     if not isinstance(value, Mapping):
         return False
 
-    return all(isinstance(key, str) for key in value)
+    mapping = cast(Mapping[object, object], value)
+    for key in mapping.keys():
+        if not isinstance(key, str):
+            return False
+    return True
