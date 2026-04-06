@@ -4,11 +4,12 @@
 
 ## Validation
 
-- [ ] `cd ts && npm run lint`
-- [ ] `cd ts && npm run typecheck`
-- [ ] `cd ts && npm test`
-- [ ] `npm run lint:md` (repo root)
-- [ ] `shellcheck scripts/*.sh` (if shell scripts changed)
+- List the checks you ran. Include only the ones relevant to this change.
+- `cd ts && npm run lint && npm run typecheck && npm test` (if `ts/` changed)
+- `cd py && uv run ruff check . && uv run ruff format --check . && uv run pyright && uv run pytest` (if `py/` changed)
+- `cd py && uv build --wheel --sdist` (if Python packaging/build config changed)
+- `npm run lint:md` (repo root, if Markdown changed)
+- `shellcheck scripts/*.sh` (repo root, if shell scripts changed)
 
 ## Docs And Examples
 

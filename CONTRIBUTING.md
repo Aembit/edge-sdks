@@ -23,6 +23,22 @@ npm run typecheck
 npm test
 ```
 
+For Python SDK changes (from `py/`):
+
+```bash
+uv sync --extra dev --locked
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
+uv run pytest
+```
+
+For Python packaging or build configuration changes (from `py/`):
+
+```bash
+uv build --wheel --sdist
+```
+
 For Markdown/documentation changes (from repo root):
 
 ```bash

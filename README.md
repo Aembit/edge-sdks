@@ -25,7 +25,7 @@ Repository layout:
 - `spec/` cross-language SDK contracts
 - `spec/openapi/` pinned OpenAPI snapshots and snapshot metadata
 - `ts/` TypeScript SDK (reference implementation)
-- `py/` planned Python SDK directory
+- `py/` Python SDK
 - `go/` planned Go SDK directory
 
 Each language SDK directory should contain:
@@ -41,8 +41,11 @@ This repository hosts SDKs for the Aembit Edge API.
 The **TypeScript SDK** is the first implementation and serves as the
 reference design for the SDK architecture.
 
-Additional SDKs for other languages (such as Python and Go) will follow
-the same conceptual design where possible.
+The **Python SDK** is in early implementation and follows the same
+conceptual design where practical.
+
+Additional SDKs for other languages (such as Go) will follow the same
+conceptual design where possible.
 
 ## Examples
 
@@ -81,6 +84,14 @@ Run TypeScript SDK checks from `ts/`:
 - `npm run lint`
 - `npm run typecheck`
 - `npm test`
+
+Run Python SDK checks from `py/`:
+
+- `uv sync --extra dev --locked`
+- `uv run ruff check .`
+- `uv run ruff format --check .`
+- `uv run pyright`
+- `uv run pytest`
 
 Run Markdown checks from repository root:
 

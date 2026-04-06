@@ -73,6 +73,7 @@ Run from `py/`:
 - `uv run ruff format --check .`
 - `uv run pyright`
 - `uv run pytest`
+- `uv build --wheel --sdist` for packaging or build configuration changes
 
 Auto-format locally when needed:
 

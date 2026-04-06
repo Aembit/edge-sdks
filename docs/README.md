@@ -18,7 +18,7 @@ Use `docs/` for:
 
 - Use `spec/` for cross-language contracts and protocol-aligned SDK design specs.
 - Use `spec/openapi/` for pinned OpenAPI snapshots and snapshot metadata.
-- Use language directories (for example `ts/`) for language-specific usage docs and examples.
+- Use language directories (for example `ts/` and `py/`) for language-specific usage docs and examples.
 
 ## Status
 
