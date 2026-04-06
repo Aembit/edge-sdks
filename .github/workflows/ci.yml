@@ -92,7 +92,7 @@ jobs:
         if: matrix.python-version == '3.10'
         run: |
           python -m venv .pkg-venv
-          .pkg-venv/bin/pip install --no-deps dist/*.whl
+          .pkg-venv/bin/pip install dist/*.whl
 
       - name: Smoke test built package
         if: matrix.python-version == '3.10'
