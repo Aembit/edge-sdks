@@ -32,13 +32,17 @@ DEFAULT_PROVIDER_ID = "aws-role"
 class AwsRoleSigner(Protocol):
     """Callable signer hook for AWS STS GetCallerIdentity request data."""
 
-    def __call__(self, *, region: str) -> AwsRoleSignedRequestData: ...
+    def __call__(self, *, region: str) -> AwsRoleSignedRequestData:
+        """Return signed request data for the given AWS region."""
+        ...
 
 
 class SleepFn(Protocol):
     """Sleep hook for retry backoff."""
 
-    def __call__(self, seconds: float, /) -> None: ...
+    def __call__(self, seconds: float, /) -> None:
+        """Pause before the next retry attempt."""
+        ...
 
 
 @dataclass(slots=True)
@@ -60,6 +64,8 @@ class AwsRoleTrustProvider:
     kind = "aws_role"
 
     def __post_init__(self) -> None:
+        """Normalize the public provider id after dataclass construction."""
+
         self.id = _resolve_provider_id(self.id)
 
     def get_identity_single_flight_key(self) -> str:
@@ -114,11 +120,15 @@ class AwsRoleTrustProvider:
 
 
 def _resolve_provider_id(value: object) -> str:
+    """Return a stable provider id, falling back to the default when blank."""
+
     provider_id = value.strip() if isinstance(value, str) else ""
     return provider_id or DEFAULT_PROVIDER_ID
 
 
 def _resolve_region(value: object) -> str:
+    """Trim and validate the public AWS region option."""
+
     region = value.strip() if isinstance(value, str) else ""
     if not region:
         raise TrustProviderError(
@@ -129,6 +139,8 @@ def _resolve_region(value: object) -> str:
 
 
 def _normalize_headers(headers: Mapping[str, object]) -> dict[str, str]:
+    """Validate signer headers and copy them into a plain string mapping."""
+
     normalized: dict[str, str] = {}
     for key, value in headers.items():
         if isinstance(value, str):
@@ -142,6 +154,8 @@ def _normalize_headers(headers: Mapping[str, object]) -> dict[str, str]:
 
 
 def _map_role_signer_error(error: Exception) -> TrustProviderError:
+    """Translate signer and credential failures into stable SDK errors."""
+
     if isinstance(error, TrustProviderError):
         return error
 
@@ -164,6 +178,8 @@ def _map_role_signer_error(error: Exception) -> TrustProviderError:
 
 
 def _is_non_retryable_credential_error(error: Exception) -> bool:
+    """Detect deterministic credential shape failures from local validation."""
+
     if not isinstance(error, ValueError):
         return False
 

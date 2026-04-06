@@ -36,13 +36,17 @@ class AwsCredentialIdentity:
 class AwsCredentialProvider(Protocol):
     """Credential resolver for the AWS Role signer."""
 
-    def __call__(self) -> AwsCredentialIdentity: ...
+    def __call__(self) -> AwsCredentialIdentity:
+        """Return credentials that can sign the STS request."""
+        ...
 
 
 class AwsClock(Protocol):
     """Clock hook for deterministic signing tests."""
 
-    def __call__(self) -> datetime: ...
+    def __call__(self) -> datetime:
+        """Return the time that should be used for signing."""
+        ...
 
 
 def build_aws_sts_get_caller_identity_signed_data(
@@ -92,6 +96,8 @@ def build_aws_sts_get_caller_identity_signed_data(
 
 
 def _resolve_default_credentials() -> AwsCredentialIdentity:
+    """Load credentials from the default botocore credential chain."""
+
     credentials = cast(Any, Session().get_credentials())
     if credentials is None:
         raise NoCredentialsError()
@@ -105,6 +111,8 @@ def _resolve_default_credentials() -> AwsCredentialIdentity:
 
 
 def _resolve_region(value: str) -> str:
+    """Trim and validate the AWS region used for signing."""
+
     normalized = value.strip()
     if not normalized:
         raise ValueError("AWS Role Trust Provider requires a non-empty region")
@@ -112,12 +120,16 @@ def _resolve_region(value: str) -> str:
 
 
 def _resolve_sts_host(region: str) -> str:
+    """Return the correct STS host for the given AWS partition."""
+
     if region.startswith("cn-"):
         return f"sts.{region}.amazonaws.com.cn"
     return f"sts.{region}.amazonaws.com"
 
 
 def _assert_credentials(credentials: AwsCredentialIdentity) -> None:
+    """Reject credentials that are missing required key material."""
+
     if credentials.access_key_id.strip() == "":
         raise ValueError("AWS credential provider returned an empty accessKeyId")
     if credentials.secret_access_key.strip() == "":
@@ -125,6 +137,8 @@ def _assert_credentials(credentials: AwsCredentialIdentity) -> None:
 
 
 def _normalize_signing_time(value: datetime | None) -> datetime | None:
+    """Convert aware datetimes to naive UTC for botocore signing hooks."""
+
     if value is None:
         return None
     if value.tzinfo is None:
@@ -133,6 +147,8 @@ def _normalize_signing_time(value: datetime | None) -> datetime | None:
 
 
 def _normalize_headers(items: list[tuple[str, str]]) -> dict[str, str]:
+    """Lower-case signed header names for stable payload output."""
+
     normalized: dict[str, str] = {}
     for key, value in items:
         normalized[key.lower()] = value

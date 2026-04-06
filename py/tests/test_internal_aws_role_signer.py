@@ -12,6 +12,8 @@ from aembit_edge.internal.trust_providers import (
 
 
 def test_builds_signed_sts_headers_for_get_caller_identity() -> None:
+    """The signer should build a standard signed STS request payload."""
+
     result = build_aws_sts_get_caller_identity_signed_data(
         region="us-east-1",
         credentials_provider=lambda: AwsCredentialIdentity(
@@ -33,6 +35,8 @@ def test_builds_signed_sts_headers_for_get_caller_identity() -> None:
 
 
 def test_uses_partition_aware_sts_host_for_aws_china_regions() -> None:
+    """China regions should use the China STS hostname format."""
+
     result = build_aws_sts_get_caller_identity_signed_data(
         region="cn-north-1",
         credentials_provider=lambda: AwsCredentialIdentity(
@@ -48,6 +52,8 @@ def test_uses_partition_aware_sts_host_for_aws_china_regions() -> None:
 
 
 def test_keeps_standard_sts_host_format_for_govcloud_regions() -> None:
+    """GovCloud regions should keep the standard STS hostname format."""
+
     result = build_aws_sts_get_caller_identity_signed_data(
         region="us-gov-west-1",
         credentials_provider=lambda: AwsCredentialIdentity(
@@ -63,6 +69,8 @@ def test_keeps_standard_sts_host_format_for_govcloud_regions() -> None:
 
 
 def test_omits_security_token_when_session_token_is_not_present() -> None:
+    """The signer should skip the session header when no token is present."""
+
     result = build_aws_sts_get_caller_identity_signed_data(
         region="us-west-2",
         credentials_provider=lambda: AwsCredentialIdentity(
@@ -78,6 +86,8 @@ def test_omits_security_token_when_session_token_is_not_present() -> None:
 
 
 def test_trims_and_validates_region() -> None:
+    """The signer should trim valid regions and reject blank ones."""
+
     result = build_aws_sts_get_caller_identity_signed_data(
         region=" eu-central-1 ",
         credentials_provider=lambda: AwsCredentialIdentity(
@@ -100,6 +110,8 @@ def test_trims_and_validates_region() -> None:
 
 
 def test_fails_when_credential_provider_returns_missing_key_fields() -> None:
+    """The signer should reject credentials that are missing required keys."""
+
     with pytest.raises(ValueError, match="empty accessKeyId"):
         build_aws_sts_get_caller_identity_signed_data(
             region="us-east-1",

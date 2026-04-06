@@ -14,6 +14,8 @@ from aembit_edge.trust_providers import AwsRoleTrustProvider
 
 
 def test_collect_identity_returns_sts_get_caller_identity_payload() -> None:
+    """The provider should return the expected AWS Role auth payload."""
+
     calls: list[str] = []
 
     provider = AwsRoleTrustProvider(
@@ -39,6 +41,8 @@ def test_collect_identity_returns_sts_get_caller_identity_payload() -> None:
 
 
 def test_collect_identity_uses_custom_provider_id() -> None:
+    """The provider should preserve a non-blank custom id."""
+
     provider = AwsRoleTrustProvider(
         id=" custom-aws-role ",
         region="us-east-1",
@@ -53,6 +57,8 @@ def test_collect_identity_uses_custom_provider_id() -> None:
 
 
 def test_collect_identity_rejects_blank_region() -> None:
+    """The provider should reject a blank public region option."""
+
     provider = AwsRoleTrustProvider(
         region="  ",
         signer=lambda region: AwsRoleSignedRequestData(headers={}, region=region),
@@ -63,6 +69,8 @@ def test_collect_identity_rejects_blank_region() -> None:
 
 
 def test_collect_identity_rejects_invalid_header_values() -> None:
+    """The provider should reject signer output with non-string header values."""
+
     provider = AwsRoleTrustProvider(
         region="us-east-1",
         signer=lambda region: AwsRoleSignedRequestData(
@@ -76,7 +84,11 @@ def test_collect_identity_rejects_invalid_header_values() -> None:
 
 
 def test_collect_identity_uses_default_signer_entry_point() -> None:
+    """The public surface should keep the signer hook callable."""
+
     def signer(*, region: str) -> AwsRoleSignedRequestData:
+        """Return a minimal signed request payload for the given region."""
+
         return AwsRoleSignedRequestData(
             headers={"host": f"sts.{region}.amazonaws.com"},
             region=region,
@@ -91,6 +103,8 @@ def test_collect_identity_uses_default_signer_entry_point() -> None:
 
 
 def test_collect_identity_maps_exhausted_credential_resolution_failures_as_retryable() -> None:
+    """Missing credentials should map to a retryable TrustProviderError."""
+
     provider = AwsRoleTrustProvider(
         region="us-east-1",
         signer=_raise_no_credentials_error,
@@ -104,6 +118,8 @@ def test_collect_identity_maps_exhausted_credential_resolution_failures_as_retry
 
 
 def test_collect_identity_maps_credential_retrieval_failures_as_retryable() -> None:
+    """Credential retrieval failures should map to a retryable TrustProviderError."""
+
     provider = AwsRoleTrustProvider(
         region="us-east-1",
         signer=_raise_credential_retrieval_error,
@@ -117,6 +133,8 @@ def test_collect_identity_maps_credential_retrieval_failures_as_retryable() -> N
 
 
 def test_collect_identity_maps_partial_credentials_as_non_retryable() -> None:
+    """Partial credentials should map to a non-retryable TrustProviderError."""
+
     provider = AwsRoleTrustProvider(
         region="us-east-1",
         signer=_raise_partial_credentials_error,
@@ -131,6 +149,8 @@ def test_collect_identity_maps_partial_credentials_as_non_retryable() -> None:
 
 def test_collect_identity_maps_deterministic_credential_validation_errors_as_non_retryable(
 ) -> None:
+    """Local credential validation failures should not be retried."""
+
     provider = AwsRoleTrustProvider(
         region="us-east-1",
         signer=_raise_empty_access_key_error,
@@ -144,6 +164,8 @@ def test_collect_identity_maps_deterministic_credential_validation_errors_as_non
 
 
 def test_collect_identity_maps_unexpected_signer_failures_as_non_retryable() -> None:
+    """Unexpected signer failures should surface as non-retryable SDK errors."""
+
     provider = AwsRoleTrustProvider(
         region="us-east-1",
         signer=_raise_unexpected_error,
@@ -160,9 +182,13 @@ def test_collect_identity_maps_unexpected_signer_failures_as_non_retryable() -> 
 
 
 def test_collect_identity_retries_retryable_failures() -> None:
+    """Retryable signer failures should be retried by the provider."""
+
     calls = {"count": 0}
 
     def signer(*, region: str) -> AwsRoleSignedRequestData:
+        """Fail once, then return a valid signed request."""
+
         calls["count"] += 1
         if calls["count"] == 1:
             raise NoCredentialsError()
@@ -192,9 +218,13 @@ def test_collect_identity_retries_retryable_failures() -> None:
 
 
 def test_collect_identity_does_not_retry_non_retryable_failures() -> None:
+    """Non-retryable signer failures should stop after the first attempt."""
+
     calls = {"count": 0}
 
     def signer(*, region: str) -> AwsRoleSignedRequestData:
+        """Always raise a deterministic partial-credentials failure."""
+
         del region
         calls["count"] += 1
         raise PartialCredentialsError(provider="env", cred_var="AWS_SECRET_ACCESS_KEY")
@@ -212,9 +242,13 @@ def test_collect_identity_does_not_retry_non_retryable_failures() -> None:
 
 
 def test_collect_identity_respects_disabled_retry_setting() -> None:
+    """Disabled retry settings should force a single provider attempt."""
+
     calls = {"count": 0}
 
     def signer(*, region: str) -> AwsRoleSignedRequestData:
+        """Always raise a retryable missing-credentials failure."""
+
         del region
         calls["count"] += 1
         raise NoCredentialsError()
@@ -235,6 +269,8 @@ def _capture_signed_request(
     calls: list[str],
     region: str,
 ) -> AwsRoleSignedRequestData:
+    """Record the region and return a deterministic signed request payload."""
+
     calls.append(region)
     return AwsRoleSignedRequestData(
         headers={
@@ -246,25 +282,35 @@ def _capture_signed_request(
 
 
 def _raise_no_credentials_error(*, region: str) -> AwsRoleSignedRequestData:
+    """Raise the botocore missing-credentials error used by the provider."""
+
     del region
     raise NoCredentialsError()
 
 
 def _raise_credential_retrieval_error(*, region: str) -> AwsRoleSignedRequestData:
+    """Raise the botocore credential-retrieval error used by the provider."""
+
     del region
     raise CredentialRetrievalError(provider="iam-role", error_msg="boom")
 
 
 def _raise_partial_credentials_error(*, region: str) -> AwsRoleSignedRequestData:
+    """Raise the botocore partial-credentials error used by the provider."""
+
     del region
     raise PartialCredentialsError(provider="env", cred_var="AWS_SECRET_ACCESS_KEY")
 
 
 def _raise_empty_access_key_error(*, region: str) -> AwsRoleSignedRequestData:
+    """Raise a deterministic local credential validation failure."""
+
     del region
     raise ValueError("AWS credential provider returned an empty accessKeyId")
 
 
 def _raise_unexpected_error(*, region: str) -> AwsRoleSignedRequestData:
+    """Raise an unexpected signer failure for generic error mapping tests."""
+
     del region
     raise RuntimeError("unexpected signer failure")

@@ -205,7 +205,11 @@ class BlankSingleFlightKeyTrustProvider(DynamicIdentityTrustProvider):
 
 
 class BlockingAwsRoleTrustProvider(AwsRoleTrustProvider):
+    """AWS Role provider test double that blocks during signing."""
+
     def __init__(self) -> None:
+        """Set up blocking coordination so concurrent tests can control signing."""
+
         self.identity_started = threading.Event()
         self.release_identity = threading.Event()
         self.lock = threading.Lock()
@@ -216,6 +220,8 @@ class BlockingAwsRoleTrustProvider(AwsRoleTrustProvider):
         )
 
     def _sign(self, *, region: str) -> AwsRoleSignedRequestData:
+        """Block until released, then return a deterministic signed payload."""
+
         with self.lock:
             self.calls += 1
         self.identity_started.set()
@@ -439,6 +445,8 @@ def test_get_credential_refreshes_expired_token_using_skew() -> None:
 
 
 def test_authenticate_sends_aws_role_signed_payload() -> None:
+    """Authenticate should send the signed AWS Role payload unchanged."""
+
     sender = SenderStub(
         [
             RawHttpResponse(
@@ -471,6 +479,8 @@ def test_authenticate_sends_aws_role_signed_payload() -> None:
 
 
 def test_get_credential_reuses_cached_token_for_stable_aws_role_identity() -> None:
+    """Stable AWS Role identity should allow auth token reuse."""
+
     sender = SenderStub(
         [
             RawHttpResponse(
@@ -517,6 +527,8 @@ def test_get_credential_reuses_cached_token_for_stable_aws_role_identity() -> No
 
 
 def test_get_credential_refreshes_expired_aws_role_token_using_same_auth_payload() -> None:
+    """Expired AWS Role tokens should refresh with the same auth payload."""
+
     sender = SenderStub(
         [
             RawHttpResponse(
@@ -681,6 +693,8 @@ def test_get_credential_deduplicates_concurrent_identity_collection() -> None:
 
 
 def test_get_credential_deduplicates_concurrent_aws_role_identity_collection() -> None:
+    """Concurrent AWS Role requests should share one identity collection."""
+
     sender = BlockingAuthSender()
     provider = BlockingAwsRoleTrustProvider()
     client = build_client(sender=sender, provider=provider)
@@ -1110,6 +1124,8 @@ def test_authenticate_rejects_invalid_client_workload_details() -> None:
 
 
 def _aws_role_minimal_signer(*, region: str) -> AwsRoleSignedRequestData:
+    """Return the smallest signed payload needed for client tests."""
+
     return AwsRoleSignedRequestData(
         headers={"host": f"sts.{region}.amazonaws.com"},
         region=region,
@@ -1117,6 +1133,8 @@ def _aws_role_minimal_signer(*, region: str) -> AwsRoleSignedRequestData:
 
 
 def _aws_role_signer_with_auth(*, region: str) -> AwsRoleSignedRequestData:
+    """Return a signed payload that includes an authorization header."""
+
     return AwsRoleSignedRequestData(
         headers={
             "host": f"sts.{region}.amazonaws.com",
@@ -1127,6 +1145,8 @@ def _aws_role_signer_with_auth(*, region: str) -> AwsRoleSignedRequestData:
 
 
 def _aws_role_signer_with_date(*, region: str) -> AwsRoleSignedRequestData:
+    """Return a signed payload that includes auth and signing timestamp headers."""
+
     return AwsRoleSignedRequestData(
         headers={
             "host": f"sts.{region}.amazonaws.com",

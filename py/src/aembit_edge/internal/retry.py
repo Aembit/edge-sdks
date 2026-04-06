@@ -159,6 +159,8 @@ def serialize_effective_retry_policy(policy: EffectiveRetryPolicy) -> str:
 
 
 def _normalize_max_attempts(value: int | None) -> int:
+    """Convert the configured attempt count into a safe integer value."""
+
     if value is None:
         return DEFAULT_RETRY_POLICY.max_attempts
     if _is_invalid_numeric(value):
@@ -168,6 +170,8 @@ def _normalize_max_attempts(value: int | None) -> int:
 
 
 def _normalize_base_delay_ms(value: int | None) -> int:
+    """Convert the configured base delay into a safe millisecond value."""
+
     if value is None:
         return DEFAULT_RETRY_POLICY.base_delay_ms
     if _is_invalid_numeric(value):
@@ -177,6 +181,8 @@ def _normalize_base_delay_ms(value: int | None) -> int:
 
 
 def _normalize_max_delay_ms(value: int | None, base_delay_ms: int) -> int:
+    """Convert the configured max delay into a safe millisecond value."""
+
     if value is None:
         return DEFAULT_RETRY_POLICY.max_delay_ms
     if _is_invalid_numeric(value):
@@ -186,6 +192,8 @@ def _normalize_max_delay_ms(value: int | None, base_delay_ms: int) -> int:
 
 
 def _is_invalid_numeric(value: object) -> bool:
+    """Return true when a retry numeric field is missing or unusable."""
+
     return (
         value is None
         or isinstance(value, bool)
@@ -195,6 +203,8 @@ def _is_invalid_numeric(value: object) -> bool:
 
 
 def _normalize_status_codes(status_codes: tuple[int, ...] | None) -> tuple[int, ...]:
+    """Sort and de-duplicate custom retryable status codes."""
+
     if status_codes is None:
         return DEFAULT_RETRY_POLICY.retry_on_status_codes
 
