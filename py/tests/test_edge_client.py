@@ -699,6 +699,45 @@ def test_get_credential_deduplicates_equivalent_retry_configs() -> None:
     assert sorted(results) == ["value-1", "value-2"]
 
 
+def test_get_credential_deduplicates_equivalent_disabled_retry_configs() -> None:
+    sender = BlockingAuthSender()
+    client = build_client(sender=sender)
+    results: list[str] = []
+    errors: list[Exception] = []
+
+    def run_request(options: GetCredentialOptions) -> None:
+        try:
+            result = client.get_credential(
+                GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443)),
+                options,
+            )
+            results.append(str(result.data["token"]))
+        except Exception as error:  # pragma: no cover - defensive
+            errors.append(error)
+
+    first = threading.Thread(
+        target=run_request,
+        args=(GetCredentialOptions(retry=RetryPolicy(enabled=False, max_attempts=2)),),
+    )
+    second = threading.Thread(
+        target=run_request,
+        args=(GetCredentialOptions(retry=RetryPolicy(enabled=False, max_attempts=5)),),
+    )
+
+    first.start()
+    assert sender.auth_started.wait(timeout=1)
+    second.start()
+    time.sleep(0.05)
+    sender.release_auth.set()
+    first.join(timeout=1)
+    second.join(timeout=1)
+
+    assert not errors
+    assert sender.auth_calls == 1
+    assert sender.credential_calls == 2
+    assert sorted(results) == ["value-1", "value-2"]
+
+
 def test_trust_provider_errors_are_wrapped() -> None:
     sender = SenderStub([])
     client = build_client(sender=sender, provider=StubTrustProvider(RuntimeError("boom")))

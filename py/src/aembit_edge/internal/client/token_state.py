@@ -103,4 +103,15 @@ def serialize_effective_retry_policy_key(
 
     merged_override = merge_retry_overrides(base_retry, request_retry)
     effective_retry = merge_retry_policy(merged_override)
+    if not effective_retry.enabled:
+        return serialize_effective_retry_policy(
+            type(effective_retry)(
+                enabled=False,
+                max_attempts=1,
+                base_delay_ms=0,
+                max_delay_ms=0,
+                retry_on_status_codes=(),
+                jitter=effective_retry.jitter,
+            )
+        )
     return serialize_effective_retry_policy(effective_retry)

@@ -60,10 +60,14 @@ def test_serialize_auth_single_flight_key_is_stable() -> None:
 
 
 def test_serialize_effective_retry_policy_key_is_stable() -> None:
-    assert serialize_effective_retry_policy_key(
-        base_retry=RetryPolicy(max_attempts=5),
-        request_retry=RetryPolicy(enabled=False),
-    ) == (
-        '{"baseDelayMs":200,"enabled":false,"jitter":true,"maxAttempts":5,'
-        '"maxDelayMs":2000,"retryOnStatusCodes":null}'
+    expected_key = (
+        '{"baseDelayMs":0,"enabled":false,"jitter":true,"maxAttempts":1,'
+        '"maxDelayMs":0,"retryOnStatusCodes":null}'
+    )
+    assert (
+        serialize_effective_retry_policy_key(
+            base_retry=RetryPolicy(max_attempts=5),
+            request_retry=RetryPolicy(enabled=False),
+        )
+        == expected_key
     )
