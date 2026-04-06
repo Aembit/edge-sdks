@@ -13,8 +13,13 @@ from aembit_edge.credentials import CredentialServerRef, GetCredentialInput, Get
 from aembit_edge.errors import AuthError, CredentialError, TrustProviderError
 from aembit_edge.internal.protocol import EdgeApi, EdgeHttpTransport, RawHttpResponse
 from aembit_edge.internal.protocol.http_transport import HttpSender
+from aembit_edge.internal.trust_providers import AwsRoleSignedRequestData
 from aembit_edge.retry import RetryPolicy
-from aembit_edge.trust_providers import CollectedTrustProviderIdentity, TrustProvider
+from aembit_edge.trust_providers import (
+    AwsRoleTrustProvider,
+    CollectedTrustProviderIdentity,
+    TrustProvider,
+)
 
 
 class HarnessEdgeClient(EdgeClient):
@@ -197,6 +202,32 @@ class BlankSingleFlightKeyTrustProvider(DynamicIdentityTrustProvider):
 
     def get_identity_single_flight_key(self) -> str:
         return ""
+
+
+class BlockingAwsRoleTrustProvider(AwsRoleTrustProvider):
+    def __init__(self) -> None:
+        self.identity_started = threading.Event()
+        self.release_identity = threading.Event()
+        self.lock = threading.Lock()
+        self.calls = 0
+        super().__init__(
+            region="us-east-1",
+            signer=self._sign,
+        )
+
+    def _sign(self, *, region: str) -> AwsRoleSignedRequestData:
+        with self.lock:
+            self.calls += 1
+        self.identity_started.set()
+        self.release_identity.wait(timeout=1)
+        return AwsRoleSignedRequestData(
+            headers={
+                "host": f"sts.{region}.amazonaws.com",
+                "authorization": "AWS4-HMAC-SHA256 Credential=AKID/...",
+                "x-amz-date": "20260312T101530Z",
+            },
+            region=region,
+        )
 
 
 def build_client(
@@ -407,6 +438,131 @@ def test_get_credential_refreshes_expired_token_using_skew() -> None:
     }
 
 
+def test_authenticate_sends_aws_role_signed_payload() -> None:
+    sender = SenderStub(
+        [
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"accessToken": "token-1", "expiresIn": 120}),
+            )
+        ]
+    )
+    provider = AwsRoleTrustProvider(region="us-east-1", signer=_aws_role_signer_with_date)
+    client = build_client(sender=sender, provider=provider)
+
+    client.authenticate()
+
+    assert sender.calls[0]["body"] == {
+        "clientId": "edge-sdk-client-id",
+        "client": {
+            "aws": {
+                "stsGetCallerIdentity": {
+                    "headers": {
+                        "host": "sts.us-east-1.amazonaws.com",
+                        "authorization": "AWS4-HMAC-SHA256 Credential=AKID/...",
+                        "x-amz-date": "20260312T101530Z",
+                    },
+                    "region": "us-east-1",
+                }
+            }
+        },
+    }
+
+
+def test_get_credential_reuses_cached_token_for_stable_aws_role_identity() -> None:
+    sender = SenderStub(
+        [
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"accessToken": "token-1", "expiresIn": 120}),
+            ),
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"data": {"token": "first"}}),
+            ),
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"data": {"token": "second"}}),
+            ),
+        ]
+    )
+    provider = AwsRoleTrustProvider(region="us-east-1", signer=_aws_role_minimal_signer)
+    client = build_client(sender=sender, provider=provider)
+
+    first = client.get_credential(
+        GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
+    )
+    second = client.get_credential(
+        GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
+    )
+
+    assert first.data == {"token": "first"}
+    assert second.data == {"token": "second"}
+    assert len(sender.calls) == 3
+    assert sender.calls[0]["body"] == {
+        "clientId": "edge-sdk-client-id",
+        "client": {
+            "aws": {
+                "stsGetCallerIdentity": {
+                    "headers": {"host": "sts.us-east-1.amazonaws.com"},
+                    "region": "us-east-1",
+                }
+            }
+        },
+    }
+
+
+def test_get_credential_refreshes_expired_aws_role_token_using_same_auth_payload() -> None:
+    sender = SenderStub(
+        [
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"accessToken": "token-1", "expiresIn": 30}),
+            ),
+            RawHttpResponse(status=200, headers={}, body=json.dumps({"data": {"token": "first"}})),
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"accessToken": "token-2", "expiresIn": 30}),
+            ),
+            RawHttpResponse(status=200, headers={}, body=json.dumps({"data": {"token": "second"}})),
+        ]
+    )
+    provider = AwsRoleTrustProvider(region="us-east-1", signer=_aws_role_signer_with_auth)
+    client = build_client(sender=sender, provider=provider)
+    times = iter([1_000_000, 1_000_000, 1_029_500, 1_029_500, 1_029_500, 1_029_500])
+    client.set_now_ms_for_test(lambda: next(times))
+
+    client.get_credential(
+        GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
+    )
+    client.get_credential(
+        GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
+    )
+
+    expected_auth_body = {
+        "clientId": "edge-sdk-client-id",
+        "client": {
+            "aws": {
+                "stsGetCallerIdentity": {
+                    "headers": {
+                        "host": "sts.us-east-1.amazonaws.com",
+                        "authorization": "AWS4-HMAC-SHA256 Credential=AKID/...",
+                    },
+                    "region": "us-east-1",
+                }
+            }
+        },
+    }
+    assert sender.calls[0]["body"] == expected_auth_body
+    assert sender.calls[2]["body"] == expected_auth_body
+
+
 def test_authenticate_raises_auth_error_for_malformed_auth_payload() -> None:
     sender = SenderStub(
         [RawHttpResponse(status=200, headers={}, body=json.dumps({"expiresIn": 120}))]
@@ -491,6 +647,42 @@ def test_get_credential_deduplicates_concurrent_auth_refreshes() -> None:
 def test_get_credential_deduplicates_concurrent_identity_collection() -> None:
     sender = BlockingAuthSender()
     provider = BlockingIdentityTrustProvider()
+    client = build_client(sender=sender, provider=provider)
+    results: list[str] = []
+    errors: list[Exception] = []
+
+    def run_request() -> None:
+        try:
+            result = client.get_credential(
+                GetCredentialInput(server=CredentialServerRef(host="db.internal", port=443))
+            )
+            results.append(str(result.data["token"]))
+        except Exception as error:  # pragma: no cover - defensive
+            errors.append(error)
+
+    first = threading.Thread(target=run_request)
+    second = threading.Thread(target=run_request)
+
+    first.start()
+    assert provider.identity_started.wait(timeout=1)
+    second.start()
+    time.sleep(0.05)
+    provider.release_identity.set()
+    assert sender.auth_started.wait(timeout=1)
+    sender.release_auth.set()
+    first.join(timeout=1)
+    second.join(timeout=1)
+
+    assert not errors
+    assert provider.calls == 1
+    assert sender.auth_calls == 1
+    assert sender.credential_calls == 2
+    assert sorted(results) == ["value-1", "value-2"]
+
+
+def test_get_credential_deduplicates_concurrent_aws_role_identity_collection() -> None:
+    sender = BlockingAuthSender()
+    provider = BlockingAwsRoleTrustProvider()
     client = build_client(sender=sender, provider=provider)
     results: list[str] = []
     errors: list[Exception] = []
@@ -915,3 +1107,31 @@ def test_authenticate_rejects_invalid_client_workload_details() -> None:
 
     with pytest.raises(CredentialError):
         client.authenticate()
+
+
+def _aws_role_minimal_signer(*, region: str) -> AwsRoleSignedRequestData:
+    return AwsRoleSignedRequestData(
+        headers={"host": f"sts.{region}.amazonaws.com"},
+        region=region,
+    )
+
+
+def _aws_role_signer_with_auth(*, region: str) -> AwsRoleSignedRequestData:
+    return AwsRoleSignedRequestData(
+        headers={
+            "host": f"sts.{region}.amazonaws.com",
+            "authorization": "AWS4-HMAC-SHA256 Credential=AKID/...",
+        },
+        region=region,
+    )
+
+
+def _aws_role_signer_with_date(*, region: str) -> AwsRoleSignedRequestData:
+    return AwsRoleSignedRequestData(
+        headers={
+            "host": f"sts.{region}.amazonaws.com",
+            "authorization": "AWS4-HMAC-SHA256 Credential=AKID/...",
+            "x-amz-date": "20260312T101530Z",
+        },
+        region=region,
+    )
