@@ -1,6 +1,14 @@
 {
   "include": ["src", "tests"],
-  "exclude": [".venv", "examples"],
+  "exclude": [
+    ".venv",
+    "build",
+    "dist",
+    "examples",
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*"
+  ],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.10",

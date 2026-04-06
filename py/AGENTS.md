@@ -140,6 +140,7 @@ Before handing work back to the user:
 - run `uv run ruff format --check .`
 - run `uv run pyright`
 - run `uv run pytest`
+- run `uv build --wheel --sdist` when Python packaging or build configuration changes
 - ensure API and README changes are aligned
 - verify examples still reflect recommended usage
 - verify no secrets or production identifiers are present

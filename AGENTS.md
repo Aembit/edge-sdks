@@ -50,7 +50,7 @@ Repository layout:
 - `spec/` cross-language SDK contracts
 - `spec/openapi/` pinned OpenAPI snapshots and snapshot metadata
 - `ts/` TypeScript SDK (reference implementation)
-- `py/` planned Python SDK directory
+- `py/` Python SDK
 - `go/` planned Go SDK directory
 
 Rules:
@@ -206,6 +206,7 @@ Integration tests may be added later.
 Linting expectations:
 
 - For TypeScript changes, run `npm run lint`, `npm run typecheck`, and `npm test` from `ts/`.
+- For Python changes, run `uv run ruff check .`, `uv run ruff format --check .`, `uv run pyright`, and `uv run pytest` from `py/`.
 - For Markdown/documentation changes, run `npm run lint:md` from the repository root.
 
 ## Documentation Locations
@@ -234,7 +235,7 @@ Agents should not duplicate documentation across multiple locations.
 Language-specific development rules are defined in language directories:
 
 - `ts/AGENTS.md` (current)
-- `py/AGENTS.md` (add when Python SDK work begins)
+- `py/AGENTS.md`
 - `go/AGENTS.md` (add when Go SDK work begins)
 
 Coding agents working in a language directory must follow both:

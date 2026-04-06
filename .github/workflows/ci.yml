@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   typescript:
     name: TypeScript (Node ${{ matrix.node }})
@@ -81,6 +84,21 @@ jobs:
       - name: Test
         run: uv run pytest
 
+      - name: Build package
+        if: matrix.python-version == '3.10'
+        run: uv build --wheel --sdist
+
+      - name: Install built wheel
+        if: matrix.python-version == '3.10'
+        run: |
+          python -m venv .pkg-venv
+          .pkg-venv/bin/pip install --no-deps dist/*.whl
+
+      - name: Smoke test built package
+        if: matrix.python-version == '3.10'
+        run: |
+          .pkg-venv/bin/python -c "from importlib import resources; from aembit_edge import EdgeClient, EdgeClientConfig; marker = resources.files('aembit_edge').joinpath('py.typed'); assert marker.is_file(); print(EdgeClient.__name__, EdgeClientConfig.__name__)"
+
   markdown:
     name: Markdown Lint
     runs-on: ubuntu-latest
@@ -116,4 +134,9 @@ jobs:
           sudo apt-get install -y shellcheck
 
       - name: Run ShellCheck
-        run: shellcheck scripts/*.sh
+        run: |
+          if compgen -G "scripts/*.sh" > /dev/null; then
+            shellcheck scripts/*.sh
+          else
+            echo "No shell scripts found."
+          fi
