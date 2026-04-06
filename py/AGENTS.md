@@ -101,7 +101,7 @@ Testing and quality tools:
 
 - use `pytest`
 - use `ruff` for linting and formatting
-- use `mypy` for static type checking
+- use `pyright` as the primary static type checker
 - use `uv` for local environment and dependency management
 
 Focus tests on:
@@ -138,7 +138,7 @@ Before handing work back to the user:
 
 - run `uv run ruff check .` for Python file changes and confirm it passes
 - run `uv run ruff format --check .`
-- run `uv run mypy .`
+- run `uv run pyright`
 - run `uv run pytest`
 - ensure API and README changes are aligned
 - verify examples still reflect recommended usage

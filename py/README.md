@@ -6,15 +6,16 @@ This SDK should follow the conceptual design established by the TypeScript SDK w
 
 ## Status
 
-The Python SDK is in initial scaffolding.
+The Python SDK is in early implementation.
 
 Current scope in this directory:
 
 - package and tooling setup
 - Python-specific documentation and architecture notes
-- planned package layout for implementation work
+- working sync `EdgeClient` authentication and credential retrieval
+- shared protocol, retry, token lifecycle, and error-mapping internals
 
-Functional SDK behavior will be added incrementally in follow-up changes.
+Async client support and built-in Trust Provider implementations will be added incrementally.
 
 ## Runtime And Packaging
 
@@ -32,15 +33,17 @@ Planned v1 behavior:
 - retry logic for transient failures
 - built-in Trust Provider coverage starting with AWS Role, followed by AWS Metadata Service (IMDS)
 
-## Planned Client API
+## Client API
 
-The intended developer-facing API is:
+The package now exposes the initial public sync API surface:
 
 ```python
-from aembit_edge import AsyncEdgeClient, EdgeClient
+from aembit_edge import EdgeClient, EdgeClientConfig
+from aembit_edge import CredentialResult, CredentialServerRef, GetCredentialInput
+from aembit_edge import AsyncTrustProvider, TrustProvider
 ```
 
-Planned method names and concepts:
+Current public concepts:
 
 - `authenticate()`
 - `get_credential()`
@@ -48,7 +51,10 @@ Planned method names and concepts:
 - `resource_set`
 - `Trust Provider`
 
-The public API will be added in follow-up changes. This scaffold does not yet expose working client classes.
+Current limitation:
+
+- `EdgeClient` is implemented for synchronous authentication and credential retrieval
+- async client support is still planned but not yet exposed
 
 ## Documentation
 
@@ -62,10 +68,10 @@ The public API will be added in follow-up changes. This scaffold does not yet ex
 
 Run from `py/`:
 
-- `uv sync --extra dev`
+- `uv sync --extra dev --locked`
 - `uv run ruff check .`
 - `uv run ruff format --check .`
-- `uv run mypy .`
+- `uv run pyright`
 - `uv run pytest`
 
 Auto-format locally when needed:
@@ -87,7 +93,7 @@ Planned testing and quality stack:
 
 - test runner: `pytest`
 - linter and formatter: `ruff`
-- static type checking: `mypy`
+- static type checking: `pyright`
 - environment and dependency management: `uv`
 
 ## Security
