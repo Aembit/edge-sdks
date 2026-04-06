@@ -653,13 +653,22 @@ def test_authenticate_does_not_deduplicate_blank_identity_single_flight_key() ->
 
     assert not errors
     assert provider.calls == 2
-    assert sender.calls[0]["body"] == {
-        "clientId": "edge-sdk-client-id",
-        "client": {"oidc": {"token": "token-1"}},
-    }
-    assert sender.calls[1]["body"] == {
-        "clientId": "edge-sdk-client-id",
-        "client": {"oidc": {"token": "token-2"}},
+    request_bodies = [call["body"] for call in sender.calls]
+    assert {json.dumps(body, sort_keys=True) for body in request_bodies} == {
+        json.dumps(
+            {
+                "clientId": "edge-sdk-client-id",
+                "client": {"oidc": {"token": "token-1"}},
+            },
+            sort_keys=True,
+        ),
+        json.dumps(
+            {
+                "clientId": "edge-sdk-client-id",
+                "client": {"oidc": {"token": "token-2"}},
+            },
+            sort_keys=True,
+        ),
     }
 
 
