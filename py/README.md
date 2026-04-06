@@ -59,8 +59,8 @@ Current limitation:
 
 - `EdgeClient` is implemented for synchronous authentication and credential retrieval
 - async client support is still planned but not yet exposed
-- AWS Role Trust Provider signing internals are still landing; the public
-  provider surface is defined in this step
+- AWS Role Trust Provider uses the botocore credential chain and SigV4 signing
+  for STS `GetCallerIdentity` request generation
 
 ## Documentation
 

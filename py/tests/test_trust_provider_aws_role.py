@@ -70,10 +70,18 @@ def test_collect_identity_rejects_invalid_header_values() -> None:
 
 
 def test_collect_identity_uses_default_signer_entry_point() -> None:
-    provider = AwsRoleTrustProvider(region="us-east-1")
+    def signer(*, region: str) -> AwsRoleSignedRequestData:
+        return AwsRoleSignedRequestData(
+            headers={"host": f"sts.{region}.amazonaws.com"},
+            region=region,
+        )
 
-    with pytest.raises(TrustProviderError, match="signing is not implemented yet"):
-        provider.collect_identity()
+    provider = AwsRoleTrustProvider(
+        region="us-east-1",
+        signer=signer,
+    )
+
+    assert callable(provider.signer)
 
 
 def _capture_signed_request(

@@ -25,3 +25,12 @@ This repository includes third-party software packages. Attribution details for 
    - npm: <https://www.npmjs.com/package/@smithy/hash-node>
 
 Exact resolved versions are tracked in lockfiles (`ts/package-lock.json` and root `package-lock.json` where applicable).
+
+## Python AWS SDK Packages
+
+1. `botocore`
+   - License: Apache-2.0
+   - Source: <https://github.com/boto/botocore>
+   - PyPI: <https://pypi.org/project/botocore/>
+
+Exact resolved Python package versions are tracked in `py/uv.lock`.
