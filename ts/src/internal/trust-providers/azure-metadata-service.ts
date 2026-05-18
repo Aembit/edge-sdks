@@ -18,7 +18,7 @@ const DEFAULT_IMDS_API_VERSION = "2025-04-07"
 const IMDS_ATTESTED_DOCUMENT_PATH = "/metadata/attested/document"
 
 /**
- * Options for the built-in Azure Metadata Service Trust Provider.
+ * Options for the built-in Azure Instance Metadata Service Trust Provider.
  */
 export interface AzureMetadataServiceTrustProviderOptions {
   /**
@@ -61,7 +61,7 @@ export interface AzureMetadataServiceTrustProviderOptions {
 
 class AzureMetadataServiceTrustProvider implements TrustProvider {
   /**
-   * Internal Azure Metadata Service Trust Provider implementation.
+   * Internal Azure Instance Metadata Service Trust Provider implementation.
    *
    * This provider fetches Azure IMDS attested-data and sends the PKCS#7
    * signature blob plus the request nonce as
@@ -138,7 +138,7 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
         requestUrl = url.toString()
       } catch (error) {
         throw new TrustProviderError(
-          "Azure Metadata Service attested document request URL is invalid",
+          "Azure Instance Metadata Service attested document request URL is invalid",
           {
             retryable: false,
             cause: error
@@ -156,7 +156,7 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
 
       if (!response.ok) {
         throw createMetadataServiceHttpError({
-          providerLabel: "Azure Metadata Service",
+          providerLabel: "Azure Instance Metadata Service",
           statusCode: response.status,
           operationName: "attested document",
           retryableStatusCodes
@@ -171,7 +171,7 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
 
       if (isAbortError(error)) {
         throw new TrustProviderError(
-          `Azure Metadata Service attested document request timed out after ${String(this.timeoutMs)}ms`,
+          `Azure Instance Metadata Service attested document request timed out after ${String(this.timeoutMs)}ms`,
           {
             retryable: true,
             cause: error
@@ -181,7 +181,7 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
 
       if (isMetadataServiceNetworkError(error)) {
         throw new TrustProviderError(
-          "Azure Metadata Service attested document request failed",
+          "Azure Instance Metadata Service attested document request failed",
           {
             retryable: true,
             cause: error
@@ -190,7 +190,7 @@ class AzureMetadataServiceTrustProvider implements TrustProvider {
       }
 
       throw new TrustProviderError(
-        "Azure Metadata Service attested document request failed",
+        "Azure Instance Metadata Service attested document request failed",
         {
           retryable: false,
           cause: error
@@ -221,7 +221,7 @@ function resolveNonce(value: string): string {
   const nonce = typeof value === "string" ? value.trim() : ""
   if (!/^\d{10}$/.test(nonce)) {
     throw new TrustProviderError(
-      "Azure Metadata Service Trust Provider requires a 10-digit nonce",
+      "Azure Instance Metadata Service Trust Provider requires a 10-digit nonce",
       {
         retryable: false
       }
@@ -238,7 +238,7 @@ function createNonce(): string {
 function parseAttestedDocument(body: unknown): { encoding: string; signature: string } {
   if (!isRecord(body)) {
     throw new TrustProviderError(
-      "Azure Metadata Service returned an invalid attested document response",
+      "Azure Instance Metadata Service returned an invalid attested document response",
       {
         retryable: false
       }
@@ -248,7 +248,7 @@ function parseAttestedDocument(body: unknown): { encoding: string; signature: st
   const signature = typeof body.signature === "string" ? body.signature.trim() : ""
   if (signature.length === 0) {
     throw new TrustProviderError(
-      "Azure Metadata Service returned an empty attested document signature",
+      "Azure Instance Metadata Service returned an empty attested document signature",
       {
         retryable: false
       }
