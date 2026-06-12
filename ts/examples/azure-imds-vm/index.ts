@@ -2,11 +2,11 @@ import { EdgeClient } from "../../src/index.js"
 import { createAzureMetadataServiceTrustProvider } from "../../src/trust-providers/azure-metadata-service.js"
 
 /**
- * Minimal Azure VM example for the Azure Metadata Service Trust Provider.
+ * Minimal Azure VM example for the Azure Instance Metadata Service Trust Provider.
  *
  * What to edit:
  * - `baseUrl`: your tenant's regional Aembit Edge URL
- * - `clientId`: your Edge SDK Client ID from the Azure Metadata Service Trust Provider
+ * - `clientId`: your Edge SDK Client ID from the Azure Instance Metadata Service Trust Provider
  * - `serverHost` / `serverPort`: the Service Endpoint from your Server Workload
  * - `credentialType`: the credential type returned by your Credential Provider
  * - `resourceSet`: optional, only when your tenant flow requires it
@@ -24,7 +24,7 @@ const EXAMPLE_CONFIG = {
   printCredentialJson: false
 }
 
-// Use the built-in Azure Metadata Service Trust Provider so the SDK can
+// Use the built-in Azure Instance Metadata Service Trust Provider so the SDK can
 // identify the Azure VM through IMDS attested data.
 const trustProvider = createAzureMetadataServiceTrustProvider()
 

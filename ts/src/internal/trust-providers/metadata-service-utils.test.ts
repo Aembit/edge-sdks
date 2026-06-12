@@ -53,7 +53,7 @@ describe("createMetadataServiceHttpError", () => {
 
   it("creates a retryable error for built-in retryable status codes", () => {
     const error = createMetadataServiceHttpError({
-      providerLabel: "Azure Metadata Service",
+      providerLabel: "Azure Instance Metadata Service",
       operationName: "attested document",
       statusCode: 500
     })
@@ -66,7 +66,7 @@ describe("createMetadataServiceHttpError", () => {
 
   it("supports additional retryable status codes from policy", () => {
     const error = createMetadataServiceHttpError({
-      providerLabel: "Azure Metadata Service",
+      providerLabel: "Azure Instance Metadata Service",
       operationName: "attested document",
       statusCode: 409,
       retryableStatusCodes: [409]

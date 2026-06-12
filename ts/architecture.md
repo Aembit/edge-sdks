@@ -190,9 +190,9 @@ Roadmap note:
 - keep `gcp` separate even though it overlaps on `identityToken`, because
   `GcpAttestationDTO` also supports `instanceDocument`
 
-### Azure Metadata Service Trust Provider Contract
+### Azure Instance Metadata Service Trust Provider Contract
 
-This section defines the v1 contract for the Azure Metadata Service Trust Provider.
+This section defines the v1 contract for the Azure Instance Metadata Service Trust Provider.
 
 Public factory target:
 
@@ -243,7 +243,7 @@ Current backend support gap:
 
 Roadmap note:
 
-- keep the Azure Metadata Service Trust Provider and Azure VM example in the SDK
+- keep the Azure Instance Metadata Service Trust Provider and Azure VM example in the SDK
 - treat them as preview/reference implementations until the Edge API and UI support the full Azure IMDS flow
 
 ### GCP Identity Token Trust Provider Contract

@@ -36,7 +36,7 @@ The intended Aembit setup for this flow is:
 
 - a Client Workload for the Azure VM identity
 - a Server Workload with a Service Endpoint (`host`, `port`) that this example will request
-- an Azure Metadata Service Trust Provider with an Edge SDK Client ID
+- an Azure Instance Metadata Service Trust Provider with an Edge SDK Client ID
 - a Credential Provider that returns the requested credential type
 
 At the moment, that setup cannot be completed end-to-end because of the current Aembit UI and API gaps described above.
@@ -44,7 +44,7 @@ At the moment, that setup cannot be completed end-to-end because of the current 
 References:
 
 - Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
-- Azure Metadata Service Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/azure-metadata-service-trust-provider/>
+- Azure Instance Metadata Service Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/azure-metadata-service-trust-provider/>
 - Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
 Example Server Workload configuration for this README:
@@ -59,7 +59,7 @@ Example Server Workload configuration for this README:
 Open [`./index.ts`](./index.ts) and update `EXAMPLE_CONFIG`:
 
 - `baseUrl`: your tenant's regional Aembit Edge URL
-- `clientId`: your Edge SDK Client ID from the Azure Metadata Service Trust Provider
+- `clientId`: your Edge SDK Client ID from the Azure Instance Metadata Service Trust Provider
 - `serverHost` and `serverPort`: the Service Endpoint from your Server Workload
 - `credentialType`: the credential type returned by your Credential Provider
 - `resourceSet`: optional, only when your tenant flow requires it
