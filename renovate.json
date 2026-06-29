@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "minimumReleaseAge": "14 days",
+  "separateMajorMinor": false,
+  "pinDigests": true,
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
+  "dependencyDashboard": false,
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "groupName": "NPM dependencies (all versions)"
+    },
+    {
+      "matchManagers": ["pip_requirements", "pep621", "poetry", "pipenv"],
+      "groupName": "Python dependencies (all versions)"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions (all versions)"
+    }
+  ]
+}
