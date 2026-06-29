@@ -124,9 +124,9 @@ This repository operates under a strict **SDK Industry dependency management pol
    - We commit lockfiles (`package-lock.json`, `uv.lock`) to our repository to guarantee reproducible and stable builds during local development and CI runs.
    - All internal CI/CD steps and local workflows **MUST** install dependencies using locked forms (e.g., `npm ci` or `uv sync --locked`).
 
-3. **Strict Cryptographic Pinned Digests for Internal Tooling**:
-   - Since GitHub Actions and self-hosted runners execute strictly inside our own build boundaries, all Actions and workflow dependencies **MUST** be pinned to absolute SHA-256 cryptographic commit hashes (e.g., `actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0` instead of `v4`).
-   - Renovate manages these digests automatically, opening unified PRs on a monthly schedule.
+3. **Strict Pinned Commit SHAs for Internal Tooling**:
+   - Since GitHub Actions and self-hosted runners execute strictly inside our own build boundaries, all newly created or updated GitHub Actions and workflow dependencies **MUST** be pinned to absolute git commit SHAs (e.g., `actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0` instead of `v4`).
+   - Existing workflows utilizing standard version tags will be gradually migrated to pinned commit SHAs, and Renovate will manage these SHAs automatically going forward.
 
 ## Design Principles
 
