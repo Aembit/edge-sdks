@@ -97,6 +97,14 @@ Run Markdown checks from repository root:
 
 - `npm run lint:md`
 
+## Dependency Management
+
+This repository adheres to standard industry dependency patterns for public SDK development:
+
+- **Flexible Ranges for Consumers**: Public SDK dependencies are kept flexible using semantic ranges (`^` / `~` / `>=`) to avoid downstream dependency conflicts.
+- **Strict Internal Lockfiles**: Committed lockfiles (`package-lock.json` and `uv.lock`) guarantee secure and reproducible environments for internal development and CI testing.
+- **Automated Upgrades with Renovate**: Renovate is integrated to automatically scan our dependencies and open unified pull requests monthly to keep our dependencies and GitHub Actions securely updated.
+
 ## License
 
 This project will be released under an open source license prior to public release.
