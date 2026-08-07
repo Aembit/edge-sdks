@@ -17,7 +17,7 @@
       "matchManagers": ["npm"],
       "groupName": "NPM dependencies (all versions)",
       "postUpgradeTasks": {
-        "commands": ["cd ts && npm ci && npm run lint -- --fix"],
+        "commands": ["cd ts && npx eslint 'src/**/*.ts' --fix"],
         "fileFilters": ["ts/src/**/*.ts"],
         "executionMode": "branch"
       }
