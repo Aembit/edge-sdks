@@ -11,18 +11,15 @@
   "dependencyDashboard": false,
   "packageRules": [
     {
-      "matchPackageNames": [
-        "typescript",
-        "typescript-eslint",
-        "@typescript-eslint/parser",
-        "@typescript-eslint/eslint-plugin",
-        "@typescript-eslint/utils"
-      ],
-      "groupName": "TypeScript & ESLint Ecosystem (all versions)"
-    },
-    {
       "matchManagers": ["npm"],
       "groupName": "NPM dependencies (all versions)"
+    },
+    {
+      "matchPackageNames": [
+        "typescript",
+        "/^@typescript-eslint//"
+      ],
+      "groupName": "TypeScript & ESLint Ecosystem (all versions)"
     },
     {
       "matchManagers": ["pip_requirements", "pep621", "poetry", "pipenv"],
