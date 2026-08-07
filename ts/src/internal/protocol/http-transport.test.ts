@@ -6,7 +6,7 @@ import { EdgeHttpTransport } from "./http-transport.js";
 function asFetchMock(
   fn: (input: unknown, init?: RequestInit) => Promise<Response>
 ): typeof fetch {
-  return fn as unknown as typeof fetch;
+  return fn;
 }
 
 describe("EdgeHttpTransport", () => {

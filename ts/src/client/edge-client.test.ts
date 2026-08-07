@@ -10,7 +10,7 @@ import { EdgeClient } from "./edge-client.js"
 function asFetchMock(
   fn: (input: unknown, init?: RequestInit) => Promise<Response>
 ): typeof fetch {
-  return fn as unknown as typeof fetch
+  return fn
 }
 
 function parseRequestBody(fetchMock: ReturnType<typeof vi.fn>, callIndex: number): unknown {
