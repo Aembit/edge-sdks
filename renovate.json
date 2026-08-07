@@ -9,6 +9,9 @@
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
   "dependencyDashboard": false,
+  "vulnerabilityAlerts": {
+    "groupName": null
+  },
   "packageRules": [
     {
       "matchManagers": ["npm"],
