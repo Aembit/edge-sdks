@@ -135,7 +135,7 @@ describe("EdgeApi", () => {
     const api = new EdgeApi({
       transport: {
         requestJson:
-          requestJsonMock as unknown as EdgeApiOptions["transport"]["requestJson"]
+          requestJsonMock
       }
     });
 
@@ -160,7 +160,7 @@ describe("EdgeApi", () => {
     const api = new EdgeApi({
       transport: {
         requestJson:
-          requestJsonMock as unknown as EdgeApiOptions["transport"]["requestJson"]
+          requestJsonMock
       }
     });
 

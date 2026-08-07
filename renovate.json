@@ -15,7 +15,12 @@
   "packageRules": [
     {
       "matchManagers": ["npm"],
-      "groupName": "NPM dependencies (all versions)"
+      "groupName": "NPM dependencies (all versions)",
+      "postUpgradeTasks": {
+        "commands": ["cd ts && npm ci && npm run lint -- --fix"],
+        "fileFilters": ["ts/src/**/*.ts"],
+        "executionMode": "branch"
+      }
     },
     {
       "matchPackageNames": [

@@ -6,7 +6,7 @@ import { createAzureMetadataServiceTrustProvider } from "./azure-metadata-servic
 function asFetchMock(
   fn: (input: unknown, init?: RequestInit) => Promise<Response>
 ): typeof fetch {
-  return fn as unknown as typeof fetch
+  return fn
 }
 
 function getHeaderValue(init: RequestInit | undefined, key: string): string | undefined {
