@@ -9,10 +9,20 @@
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
   "dependencyDashboard": false,
+  "vulnerabilityAlerts": {
+    "groupName": null
+  },
   "packageRules": [
     {
       "matchManagers": ["npm"],
       "groupName": "NPM dependencies (all versions)"
+    },
+    {
+      "matchPackageNames": [
+        "typescript",
+        "/^@typescript-eslint//"
+      ],
+      "groupName": "TypeScript & ESLint Ecosystem (all versions)"
     },
     {
       "matchManagers": ["pip_requirements", "pep621", "poetry", "pipenv"],
