@@ -5,7 +5,7 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from threading import Event, Lock
-from typing import TypeGuard, cast
+from typing import Generic, TypeGuard, TypeVar, cast
 
 from .auth import AuthSession
 from .config import EdgeClientConfig
@@ -44,8 +44,8 @@ class EdgeClient:
         self._auth_expiry_skew_ms = resolve_auth_expiry_skew_ms(config.auth_expiry_skew_ms)
         self._token_state: CachedTokenState | None = None
         self._state_lock = Lock()
-        self._in_flight_auth_by_key: dict[str, _InFlightAuth] = {}
-        self._in_flight_identity_by_key: dict[str, _InFlightIdentity] = {}
+        self._in_flight_auth_by_key: dict[str, _InFlight[CachedTokenState]] = {}
+        self._in_flight_identity_by_key: dict[str, _InFlight[CollectedTrustProviderIdentity]] = {}
         self._api = EdgeApi(
             transport=EdgeHttpTransport(
                 base_url=config.base_url,
@@ -84,15 +84,7 @@ class EdgeClient:
         options: GetCredentialOptions | None = None,
     ) -> CredentialResult:
         """Retrieve credentials for a target server."""
-        request_value = cast(object, request)
-        if not isinstance(request_value, GetCredentialInput):
-            raise CredentialError("get_credential() requires a valid input object", retryable=False)
-        request = request_value
-
-        options_value = cast(object, options)
-        if options_value is not None and not isinstance(options_value, GetCredentialOptions):
-            raise CredentialError("get_credential() options must be an object", retryable=False)
-        options = options_value
+        request, options = _validate_get_credential_inputs(request, options)
 
         effective_options = options or GetCredentialOptions()
         self._validate_retry_override(self._config.retry, operation="get_credential")
@@ -185,100 +177,56 @@ class EdgeClient:
             ):
                 return current_state
 
-            existing = self._in_flight_auth_by_key.get(single_flight_key)
-            if existing is not None:
-                in_flight = existing
-                run_request = False
-            else:
-                in_flight = _InFlightAuth()
-                self._in_flight_auth_by_key[single_flight_key] = in_flight
-                run_request = True
-
-        if not run_request:
-            in_flight.done.wait()
-            if in_flight.error is not None:
-                raise in_flight.error
-            if in_flight.result is None:
-                raise RuntimeError("in-flight authentication completed without a result")
-            return in_flight.result
-
-        try:
-            auth_body = parse_auth_success_body(
-                self._api.auth(
-                    {
-                        "clientId": self._config.client_id,
-                        "client": identity.client,
-                    },
-                    EdgeApiRequestOptions(resource_set=resource_set, retry=retry),
+        def do_auth() -> CachedTokenState:
+            try:
+                auth_body = parse_auth_success_body(
+                    self._api.auth(
+                        {
+                            "clientId": self._config.client_id,
+                            "client": identity.client,
+                        },
+                        EdgeApiRequestOptions(resource_set=resource_set, retry=retry),
+                    )
                 )
-            )
-            next_state = CachedTokenState(
-                access_token=parse_access_token(auth_body.get("accessToken")),
-                expires_at_ms=calculate_expires_at_ms(
-                    auth_body.get("expiresIn"),
-                    self._now_ms(),
-                ),
-                resource_set=resource_set,
-                auth_cache_key=identity.auth_cache_key,
-            )
-            with self._state_lock:
-                self._token_state = next_state
-            in_flight.result = next_state
-            return next_state
-        except Exception as error:
-            with self._state_lock:
-                current_state = self._token_state
-                if (
-                    current_state is not None
-                    and current_state.resource_set == resource_set
-                    and not is_token_valid(current_state, self._now_ms(), self._auth_expiry_skew_ms)
-                ):
-                    self._token_state = None
-            in_flight.error = error
-            raise
-        finally:
-            in_flight.done.set()
-            with self._state_lock:
-                current = self._in_flight_auth_by_key.get(single_flight_key)
-                if current is in_flight:
-                    self._in_flight_auth_by_key.pop(single_flight_key, None)
+                next_state = CachedTokenState(
+                    access_token=parse_access_token(auth_body.get("accessToken")),
+                    expires_at_ms=calculate_expires_at_ms(
+                        auth_body.get("expiresIn"),
+                        self._now_ms(),
+                    ),
+                    resource_set=resource_set,
+                    auth_cache_key=identity.auth_cache_key,
+                )
+                with self._state_lock:
+                    self._token_state = next_state
+                return next_state
+            except Exception:
+                with self._state_lock:
+                    curr = self._token_state
+                    if (
+                        curr is not None
+                        and curr.resource_set == resource_set
+                        and not is_token_valid(curr, self._now_ms(), self._auth_expiry_skew_ms)
+                    ):
+                        self._token_state = None
+                raise
+
+        return self._execute_single_flight(
+            key=single_flight_key,
+            in_flight_dict=self._in_flight_auth_by_key,
+            action=do_auth,
+        )
 
     def _collect_identity(self) -> CollectedTrustProviderIdentity:
         single_flight_key = self._resolve_identity_single_flight_key()
         if single_flight_key is None:
             return self._collect_identity_uncached()
 
-        with self._state_lock:
-            existing = self._in_flight_identity_by_key.get(single_flight_key)
-            if existing is not None:
-                in_flight = existing
-                run_collection = False
-            else:
-                in_flight = _InFlightIdentity()
-                self._in_flight_identity_by_key[single_flight_key] = in_flight
-                run_collection = True
-
-        if not run_collection:
-            in_flight.done.wait()
-            if in_flight.error is not None:
-                raise in_flight.error
-            if in_flight.result is None:
-                raise RuntimeError("in-flight identity collection completed without a result")
-            return in_flight.result
-
-        try:
-            collected = self._collect_identity_uncached()
-            in_flight.result = collected
-            return collected
-        except Exception as error:
-            in_flight.error = error
-            raise
-        finally:
-            in_flight.done.set()
-            with self._state_lock:
-                current = self._in_flight_identity_by_key.get(single_flight_key)
-                if current is in_flight:
-                    self._in_flight_identity_by_key.pop(single_flight_key, None)
+        return self._execute_single_flight(
+            key=single_flight_key,
+            in_flight_dict=self._in_flight_identity_by_key,
+            action=self._collect_identity_uncached,
+        )
 
     def _resolve_identity_single_flight_key(self) -> str | None:
         key_factory = getattr(self._config.trust_provider, "get_identity_single_flight_key", None)
@@ -327,24 +275,7 @@ class EdgeClient:
                 retryable=False,
             ) from error
 
-        if not isinstance(collected_value, CollectedTrustProviderIdentity):
-            raise TrustProviderError(
-                f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
-                retryable=False,
-            )
-        collected = collected_value
-        client_value = cast(object, collected.client)
-        if not isinstance(client_value, Mapping):
-            raise TrustProviderError(
-                f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
-                retryable=False,
-            )
-        auth_cache_key_value = cast(object, collected.auth_cache_key)
-        if auth_cache_key_value is not None and not isinstance(auth_cache_key_value, str):
-            raise TrustProviderError(
-                f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
-                retryable=False,
-            )
+        collected = self._validate_collected_identity(collected_value)
 
         return CollectedTrustProviderIdentity(
             client=_merge_client_workload_details(
@@ -362,6 +293,66 @@ class EdgeClient:
             ),
             auth_cache_key=collected.auth_cache_key,
         )
+
+    def _validate_collected_identity(self, collected_value: object) -> CollectedTrustProviderIdentity:
+        """Validates the type and structure of the collected identity payload."""
+        if not isinstance(collected_value, CollectedTrustProviderIdentity):
+            raise TrustProviderError(
+                f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
+                retryable=False,
+            )
+        client_value = cast(object, collected_value.client)
+        if not isinstance(client_value, Mapping):
+            raise TrustProviderError(
+                f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
+                retryable=False,
+            )
+        auth_cache_key_value = cast(object, collected_value.auth_cache_key)
+        if auth_cache_key_value is not None and not isinstance(auth_cache_key_value, str):
+            raise TrustProviderError(
+                f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
+                retryable=False,
+            )
+        return collected_value
+
+    def _execute_single_flight(
+        self,
+        key: str,
+        in_flight_dict: dict[str, _InFlight[_T]],
+        action: Callable[[], _T],
+    ) -> _T:
+        """Executes the given action under a single-flight request coalescing context."""
+        with self._state_lock:
+            existing = in_flight_dict.get(key)
+            if existing is not None:
+                in_flight = existing
+                run_action = False
+            else:
+                in_flight = _InFlight[_T]()
+                in_flight_dict[key] = in_flight
+                run_action = True
+
+        if not run_action:
+            in_flight.done.wait()
+            if in_flight.error is not None:
+                raise in_flight.error
+            if in_flight.result is None:
+                raise RuntimeError("In-flight operation completed without a result")
+            return in_flight.result
+
+        try:
+            result = action()
+            in_flight.result = result
+            return result
+        except Exception as error:
+            in_flight.error = error
+            raise
+        finally:
+            in_flight.done.set()
+            with self._state_lock:
+                current = in_flight_dict.get(key)
+                if current is in_flight:
+                    in_flight_dict.pop(key, None)
 
     def _validate_retry_override(
         self,
@@ -437,17 +428,13 @@ def _merge_mappings(
     return cast(ClientWorkloadDetails, merged)
 
 
-@dataclass(slots=True)
-class _InFlightAuth:
-    done: Event = field(default_factory=Event)
-    result: CachedTokenState | None = None
-    error: Exception | None = None
+_T = TypeVar("_T")
 
 
 @dataclass(slots=True)
-class _InFlightIdentity:
+class _InFlight(Generic[_T]):
     done: Event = field(default_factory=Event)
-    result: CollectedTrustProviderIdentity | None = None
+    result: _T | None = None
     error: Exception | None = None
 
 
@@ -518,3 +505,14 @@ def _normalize_json_value(
         )
 
     raise error_factory()
+
+
+def _validate_get_credential_inputs(
+    request: object,
+    options: object,
+) -> tuple[GetCredentialInput, GetCredentialOptions | None]:
+    if not isinstance(request, GetCredentialInput):
+        raise CredentialError("get_credential() requires a valid input object", retryable=False)
+    if options is not None and not isinstance(options, GetCredentialOptions):
+        raise CredentialError("get_credential() options must be an object", retryable=False)
+    return request, options

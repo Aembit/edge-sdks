@@ -85,18 +85,12 @@ class AwsRoleTrustProvider:
             try:
                 signed_data = self.signer(region=region)
                 break
-            except TrustProviderError as error:
-                last_error = error
-                if not is_retryable_error(error) or attempt >= max_attempts:
-                    raise
-
-                delay_ms = calculate_backoff_delay_ms(attempt, effective_retry_policy)
-                if delay_ms > 0:
-                    self.sleep(delay_ms / 1000)
             except Exception as error:
                 mapped_error = _map_role_signer_error(error)
                 last_error = mapped_error
                 if not is_retryable_error(mapped_error) or attempt >= max_attempts:
+                    if mapped_error is error:
+                        raise error
                     raise mapped_error from error
 
                 delay_ms = calculate_backoff_delay_ms(attempt, effective_retry_policy)
