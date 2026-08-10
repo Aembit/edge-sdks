@@ -150,7 +150,7 @@ class EdgeClient:
 
     def _run_authentication(
         self,
-        *,
+        *,  # bare '*' forces all subsequent arguments to be keyword-only (must be passed by name).
         resource_set: str | None,
         retry: RetryPolicy | None,
         force: bool,
@@ -166,6 +166,7 @@ class EdgeClient:
             retry_key=retry_key,
         )
 
+        #  'with' lock context is equivalent to C# 'lock (stateLock) { ... }'.
         with self._state_lock:
             current_state = self._token_state
             if (
@@ -334,6 +335,8 @@ class EdgeClient:
 
         if not run_action:
             in_flight.done.wait()
+
+            # Once unblocked, we check if the single execution failed or succeeded:
             if in_flight.error is not None:
                 raise in_flight.error
             if in_flight.result is None:
@@ -431,8 +434,11 @@ def _merge_mappings(
 _T = TypeVar("_T")
 
 
+# slots=True disables the dynamic attribute dictionary __dict__, 
+# optimizing memory and restricting attributes
 @dataclass(slots=True)
 class _InFlight(Generic[_T]):
+    # Event is used for thread synchronization
     done: Event = field(default_factory=Event)
     result: _T | None = None
     error: Exception | None = None
@@ -442,6 +448,8 @@ def _is_valid_retry_numeric(value: object) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value)
 
 
+# TypeGuard tells the type checker that if this returns True,
+# the type is guaranteed to be Mapping[str, JsonValue]
 def _is_json_mapping_value(value: JsonValue | None) -> TypeGuard[Mapping[str, JsonValue]]:
     return isinstance(value, Mapping)
 
