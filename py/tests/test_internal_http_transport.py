@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pytest import MonkeyPatch
+import pytest
 
 from aembit_edge.internal.protocol.http_transport import default_http_sender
 
@@ -26,7 +26,7 @@ class _FakeResponse:
         return b"{}"
 
 
-def test_default_http_sender_clamps_zero_timeout_to_none(monkeypatch: MonkeyPatch) -> None:
+def test_default_http_sender_clamps_zero_timeout_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, object] = {}
 
     def fake_urlopen(request: object, timeout: float | None = None) -> _FakeResponse:
@@ -50,7 +50,9 @@ def test_default_http_sender_clamps_zero_timeout_to_none(monkeypatch: MonkeyPatc
     assert captured["timeout"] is None
 
 
-def test_default_http_sender_clamps_negative_timeout_to_none(monkeypatch: MonkeyPatch) -> None:
+def test_default_http_sender_clamps_negative_timeout_to_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, object] = {}
 
     def fake_urlopen(request: object, timeout: float | None = None) -> _FakeResponse:

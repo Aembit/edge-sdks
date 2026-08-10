@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { ApiError, AuthError, CredentialError } from "./errors.js";
-import { EdgeApi } from "./edge-api.js";
-import type { EdgeApiOptions } from "./edge-api.js";
+import { EdgeApi, type EdgeApiOptions } from "./edge-api.js";
 import type { EdgeAuthRequestBody, EdgeCredentialsRequestBody } from "./types.js";
 
 function getFirstCallArgument(

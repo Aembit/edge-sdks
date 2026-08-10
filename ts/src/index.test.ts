@@ -7,9 +7,9 @@ import {
   createAzureMetadataServiceTrustProvider,
   createGcpIdentityTokenTrustProvider,
   createOidcIdTokenTrustProvider,
-  trustProviders
+  trustProviders,
+  type AuthSession
 } from "./index.js";
-import type { AuthSession } from "./index.js";
 
 describe("public type exports", () => {
   it("supports AuthSession typing", () => {
