@@ -27,7 +27,7 @@ Planned v1 behavior:
 The SDK now exposes `EdgeClient` as the developer-facing API.
 
 ```ts
-import { EdgeClient, trustProviders } from "@aembit/edge-sdk-ts"
+import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
 
 const client = new EdgeClient({
   baseUrl: "https://tenant.aembit.io",
@@ -64,10 +64,10 @@ Notes:
 When bundle size matters, import only the Trust Provider factory you need:
 
 ```ts
-import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk-ts"
-import { createAwsRoleTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/aws-role"
-import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/gcp-identity-token"
-import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk-ts/trust-providers/oidc-id-token"
+import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk"
+import { createAwsRoleTrustProvider } from "@aembit/edge-sdk/trust-providers/aws-role"
+import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/gcp-identity-token"
+import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/oidc-id-token"
 ```
 
 Use `trustProviders` for convenience when bundle size is not a concern.
