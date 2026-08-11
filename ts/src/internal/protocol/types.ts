@@ -7,7 +7,7 @@ export type EdgeAuthPath = "/edge/v1/auth";
 export type EdgeCredentialsPath = "/edge/v1/credentials";
 
 /**
- * Known status codes from `spec/openapi/api-1.yaml` (retrieved 2026-03-07T17:37:55Z).
+ * Known status codes from `spec/openapi/edge-sdk-v1.yaml`
  */
 export type AuthSuccessStatus = 200;
 export type AuthErrorStatus = 400 | 401 | 500;
@@ -36,6 +36,7 @@ export interface EdgeAuthRequestBody {
  */
 export interface EdgeAuthSuccessBody {
   accessToken?: string | null;
+  refreshToken?: string | null;
   tokenType?: string | null;
   expiresIn?: number;
 }
@@ -50,12 +51,25 @@ export interface EdgeServerWorkloadDetails {
 }
 
 /**
+ * Connection metadata for filtering multi-credential provider access policy requests.
+ */
+export interface ConnectionMetadata {
+  accountName?: string | null;
+  accessKeyId?: string | null;
+  headerName?: string | null;
+  headerValue?: string | null;
+  httpBodyFieldPath?: string | null;
+  httpBodyFieldValue?: string | null;
+}
+
+/**
  * `/edge/v1/credentials` request body.
  */
 export interface EdgeCredentialsRequestBody {
   client: ClientWorkloadDetails;
   server: EdgeServerWorkloadDetails;
   credentialType?: string;
+  connectionMetadata?: ConnectionMetadata;
 }
 
 /**
