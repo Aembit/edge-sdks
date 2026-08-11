@@ -21,6 +21,8 @@ export default [
       }
     },
     rules: {
+      "no-duplicate-imports": "error",
+      "@typescript-eslint/no-redundant-type-constituents": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
