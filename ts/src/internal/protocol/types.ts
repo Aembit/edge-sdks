@@ -36,7 +36,6 @@ export interface EdgeAuthRequestBody {
  */
 export interface EdgeAuthSuccessBody {
   accessToken?: string | null;
-  refreshToken?: string | null;
   tokenType?: string | null;
   expiresIn?: number;
 }

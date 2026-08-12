@@ -30,7 +30,6 @@ class EdgeAuthSuccessBody(TypedDict, total=False):
     """`/edge/v1/auth` success body."""
 
     accessToken: str | None
-    refreshToken: str | None
     tokenType: str | None
     expiresIn: int
 

@@ -718,11 +718,6 @@ components:
           minLength: 1
           type: string
           description: Bearer token for authenticating subsequent API requests
-        refreshToken:
-          type:
-            - 'null'
-            - string
-          description: Refresh token to obtain new access tokens for future API authentication requests
         tokenType:
           minLength: 1
           type: string
