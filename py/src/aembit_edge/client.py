@@ -1,5 +1,7 @@
 """Public sync client API."""
 
+from __future__ import annotations
+
 import math
 import time
 from collections.abc import Callable, Mapping
@@ -224,7 +226,9 @@ class EdgeClient:
         )
 
     def _retrieve_workload_identity_proof(self) -> CollectedTrustProviderIdentity:
-        """Asks the platform (e.g., AWS STS) to gather local cryptographic proof of who this workload is."""
+        """Asks the platform (e.g., AWS STS) to gather local cryptographic
+        proof of who this workload is.
+        """
         single_flight_key = self._generate_identity_cache_key()
         if single_flight_key is None:
             return self._collect_identity_uncached()
@@ -287,8 +291,13 @@ class EdgeClient:
             auth_cache_key=collected.auth_cache_key,
         )
 
-    def _verify_trust_provider_response(self, collected_value: object) -> CollectedTrustProviderIdentity:
-        """Validates that the external trust provider returned complete and correct identity parameters."""
+    def _verify_trust_provider_response(
+        self,
+        collected_value: object,
+    ) -> CollectedTrustProviderIdentity:
+        """Validates that the external trust provider returned complete
+        and correct identity parameters.
+        """
         if not isinstance(collected_value, CollectedTrustProviderIdentity):
             raise TrustProviderError(
                 f"Trust Provider '{self._config.trust_provider.id}' returned invalid identity data",
