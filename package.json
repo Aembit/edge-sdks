@@ -7,8 +7,5 @@
   },
   "devDependencies": {
     "markdownlint-cli2": "^0.23.0"
-  },
-  "dependencies": {
-    "uv": "^1.4.0"
   }
 }
