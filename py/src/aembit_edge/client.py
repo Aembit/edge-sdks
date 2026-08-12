@@ -323,8 +323,7 @@ class EdgeClient:
         in_flight_dict: dict[str, _InFlight[_T]],
         action: Callable[[], _T],
     ) -> _T:
-        """Combines parallel threads requesting the same thing
-        at the exact same millisecond so we only call the API once."""
+        """Combines parallel threads requesting the same thing so we only call the API once."""
         with self._state_lock:
             is_in_flight = in_flight_dict.get(key)
             if is_in_flight is not None:
