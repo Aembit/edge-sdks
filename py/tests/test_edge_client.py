@@ -372,6 +372,47 @@ def test_get_credential_auto_authenticates_and_defaults_transport_protocol() -> 
     }
 
 
+def test_get_credential_forwards_connection_metadata_and_cert_signing_request() -> None:
+    sender = SenderStub(
+        [
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"accessToken": "token-1", "expiresIn": 120}),
+            ),
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps(
+                    {
+                        "credentialType": "X509Svid",
+                        "expiresAt": None,
+                        "data": {"certificate": "pem-cert"},
+                    }
+                ),
+            ),
+        ]
+    )
+    client = build_client(sender=sender)
+
+    result = client.get_credential(
+        GetCredentialInput(
+            server=CredentialServerRef(host="db.internal", port=443),
+            connection_metadata={"accountName": "snowflake_user"},
+            cert_signing_request="-----BEGIN CERTIFICATE REQUEST-----...",
+        )
+    )
+
+    assert result.credential_type == "X509Svid"
+    assert result.data == {"certificate": "pem-cert"}
+    assert sender.calls[1]["body"] == {
+        "client": {"aws": {"region": "us-east-1"}},
+        "server": {"host": "db.internal", "port": 443, "transportProtocol": "TCP"},
+        "connectionMetadata": {"accountName": "snowflake_user"},
+        "certSigningRequest": "-----BEGIN CERTIFICATE REQUEST-----...",
+    }
+
+
 def test_get_credential_reuses_cached_token() -> None:
     sender = SenderStub(
         [
