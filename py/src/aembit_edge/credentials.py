@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Literal
 
+from .internal.protocol.types import ConnectionMetadata
 from .retry import RetryPolicy
 from .types import JsonObject
 
@@ -28,6 +29,8 @@ class GetCredentialInput:
 
     server: CredentialServerRef
     credential_type: str | None = None
+    connection_metadata: ConnectionMetadata | None = None
+    cert_signing_request: str | None = None
 
 
 @dataclass(slots=True, kw_only=True)

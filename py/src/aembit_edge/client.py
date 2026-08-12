@@ -115,6 +115,10 @@ class EdgeClient:
         }
         if request.credential_type is not None:
             body["credentialType"] = request.credential_type
+        if request.connection_metadata is not None:
+            body["connectionMetadata"] = request.connection_metadata
+        if request.cert_signing_request is not None:
+            body["certSigningRequest"] = request.cert_signing_request
 
         credential_body = parse_credential_success_body(
             self._api.credentials(
