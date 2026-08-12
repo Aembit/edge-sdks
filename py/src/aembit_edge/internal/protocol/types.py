@@ -42,12 +42,25 @@ class EdgeServerWorkloadDetails(TypedDict, total=False):
     port: int
 
 
+class ConnectionMetadata(TypedDict, total=False):
+    """Filter values for multi-credential provider access policy credential requests."""
+
+    accountName: str | None
+    accessKeyId: str | None
+    headerName: str | None
+    headerValue: str | None
+    httpBodyFieldPath: str | None
+    httpBodyFieldValue: str | None
+
+
 class EdgeCredentialsRequestBody(TypedDict, total=False):
     """`/edge/v1/credentials` request body."""
 
     client: ClientWorkloadDetails
     server: EdgeServerWorkloadDetails
     credentialType: str
+    connectionMetadata: ConnectionMetadata
+    certSigningRequest: str | None
 
 
 class EdgeCredentialsSuccessBody(TypedDict, total=False):

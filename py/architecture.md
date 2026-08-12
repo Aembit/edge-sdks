@@ -11,9 +11,9 @@ Initial baseline:
 - runtime target: Python `>=3.10`
 - package distribution name: `aembit-edge-sdk`
 - import package: `aembit_edge`
-- target API contract: Aembit Edge API v1 (`spec/openapi/api-1.yaml`)
+- target API contract: Aembit Edge API v1 (`spec/openapi/edge-sdk-v1.yaml`)
 - canonical API docs: `https://docs.aembit.io/api-guide/edge/`
-- OpenAPI snapshot timestamp: `2026-03-07T17:37:55Z`
+- OpenAPI snapshot timestamp: `2026-08-10T22:39:19-07:00`
 - initial Trust Provider priority: AWS Role first, AWS Metadata Service next
 - test framework: `pytest`
 - lint and format: `ruff`

@@ -4,6 +4,7 @@ from .auth import AuthSession
 from .client import EdgeClient
 from .config import EdgeClientConfig
 from .credentials import (
+    ConnectionMetadata,
     CredentialResult,
     CredentialServerRef,
     GetCredentialInput,
@@ -32,6 +33,7 @@ __all__ = [
     "AsyncTrustProvider",
     "AuthError",
     "AuthSession",
+    "ConnectionMetadata",
     "CredentialError",
     "CredentialResult",
     "CredentialServerRef",

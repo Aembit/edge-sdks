@@ -4,6 +4,7 @@ import {
   TrustProviderError
 } from "../internal/protocol/errors.js"
 import { EdgeHttpTransport } from "../internal/protocol/http-transport.js"
+import type { EdgeCredentialsRequestBody } from "../internal/protocol/types.js"
 import {
   calculateExpiresAtMs,
   formatExpiresAt,
@@ -15,7 +16,8 @@ import {
   resolveAuthExpirySkewMs,
   resolveEffectiveResourceSet,
   serializeAuthSingleFlightKey,
-  serializeEffectiveRetryPolicyKey
+  serializeEffectiveRetryPolicyKey,
+  type CachedTokenState
 } from "../internal/client/index.js"
 import { isRecord } from "../internal/shared/type-guards.js"
 import type { AuthSession } from "../types/auth.js"
@@ -26,7 +28,6 @@ import type {
   ClientWorkloadDetails,
   CollectedTrustProviderIdentity
 } from "../types/trust-provider.js"
-import type { CachedTokenState } from "../internal/client/index.js"
 
 /**
  * High-level SDK client for authentication and credential retrieval.
@@ -110,10 +111,12 @@ export class EdgeClient {
       effectiveResourceSet,
       identity
     )
-    const body = {
+    const body: EdgeCredentialsRequestBody = {
       client: identity.client,
       server,
-      credentialType: input.credentialType
+      credentialType: input.credentialType,
+      connectionMetadata: input.connectionMetadata,
+      certSigningRequest: input.certSigningRequest
     }
     const response = await this.api.credentials(body, bearerToken, {
       resourceSet: options.resourceSet,

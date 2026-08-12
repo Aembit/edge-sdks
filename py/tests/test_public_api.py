@@ -62,6 +62,8 @@ def test_public_models_are_constructible() -> None:
     assert asdict(request) == {
         "server": {"host": "db.internal", "port": 443, "transport_protocol": "TCP"},
         "credential_type": "api_key",
+        "connection_metadata": None,
+        "cert_signing_request": None,
     }
     assert options.resource_set == "example"
     assert result.data["token"] == "value"

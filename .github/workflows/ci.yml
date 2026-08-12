@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -42,7 +44,21 @@ jobs:
         run: npm run typecheck
 
       - name: Test
+        if: matrix.node != '22.x'
         run: npm test
+
+      - name: Test with Coverage
+        if: matrix.node == '22.x'
+        run: npm run test:coverage
+
+      - name: SonarCloud Scan
+        if: matrix.node == '22.x'
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.EDGE_SDKS_TS_SONAR_TOKEN }}
+        with:
+          projectBaseDir: ts
 
   python:
     name: Python (${{ matrix.python-version }})
@@ -60,6 +76,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
@@ -82,7 +100,21 @@ jobs:
         run: uv run pyright
 
       - name: Test
+        if: matrix.python-version != '3.10'
         run: uv run pytest
+
+      - name: Test with Coverage
+        if: matrix.python-version == '3.10'
+        run: uv run pytest --cov=src --cov-report=xml
+
+      - name: SonarCloud Scan
+        if: matrix.python-version == '3.10'
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.EDGE_SDKS_PY_SONAR_TOKEN }}
+        with:
+          projectBaseDir: py
 
       - name: Build package
         if: matrix.python-version == '3.10'

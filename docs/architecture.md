@@ -30,8 +30,8 @@ This architecture targets **Aembit Edge API v1**.
 
 Current protocol reference:
 
-- `spec/openapi/api-1.yaml`
-- snapshot retrieval timestamp: `2026-03-07T17:37:55Z` (from `spec/openapi/README.md`)
+- `spec/openapi/edge-sdk-v1.yaml`
+- snapshot retrieval timestamp: `2026-08-10T22:39:19-07:00` (from `spec/openapi/README.md`)
 
 ## Layered Architecture
 
@@ -130,10 +130,10 @@ Cross-language retry behavior should follow this contract:
 
 ## Endpoint Response Code Semantics (Aembit Edge API v1)
 
-As of `spec/openapi/api-1.yaml` (retrieved `2026-03-07T17:37:55Z`), expected HTTP response codes are:
+As of `spec/openapi/edge-sdk-v1.yaml` (retrieved `2026-08-10T22:39:19-07:00`), expected HTTP response codes are:
 
-- `POST /edge/v1/auth`: `200`, `400`, `401`, `500`
-- `POST /edge/v1/credentials`: `200`, `400`, `500`
+- `POST /edge/v1/auth`: `200`, `400`, `401`, `429`, `500`
+- `POST /edge/v1/credentials`: `200`, `400`, `401`, `403`, `404`, `429`, `500`
 
 Default handling for other status codes:
 

@@ -4,12 +4,12 @@ This directory stores pinned OpenAPI snapshots used to develop and validate SDK 
 
 ## Current Snapshot
 
-- File: `api-1.yaml`
-- OpenAPI version: `3.0.4`
+- File: `edge-sdk-v1.yaml`
+- OpenAPI version: `3.1.1`
 - API title: `Aembit Edge API`
-- API version (`info.version`): `v1`
-- Retrieved on: `2026-03-07T17:37:55Z`
-- Source URL: `https://docs.aembit.io/api-guide/edge/api-reference-edge`
+- API version (`info.version`): `1.0.0`
+- Retrieved on: `2026-08-10T22:39:19-07:00`
+- Source URL: `https://docs.aembit.io/edge.yaml`
 
 ## Why This Is Committed
 
@@ -32,5 +32,4 @@ When replacing or adding a spec snapshot:
 
 ## Notes
 
-- The current filename (`api-1.yaml`) is preserved as-downloaded.
-- Consider a future rename to a versioned name (example: `edge-v1-openapi.yaml`) when convenient.
+- The snapshot filename `edge-sdk-v1.yaml` reflects the versioned OpenAPI spec snapshot for Aembit Edge API v1.

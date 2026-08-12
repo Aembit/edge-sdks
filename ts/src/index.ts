@@ -18,6 +18,7 @@ export type {
 export type { AuthSession } from "./types/auth.js";
 export type { EdgeClientConfig } from "./types/client-config.js";
 export type {
+  ConnectionMetadata,
   CredentialResult,
   CredentialServerRef,
   GetCredentialInput,
