@@ -4,6 +4,7 @@ import {
   TrustProviderError
 } from "../internal/protocol/errors.js"
 import { EdgeHttpTransport } from "../internal/protocol/http-transport.js"
+import type { EdgeCredentialsRequestBody } from "../internal/protocol/types.js"
 import {
   calculateExpiresAtMs,
   formatExpiresAt,
@@ -110,10 +111,12 @@ export class EdgeClient {
       effectiveResourceSet,
       identity
     )
-    const body = {
+    const body: EdgeCredentialsRequestBody = {
       client: identity.client,
       server,
-      credentialType: input.credentialType
+      credentialType: input.credentialType,
+      connectionMetadata: input.connectionMetadata,
+      certSigningRequest: input.certSigningRequest
     }
     const response = await this.api.credentials(body, bearerToken, {
       resourceSet: options.resourceSet,

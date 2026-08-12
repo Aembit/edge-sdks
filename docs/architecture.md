@@ -132,8 +132,8 @@ Cross-language retry behavior should follow this contract:
 
 As of `spec/openapi/edge-sdk-v1.yaml` (retrieved `2026-08-10T22:39:19-07:00`), expected HTTP response codes are:
 
-- `POST /edge/v1/auth`: `200`, `400`, `401`, `500`
-- `POST /edge/v1/credentials`: `200`, `400`, `500`
+- `POST /edge/v1/auth`: `200`, `400`, `401`, `429`, `500`
+- `POST /edge/v1/credentials`: `200`, `400`, `401`, `403`, `404`, `429`, `500`
 
 Default handling for other status codes:
 

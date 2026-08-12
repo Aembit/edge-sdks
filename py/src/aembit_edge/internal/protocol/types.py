@@ -61,6 +61,7 @@ class EdgeCredentialsRequestBody(TypedDict, total=False):
     server: EdgeServerWorkloadDetails
     credentialType: str
     connectionMetadata: ConnectionMetadata
+    certSigningRequest: str | None
 
 
 class EdgeCredentialsSuccessBody(TypedDict, total=False):

@@ -117,7 +117,7 @@ Identity payload contract returned by `collectIdentity()`:
 }
 ```
 
-This matches the `AwsDTO.stsGetCallerIdentity` schema in `spec/openapi/api-1.yaml`.
+This matches the `AwsDTO.stsGetCallerIdentity` schema in `spec/openapi/edge-sdk-v1.yaml`.
 
 ### OIDC ID Token Trust Provider Contract
 
@@ -179,7 +179,7 @@ Identity payload contract returned by `collectIdentity()`:
 ```
 
 This matches the `ClientWorkloadDetails.oidc -> IdentityTokenAttestationDTO`
-schema in `spec/openapi/api-1.yaml`.
+schema in `spec/openapi/edge-sdk-v1.yaml`.
 
 Roadmap note:
 
@@ -227,7 +227,7 @@ Identity payload contract returned by `collectIdentity()`:
 ```
 
 This matches the `ClientWorkloadDetails.azure -> AzureAttestationDTO` schema in
-`spec/openapi/api-1.yaml`.
+`spec/openapi/edge-sdk-v1.yaml`.
 
 The Azure IMDS PKCS#7 signature blob contains the signed attested document and
 certificate chain, so the SDK sends the signature blob together with the
@@ -284,7 +284,7 @@ Identity payload contract returned by `collectIdentity()`:
 ```
 
 This matches the `ClientWorkloadDetails.gcp -> GcpAttestationDTO` schema in
-`spec/openapi/api-1.yaml` for the identity-token-based flow.
+`spec/openapi/edge-sdk-v1.yaml` for the identity-token-based flow.
 
 ### 3) Developer Client Layer (`ts/src/client`)
 
@@ -363,7 +363,7 @@ override Trust Provider-owned fields.
 Roadmap note:
 
 - add runtime validation for `clientWorkloadDetails` against the pinned
-  `ClientWorkloadDetails` schema in `spec/openapi/api-1.yaml`
+  `ClientWorkloadDetails` schema in `spec/openapi/edge-sdk-v1.yaml`
 - reject unsupported keys locally with SDK errors instead of surfacing Edge `400`
   responses
 
@@ -565,10 +565,10 @@ TypeScript implementation details for retry behavior:
 
 ## HTTP Response Code Handling (Aembit Edge API v1)
 
-As of `spec/openapi/api-1.yaml` (retrieved `2026-03-07T17:37:55Z`), expected endpoint response codes are:
+As of `spec/openapi/edge-sdk-v1.yaml` (retrieved `2026-08-10T22:39:19-07:00`), expected endpoint response codes are:
 
-- `POST /edge/v1/auth`: `200`, `400`, `401`, `500`
-- `POST /edge/v1/credentials`: `200`, `400`, `500`
+- `POST /edge/v1/auth`: `200`, `400`, `401`, `429`, `500`
+- `POST /edge/v1/credentials`: `200`, `400`, `401`, `403`, `404`, `429`, `500`
 
 Default handling for other status codes:
 

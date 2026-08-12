@@ -1,4 +1,7 @@
+import type { ConnectionMetadata } from "../internal/protocol/types.js";
 import type { RetryPolicyOverride } from "./retry.js";
+
+export type { ConnectionMetadata };
 
 /**
  * Server reference used by `getCredential()`.
@@ -33,6 +36,16 @@ export interface GetCredentialInput {
    * Optional credential type hint requested from Edge.
    */
   credentialType?: string;
+
+  /**
+   * Optional filter metadata for access policies with multiple credential providers.
+   */
+  connectionMetadata?: ConnectionMetadata;
+
+  /**
+   * Optional Certificate Signing Request (CSR) for X.509 SVID credential flows.
+   */
+  certSigningRequest?: string | null;
 }
 
 /**
