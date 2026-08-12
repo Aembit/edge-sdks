@@ -90,7 +90,7 @@ class AwsRoleTrustProvider:
                 last_error = mapped_error
                 if not is_retryable_error(mapped_error) or attempt >= max_attempts:
                     if mapped_error is error:
-                        raise error
+                        raise
                     raise mapped_error from error
 
                 delay_ms = calculate_backoff_delay_ms(attempt, effective_retry_policy)

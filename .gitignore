@@ -14,3 +14,7 @@ __pycache__/
 
 ## Vercel local state
 .vercel/
+
+## Lock files
+package-lock.json
+yarn.lock

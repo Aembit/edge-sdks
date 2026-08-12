@@ -162,7 +162,7 @@ class EdgeClient:
         force: bool,
         identity: CollectedTrustProviderIdentity,
     ) -> CachedTokenState:
-        """talks to the authentication service to get a standard session _fetch_access_token"""
+        """Acquire an access token by calling the Edge /auth endpoint and caching the result."""
         retry_key = serialize_effective_retry_policy_key(
             base_retry=self._config.retry,
             request_retry=retry,
