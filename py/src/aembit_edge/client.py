@@ -323,8 +323,8 @@ class EdgeClient:
         in_flight_dict: dict[str, _InFlight[_T]],
         action: Callable[[], _T],
     ) -> _T:
-        """Combines parallel threads requesting the same thing 
-           at the exact same millisecond so we only call the API once."""
+        """Combines parallel threads requesting the same thing
+        at the exact same millisecond so we only call the API once."""
         with self._state_lock:
             is_in_flight = in_flight_dict.get(key)
             if is_in_flight is not None:
@@ -375,7 +375,7 @@ class EdgeClient:
                 f"{operation}() retry configuration must be a RetryPolicy instance",
                 retryable=False,
             )
-        
+
         _validate_auto_retry_toggle(retry, operation)
         _validate_network_backoff_settings(retry, operation)
         _validate_retryable_server_error_codes(retry, operation)
@@ -398,8 +398,8 @@ def _validate_network_backoff_settings(
     retry: object,
     operation: str,
 ) -> None:
-    """Validates settings (delays and attempt counts) used for backing off and 
-       retrying to recover from transient network drops.
+    """Validates settings (delays and attempt counts) used for backing off and
+    retrying to recover from transient network drops.
     """
     for field_name in ("max_attempts", "base_delay_ms", "max_delay_ms"):
         # getattr(retry, field_name) is equivalent to C# Reflection:
@@ -418,8 +418,8 @@ def _validate_retryable_server_error_codes(
     retry: object,
     operation: str,
 ) -> None:
-    """Validates the specific list of HTTP server error statuses 
-       (like 429 Too Many Requests) we are allowed to retry."""
+    """Validates the specific list of HTTP server error statuses
+    (like 429 Too Many Requests) we are allowed to retry."""
     # getattr(retry, "retry_on_status_codes") is equivalent to C# Reflection:
     # retry.GetType().GetProperty("retry_on_status_codes").GetValue(retry)
     status_codes = cast(object, getattr(retry, "retry_on_status_codes", None))
@@ -430,7 +430,7 @@ def _validate_retryable_server_error_codes(
             f"{operation}() retry configuration contains invalid retry_on_status_codes",
             retryable=False,
         )
-    
+
     normalized_status_codes = cast(tuple[object, ...] | list[object], status_codes)
     for code in normalized_status_codes:
         if isinstance(code, bool) or not isinstance(code, int):
@@ -471,7 +471,7 @@ def _merge_mappings(
 _T = TypeVar("_T")
 
 
-# slots=True disables the dynamic attribute dictionary __dict__, 
+# slots=True disables the dynamic attribute dictionary __dict__,
 # optimizing memory and restricting attributes
 @dataclass(slots=True)
 class _InFlight(Generic[_T]):
@@ -502,7 +502,7 @@ def _normalize_client_workload_details(
         error_factory=lambda: CredentialError(
             "client_workload_details must be a JSON object",
             retryable=False,
-        )
+        ),
     )
 
 
