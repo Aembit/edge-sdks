@@ -8,12 +8,20 @@ from .base import (
     TrustProvider,
     TrustProviderKind,
 )
+from .oidc_providers import (
+    GitHubTrustProvider,
+    GitLabTrustProvider,
+    TerraformTrustProvider,
+)
 
 __all__ = [
     "AsyncTrustProvider",
     "AwsRoleTrustProvider",
     "ClientWorkloadDetails",
     "CollectedTrustProviderIdentity",
+    "GitHubTrustProvider",
+    "GitLabTrustProvider",
+    "TerraformTrustProvider",
     "TrustProvider",
     "TrustProviderKind",
 ]

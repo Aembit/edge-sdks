@@ -11,6 +11,9 @@ TrustProviderKind: TypeAlias = Literal[
     "azure_metadata_service",
     "gcp_identity_token",
     "oidc_id_token",
+    "github",
+    "terraform",
+    "gitlab",
 ]
 ClientWorkloadDetails: TypeAlias = JsonObject
 
