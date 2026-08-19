@@ -27,8 +27,7 @@ class GitHubTrustProvider:
 
     def __post_init__(self) -> None:
         """Normalize the public provider id after dataclass construction."""
-        provider_id = self.id.strip() if isinstance(self.id, str) else ""
-        self.id = provider_id or DEFAULT_GITHUB_ID
+        self.id = self.id.strip() if self.id else DEFAULT_GITHUB_ID
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the GitHub identity token for `/edge/v1/auth`."""
