@@ -40,9 +40,7 @@ class GitHubTrustProvider:
                 "GitHub Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
-        return CollectedTrustProviderIdentity(
-            client={"github": {"identityToken": token}}
-        )
+        return CollectedTrustProviderIdentity(client={"github": {"identityToken": token}})
 
 
 @dataclass(slots=True)
@@ -73,9 +71,7 @@ class TerraformTrustProvider:
                 "Terraform Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
-        return CollectedTrustProviderIdentity(
-            client={"terraform": {"identityToken": token}}
-        )
+        return CollectedTrustProviderIdentity(client={"terraform": {"identityToken": token}})
 
 
 @dataclass(slots=True)
@@ -106,6 +102,4 @@ class GitLabTrustProvider:
                 "GitLab Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
-        return CollectedTrustProviderIdentity(
-            client={"gitlab": {"identityToken": token}}
-        )
+        return CollectedTrustProviderIdentity(client={"gitlab": {"identityToken": token}})
