@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 from .base import CollectedTrustProviderIdentity, TrustProviderKind
 
 DEFAULT_GITHUB_ID = "github"
