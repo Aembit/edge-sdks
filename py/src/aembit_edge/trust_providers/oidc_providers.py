@@ -27,11 +27,13 @@ class GitHubTrustProvider:
 
     def __post_init__(self) -> None:
         """Normalize the public provider id after dataclass construction."""
-        self.id = self.id.strip() if self.id else DEFAULT_GITHUB_ID
+        normalized_id = self.id.strip() if self.id else ""
+        self.id = normalized_id or DEFAULT_GITHUB_ID
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the GitHub identity token for `/edge/v1/auth`."""
-        if not self.identity_token:
+        token = self.identity_token.strip() if isinstance(self.identity_token, str) else ""
+        if not token:
             from ..errors import TrustProviderError
 
             raise TrustProviderError(
@@ -39,7 +41,7 @@ class GitHubTrustProvider:
                 retryable=False,
             )
         return CollectedTrustProviderIdentity(
-            client={"github": {"identityToken": self.identity_token}}
+            client={"github": {"identityToken": token}}
         )
 
 
@@ -58,11 +60,13 @@ class TerraformTrustProvider:
 
     def __post_init__(self) -> None:
         """Normalize the public provider id after dataclass construction."""
-        self.id = self.id.strip() if self.id else DEFAULT_TERRAFORM_ID
+        normalized_id = self.id.strip() if self.id else ""
+        self.id = normalized_id or DEFAULT_TERRAFORM_ID
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the Terraform identity token for `/edge/v1/auth`."""
-        if not self.identity_token:
+        token = self.identity_token.strip() if isinstance(self.identity_token, str) else ""
+        if not token:
             from ..errors import TrustProviderError
 
             raise TrustProviderError(
@@ -70,7 +74,7 @@ class TerraformTrustProvider:
                 retryable=False,
             )
         return CollectedTrustProviderIdentity(
-            client={"terraform": {"identityToken": self.identity_token}}
+            client={"terraform": {"identityToken": token}}
         )
 
 
@@ -89,11 +93,13 @@ class GitLabTrustProvider:
 
     def __post_init__(self) -> None:
         """Normalize the public provider id after dataclass construction."""
-        self.id = self.id.strip() if self.id else DEFAULT_GITLAB_ID
+        normalized_id = self.id.strip() if self.id else ""
+        self.id = normalized_id or DEFAULT_GITLAB_ID
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the GitLab identity token for `/edge/v1/auth`."""
-        if not self.identity_token:
+        token = self.identity_token.strip() if isinstance(self.identity_token, str) else ""
+        if not token:
             from ..errors import TrustProviderError
 
             raise TrustProviderError(
@@ -101,5 +107,5 @@ class GitLabTrustProvider:
                 retryable=False,
             )
         return CollectedTrustProviderIdentity(
-            client={"gitlab": {"identityToken": self.identity_token}}
+            client={"gitlab": {"identityToken": token}}
         )

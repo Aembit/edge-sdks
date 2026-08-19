@@ -57,11 +57,10 @@ Current built-in Trust Provider surface (imported from `aembit_edge.trust_provid
 - `GitHubTrustProvider(identity_token=...)` - GitHub Action Trust Provider using OIDC identity tokens.
 - `GitLabTrustProvider(identity_token=...)` - GitLab Job Trust Provider using OIDC identity tokens.
 - `TerraformTrustProvider(identity_token=...)` - Terraform Cloud Trust Provider using OIDC identity tokens.
-- `OidcTrustProvider(identity_token=...)` - OIDC Trust Provider using OIDC identity tokens.
 
 ## Example Usage
 
-### Using OIDC Trust Providers (GitHub, GitLab, Terraform, OIDC)
+### Using OIDC Trust Providers (GitHub, GitLab, Terraform)
 
 To authenticate a workload using an OIDC-based trust provider, retrieve the OIDC identity token from your environment and construct the appropriate provider:
 
