@@ -103,4 +103,3 @@ class GitLabTrustProvider:
         return CollectedTrustProviderIdentity(
             client={"gitlab": {"identityToken": self.identity_token}}
         )
-
