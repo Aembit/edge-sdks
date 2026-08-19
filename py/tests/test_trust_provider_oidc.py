@@ -30,9 +30,9 @@ def test_github_provider_custom_id() -> None:
     provider_empty = GitHubTrustProvider(identity_token="token", id="")
     assert provider_empty.id == "github"
 
-    # Blank/whitespace becomes empty string because of strip() in post_init
+    # Blank/whitespace falls back to the default after normalization
     provider_whitespace = GitHubTrustProvider(identity_token="token", id="   ")
-    assert provider_whitespace.id == ""
+    assert provider_whitespace.id == "github"
 
 
 def test_github_provider_collect_identity_success() -> None:
@@ -42,11 +42,10 @@ def test_github_provider_collect_identity_success() -> None:
     assert identity.auth_cache_key is None
     assert identity.client == {"github": {"identityToken": "my-token"}}
 
-    # Whitespace token is accepted as-is by collect_identity because it's non-empty
+    # Whitespace-only tokens should be rejected
     provider_whitespace = GitHubTrustProvider(identity_token="   ")
-    identity_whitespace = provider_whitespace.collect_identity()
-    assert identity_whitespace.client == {"github": {"identityToken": "   "}}
-
+    with pytest.raises(TrustProviderError):
+        provider_whitespace.collect_identity()
 
 def test_github_provider_collect_identity_raises_for_empty_token() -> None:
     """GitHubTrustProvider collect_identity should raise TrustProviderError for empty token."""
