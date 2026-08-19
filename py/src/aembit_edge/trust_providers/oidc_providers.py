@@ -10,6 +10,7 @@ from .base import CollectedTrustProviderIdentity, TrustProviderKind
 DEFAULT_GITHUB_ID = "github"
 DEFAULT_TERRAFORM_ID = "terraform"
 DEFAULT_GITLAB_ID = "gitlab"
+DEFAULT_OIDC_ID = "oidc"
 
 
 @dataclass(slots=True)
@@ -54,7 +55,7 @@ class TerraformTrustProvider:
     identity_token: str
     id: str = DEFAULT_TERRAFORM_ID
 
-    kind: TrustProviderKind = "terraform"
+    kind: ClassVar[TrustProviderKind] = "terraform"
 
     def __post_init__(self) -> None:
         """Normalize the public provider id after dataclass construction."""
@@ -85,7 +86,7 @@ class GitLabTrustProvider:
     identity_token: str
     id: str = DEFAULT_GITLAB_ID
 
-    kind: TrustProviderKind = "gitlab"
+    kind: ClassVar[TrustProviderKind] = "gitlab"
 
     def __post_init__(self) -> None:
         """Normalize the public provider id after dataclass construction."""
@@ -102,4 +103,34 @@ class GitLabTrustProvider:
             )
         return CollectedTrustProviderIdentity(
             client={"gitlab": {"identityToken": self.identity_token}}
+        )
+
+@dataclass(slots=True)
+class OidcTrustProvider:
+    """Built-in OIDC Trust Provider.
+
+    This provider collects the `client.oidc.identityToken` payload content
+    for `/edge/v1/auth` requests.
+    """
+
+    identity_token: str
+    id: str = DEFAULT_OIDC_ID
+
+    kind: ClassVar[TrustProviderKind] = "oidc"
+
+    def __post_init__(self) -> None:
+        """Normalize the public provider id after dataclass construction."""
+        self.id = self.id.strip() if self.id else DEFAULT_OIDC_ID
+
+    def collect_identity(self) -> CollectedTrustProviderIdentity:
+        """Collect the OIDC identity token for `/edge/v1/auth`."""
+        if not self.identity_token:
+            from ..errors import TrustProviderError
+
+            raise TrustProviderError(
+                "OIDC Trust Provider requires a non-empty identity token",
+                retryable=False,
+            )
+        return CollectedTrustProviderIdentity(
+            client={"oidc": {"identityToken": self.identity_token}}
         )
