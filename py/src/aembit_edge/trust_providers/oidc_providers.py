@@ -105,6 +105,7 @@ class GitLabTrustProvider:
             client={"gitlab": {"identityToken": self.identity_token}}
         )
 
+
 @dataclass(slots=True)
 class OidcTrustProvider:
     """Built-in OIDC Trust Provider.
