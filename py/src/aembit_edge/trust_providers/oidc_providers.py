@@ -32,7 +32,7 @@ class GitHubTrustProvider:
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the GitHub identity token for `/edge/v1/auth`."""
-        token = self.identity_token.strip() if isinstance(self.identity_token, str) else ""
+        token = self.identity_token.strip() if self.identity_token else ""
         if not token:
             from ..errors import TrustProviderError
 
@@ -63,7 +63,7 @@ class TerraformTrustProvider:
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the Terraform identity token for `/edge/v1/auth`."""
-        token = self.identity_token.strip() if isinstance(self.identity_token, str) else ""
+        token = self.identity_token.strip() if self.identity_token else ""
         if not token:
             from ..errors import TrustProviderError
 
@@ -94,7 +94,7 @@ class GitLabTrustProvider:
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the GitLab identity token for `/edge/v1/auth`."""
-        token = self.identity_token.strip() if isinstance(self.identity_token, str) else ""
+        token = self.identity_token.strip() if self.identity_token else ""
         if not token:
             from ..errors import TrustProviderError
 

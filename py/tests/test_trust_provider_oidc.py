@@ -78,9 +78,9 @@ def test_terraform_provider_custom_id() -> None:
     provider_empty = TerraformTrustProvider(identity_token="token", id="")
     assert provider_empty.id == "terraform"
 
-    # Blank/whitespace becomes empty string because of strip() in post_init
+    # Blank/whitespace falls back to the default after normalization
     provider_whitespace = TerraformTrustProvider(identity_token="token", id="   ")
-    assert provider_whitespace.id == ""
+    assert provider_whitespace.id == "terraform"
 
 
 def test_terraform_provider_collect_identity_success() -> None:
@@ -90,10 +90,10 @@ def test_terraform_provider_collect_identity_success() -> None:
     assert identity.auth_cache_key is None
     assert identity.client == {"terraform": {"identityToken": "my-token"}}
 
-    # Whitespace token is accepted as-is by collect_identity because it's non-empty
+    # Whitespace-only tokens should be rejected
     provider_whitespace = TerraformTrustProvider(identity_token="   ")
-    identity_whitespace = provider_whitespace.collect_identity()
-    assert identity_whitespace.client == {"terraform": {"identityToken": "   "}}
+    with pytest.raises(TrustProviderError):
+        provider_whitespace.collect_identity()
 
 
 def test_terraform_provider_collect_identity_raises_for_empty_token() -> None:
@@ -124,9 +124,9 @@ def test_gitlab_provider_custom_id() -> None:
     provider_empty = GitLabTrustProvider(identity_token="token", id="")
     assert provider_empty.id == "gitlab"
 
-    # Blank/whitespace becomes empty string because of strip() in post_init
+    # Blank/whitespace falls back to the default after normalization
     provider_whitespace = GitLabTrustProvider(identity_token="token", id="   ")
-    assert provider_whitespace.id == ""
+    assert provider_whitespace.id == "gitlab"
 
 
 def test_gitlab_provider_collect_identity_success() -> None:
@@ -136,10 +136,10 @@ def test_gitlab_provider_collect_identity_success() -> None:
     assert identity.auth_cache_key is None
     assert identity.client == {"gitlab": {"identityToken": "my-token"}}
 
-    # Whitespace token is accepted as-is by collect_identity because it's non-empty
+    # Whitespace-only tokens should be rejected
     provider_whitespace = GitLabTrustProvider(identity_token="   ")
-    identity_whitespace = provider_whitespace.collect_identity()
-    assert identity_whitespace.client == {"gitlab": {"identityToken": "   "}}
+    with pytest.raises(TrustProviderError):
+        provider_whitespace.collect_identity()
 
 
 def test_gitlab_provider_collect_identity_raises_for_empty_token() -> None:
