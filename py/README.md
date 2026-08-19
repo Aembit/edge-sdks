@@ -51,16 +51,85 @@ Current public concepts:
 - `resource_set`
 - `Trust Provider`
 
-Current built-in Trust Provider surface:
+Current built-in Trust Provider surface (imported from `aembit_edge.trust_providers`):
 
-- `AwsRoleTrustProvider(region=...)` from `aembit_edge.trust_providers`
+- `AwsRoleTrustProvider(region=...)` - AWS Role Trust Provider using the botocore credential chain and SigV4 signing for STS `GetCallerIdentity` request generation.
+- `GitHubTrustProvider(identity_token=...)` - GitHub Action Trust Provider using OIDC identity tokens.
+- `GitLabTrustProvider(identity_token=...)` - GitLab Job Trust Provider using OIDC identity tokens.
+- `TerraformTrustProvider(identity_token=...)` - Terraform Cloud Trust Provider using OIDC identity tokens.
 
-Current limitation:
+## Example Usage
 
-- `EdgeClient` is implemented for synchronous authentication and credential retrieval
-- async client support is still planned but not yet exposed
-- AWS Role Trust Provider uses the botocore credential chain and SigV4 signing
-  for STS `GetCallerIdentity` request generation
+### Using OIDC Trust Providers (GitHub, GitLab, Terraform)
+
+To authenticate a workload using an OIDC-based trust provider, retrieve the OIDC identity token from your environment and construct the appropriate provider:
+
+```python
+from aembit_edge import EdgeClient, EdgeClientConfig, GetCredentialInput, CredentialServerRef
+from aembit_edge.trust_providers import GitHubTrustProvider
+
+# 1. Initialize the trust provider with the environment's identity token
+github_provider = GitHubTrustProvider(identity_token="YOUR_GITHUB_OIDC_TOKEN")
+
+# 2. Configure the Edge Client
+config = EdgeClientConfig(
+    base_url="https://your-tenant.aembit.io",
+    client_id="your-client-id",
+    trust_provider=github_provider,
+)
+client = EdgeClient(config)
+
+# 3. Request credentials for a target server
+server = CredentialServerRef(host="database.internal", port=5432)
+request = GetCredentialInput(server=server, credential_type="api_key")
+
+result = client.get_credential(request)
+print("Retrieved Credential Data:", result.data)
+```
+
+Other OIDC trust providers (`GitLabTrustProvider`, `TerraformTrustProvider`) follow the same pattern:
+
+```python
+from aembit_edge.trust_providers import GitLabTrustProvider, TerraformTrustProvider
+
+# For GitLab CI/CD:
+gitlab_provider = GitLabTrustProvider(identity_token="YOUR_GITLAB_OIDC_TOKEN")
+
+# For Terraform Cloud:
+terraform_provider = TerraformTrustProvider(identity_token="YOUR_TERRAFORM_OIDC_TOKEN")
+```
+
+### Using AWS Role Trust Provider
+
+For workloads running on AWS:
+
+```python
+from aembit_edge import EdgeClient, EdgeClientConfig, GetCredentialInput, CredentialServerRef
+from aembit_edge.trust_providers import AwsRoleTrustProvider
+
+# 1. Initialize the AWS Role Trust Provider
+aws_provider = AwsRoleTrustProvider(region="us-east-1")
+
+# 2. Configure the Edge Client
+config = EdgeClientConfig(
+    base_url="https://your-tenant.aembit.io",
+    client_id="your-client-id",
+    trust_provider=aws_provider,
+)
+client = EdgeClient(config)
+
+# 3. Retrieve target server credentials
+server = CredentialServerRef(host="api.internal", port=443)
+request = GetCredentialInput(server=server, credential_type="api_key")
+
+result = client.get_credential(request)
+print("Credential Data:", result.data)
+```
+
+## Current Limitations
+
+- `EdgeClient` is implemented for synchronous authentication and credential retrieval.
+- Async client support is still planned but not yet exposed.
 
 ## Documentation
 
