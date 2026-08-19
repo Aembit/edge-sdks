@@ -32,16 +32,13 @@ class GitHubTrustProvider:
         """Collect the GitHub identity token for `/edge/v1/auth`."""
         if not self.identity_token:
             from ..errors import TrustProviderError
+
             raise TrustProviderError(
                 "GitHub Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
         return CollectedTrustProviderIdentity(
-            client={
-                "github": {
-                    "identityToken": self.identity_token
-                }
-            }
+            client={"github": {"identityToken": self.identity_token}}
         )
 
 
@@ -66,16 +63,13 @@ class TerraformTrustProvider:
         """Collect the Terraform identity token for `/edge/v1/auth`."""
         if not self.identity_token:
             from ..errors import TrustProviderError
+
             raise TrustProviderError(
                 "Terraform Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
         return CollectedTrustProviderIdentity(
-            client={
-                "terraform": {
-                    "identityToken": self.identity_token
-                }
-            }
+            client={"terraform": {"identityToken": self.identity_token}}
         )
 
 
@@ -100,14 +94,11 @@ class GitLabTrustProvider:
         """Collect the GitLab identity token for `/edge/v1/auth`."""
         if not self.identity_token:
             from ..errors import TrustProviderError
+
             raise TrustProviderError(
                 "GitLab Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
         return CollectedTrustProviderIdentity(
-            client={
-                "gitlab": {
-                    "identityToken": self.identity_token
-                }
-            }
+            client={"gitlab": {"identityToken": self.identity_token}}
         )
