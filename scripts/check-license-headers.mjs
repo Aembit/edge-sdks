@@ -102,8 +102,7 @@ function checkAndProcessFile(filePath) {
     }
   }
 
-  const bodyTrimmedStart = body.trimStart();
-  const hasHeader = bodyTrimmedStart.startsWith(expectedHeader);
+  const hasHeader = body.startsWith(expectedHeader);
 
   if (hasHeader) {
     return { ok: true, filePath };

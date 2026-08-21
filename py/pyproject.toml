@@ -9,6 +9,7 @@ description = "Python SDK for the Aembit Edge API"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
+license-files = ["LICENSE"]
 authors = [
   { name = "Aembit" },
 ]
@@ -49,6 +50,7 @@ include = [
   "AGENTS.md",
   "architecture.md",
   "pyproject.toml",
+  "LICENSE",
 ]
 
 [tool.pytest.ini_options]
