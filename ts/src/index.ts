@@ -5,6 +5,7 @@ export {
   createAwsRoleTrustProvider,
   createAzureMetadataServiceTrustProvider,
   createGcpIdentityTokenTrustProvider,
+  createGitHubIdentityTokenTrustProvider,
   createOidcIdTokenTrustProvider,
 } from "./trust-providers/index.js";
 export type {
@@ -12,6 +13,7 @@ export type {
   AwsRoleTrustProviderOptions,
   AzureMetadataServiceTrustProviderOptions,
   GcpIdentityTokenTrustProviderOptions,
+  GitHubIdentityTokenTrustProviderOptions,
   OidcIdTokenTrustProviderOptions,
 } from "./trust-providers/index.js";
 
