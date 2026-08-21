@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { CredentialError } from "../protocol/errors.js";
 import type { EdgeCredentialsSuccessBody } from "../protocol/types.js";
 import type { CredentialServerRef } from "../../types/credential.js";

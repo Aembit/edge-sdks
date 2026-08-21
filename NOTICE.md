@@ -1,5 +1,10 @@
 # NOTICE
 
+Aembit Edge SDKs
+Copyright 2024-present Aembit, Inc.
+
+This product includes software developed at Aembit, Inc. (<https://aembit.io/>).
+
 This repository includes third-party software packages. Attribution details for direct dependencies added for AWS Role Trust Provider support are listed below.
 
 ## AWS SDK / Smithy Packages

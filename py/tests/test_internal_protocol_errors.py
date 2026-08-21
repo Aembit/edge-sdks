@@ -1,3 +1,5 @@
+# Copyright 2024-present Aembit, Inc.
+# SPDX-License-Identifier: Apache-2.0
 from aembit_edge.internal.protocol.errors import (
     extract_edge_generic_error_body,
     extract_request_id,

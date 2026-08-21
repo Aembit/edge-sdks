@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { AuthError } from "../protocol/errors.js";
 import type { EdgeAuthSuccessBody } from "../protocol/types.js";
 import { isRecord } from "../shared/type-guards.js";

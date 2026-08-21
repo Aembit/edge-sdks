@@ -2,6 +2,8 @@
   "name": "aembit-edge-sdks-repo-tools",
   "private": true,
   "scripts": {
+    "lint:headers": "node scripts/check-license-headers.mjs",
+    "lint:headers:fix": "node scripts/check-license-headers.mjs --fix",
     "lint:md": "markdownlint-cli2",
     "lint:md:fix": "markdownlint-cli2 --fix"
   },

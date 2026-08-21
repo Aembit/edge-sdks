@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { TrustProviderError } from "../protocol/errors.js"

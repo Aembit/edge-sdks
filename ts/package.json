@@ -3,6 +3,7 @@
   "version": "0.4.0",
   "private": true,
   "description": "TypeScript SDK for the Aembit Edge API",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -37,7 +38,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20"

@@ -1,3 +1,5 @@
+# Copyright 2024-present Aembit, Inc.
+# SPDX-License-Identifier: Apache-2.0
 """Credential request and response parsing helpers."""
 
 from typing import Literal, cast

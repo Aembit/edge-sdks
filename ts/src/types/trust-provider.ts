@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Provider identifier strings are intentionally open-ended for forward compatibility.
  */

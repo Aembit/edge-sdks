@@ -1,3 +1,5 @@
+# Copyright 2024-present Aembit, Inc.
+# SPDX-License-Identifier: Apache-2.0
 """Protocol-aligned request and response types for Aembit Edge API v1."""
 
 from dataclasses import dataclass

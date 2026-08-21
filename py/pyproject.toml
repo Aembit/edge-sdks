@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "Python SDK for the Aembit Edge API"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "TBD" }
+license = { text = "Apache-2.0" }
+license-files = ["LICENSE"]
 authors = [
   { name = "Aembit" },
 ]
@@ -16,7 +17,7 @@ keywords = ["aembit", "credentials", "edge", "sdk", "security"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "License :: Other/Proprietary License",
+  "License :: OSI Approved :: Apache Software License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
@@ -49,6 +50,7 @@ include = [
   "AGENTS.md",
   "architecture.md",
   "pyproject.toml",
+  "LICENSE",
 ]
 
 [tool.pytest.ini_options]

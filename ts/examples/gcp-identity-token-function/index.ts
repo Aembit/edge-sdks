@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { createRequire } from "node:module"
 
 import { EdgeClient } from "../../src/index.js"
