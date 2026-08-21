@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { TrustProviderError } from "../protocol/errors.js"
 import { executeWithRetry, mergeRetryPolicy } from "../protocol/retry.js"
 import { isAbortError, resolveRequestUrl } from "../shared/http-utils.js"

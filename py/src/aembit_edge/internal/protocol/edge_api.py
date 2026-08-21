@@ -1,3 +1,5 @@
+# Copyright 2024-present Aembit, Inc.
+# SPDX-License-Identifier: Apache-2.0
 """Low-level endpoint adapter for the Aembit Edge API."""
 
 from __future__ import annotations

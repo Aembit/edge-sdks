@@ -1,3 +1,5 @@
+# Copyright 2024-present Aembit, Inc.
+# SPDX-License-Identifier: Apache-2.0
 """Internal Trust Provider helpers."""
 
 from .aws_role import (

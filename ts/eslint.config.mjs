@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import js from "@eslint/js"
 import globals from "globals"
 import tseslint from "typescript-eslint"

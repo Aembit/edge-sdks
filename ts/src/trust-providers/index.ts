@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { createAwsMetadataServiceTrustProvider } from "./aws-metadata-service.js"
 import { createAwsRoleTrustProvider } from "./aws-role.js"
 import { createAzureMetadataServiceTrustProvider } from "./azure-metadata-service.js"

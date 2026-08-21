@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { defaultProvider } from "@aws-sdk/credential-provider-node"
 import { Hash } from "@smithy/hash-node"
 import { HttpRequest } from "@smithy/protocol-http"

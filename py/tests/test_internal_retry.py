@@ -1,3 +1,5 @@
+# Copyright 2024-present Aembit, Inc.
+# SPDX-License-Identifier: Apache-2.0
 from aembit_edge.internal.protocol.retry import (
     calculate_backoff_delay_ms,
     is_retryable_http_status,

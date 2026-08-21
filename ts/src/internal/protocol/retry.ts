@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import type { RetryPolicy, RetryPolicyOverride } from "../../types/retry.js";
 
 /**

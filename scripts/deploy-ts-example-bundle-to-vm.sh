@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Copyright 2024-present Aembit, Inc.
+# SPDX-License-Identifier: Apache-2.0
 # Copy a built TypeScript example bundle to a remote VM with scp.
 
 set -eu

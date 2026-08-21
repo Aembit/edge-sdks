@@ -1,3 +1,5 @@
+// Copyright 2024-present Aembit, Inc.
+// SPDX-License-Identifier: Apache-2.0
 import { EdgeClient } from "../../src/index.js"
 import { createAzureMetadataServiceTrustProvider } from "../../src/trust-providers/azure-metadata-service.js"
 

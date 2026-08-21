@@ -68,6 +68,13 @@ jobs:
         with:
           projectBaseDir: ts
 
+      - name: Build and verify package artifact
+        if: matrix.node == '22.x'
+        run: |
+          npm run build
+          npm pack
+          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/LICENSE"
+
   python:
     name: Python (${{ matrix.python-version }})
     runs-on: ubuntu-latest
@@ -128,6 +135,12 @@ jobs:
         if: matrix.python-version == '3.10'
         run: uv build --wheel --sdist
 
+      - name: Verify license in built artifacts
+        if: matrix.python-version == '3.10'
+        run: |
+          unzip -l dist/*.whl | grep -E "dist-info/licenses/LICENSE|dist-info/LICENSE"
+          tar -ztvf dist/*.tar.gz | grep -E "aembit_edge_sdk-[0-9.]+/LICENSE"
+
       - name: Install built wheel
         if: matrix.python-version == '3.10'
         run: |
@@ -159,6 +172,9 @@ jobs:
 
       - name: Lint Markdown
         run: npm run lint:md
+
+      - name: Check License Headers
+        run: npm run lint:headers
 
   shellcheck:
     name: ShellCheck
