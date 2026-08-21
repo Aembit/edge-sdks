@@ -27,6 +27,10 @@
       "types": "./dist/trust-providers/gcp-identity-token.d.ts",
       "import": "./dist/trust-providers/gcp-identity-token.js"
     },
+    "./trust-providers/github-identity-token": {
+      "types": "./dist/trust-providers/github-identity-token.d.ts",
+      "import": "./dist/trust-providers/github-identity-token.js"
+    },
     "./trust-providers/oidc-id-token": {
       "types": "./dist/trust-providers/oidc-id-token.d.ts",
       "import": "./dist/trust-providers/oidc-id-token.js"
