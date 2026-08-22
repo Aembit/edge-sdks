@@ -1,8 +1,12 @@
 # Python Examples
 
-Runnable Python examples will be added here as the SDK implementation lands.
+Runnable Python examples for the Aembit Edge Python SDK.
 
-Planned early examples:
+Current runnable examples:
+
+- [`logging_integration/`](./logging_integration/) - Standard logging and Loguru interception configuration
+
+Planned examples:
 
 - AWS Role usage
 - AWS Metadata Service (IMDS) usage
