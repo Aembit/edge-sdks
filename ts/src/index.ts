@@ -38,6 +38,7 @@ export type {
   TrustProviderErrorLike,
 } from "./types/errors.js";
 export type { RetryPolicy, RetryPolicyOverride } from "./types/retry.js";
+export type { AembitLogger, LogContext } from "./types/logger.js";
 export type {
   ClientWorkloadDetails,
   TrustProvider,

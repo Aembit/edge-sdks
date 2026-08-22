@@ -20,4 +20,6 @@ export {
   serializeEffectiveRetryPolicyKey
 } from "./token-state.js";
 
+export { SafeLogger } from "./logger.js";
+
 export type { CachedTokenState } from "./token-state.js";

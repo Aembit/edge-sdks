@@ -1,5 +1,6 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
+import type { AembitLogger } from "./logger.js";
 import type { RetryPolicyOverride } from "./retry.js";
 import type { ClientWorkloadDetails, TrustProvider } from "./trust-provider.js";
 
@@ -47,4 +48,10 @@ export interface EdgeClientConfig {
    * Global retry policy override.
    */
   retry?: RetryPolicyOverride;
+
+  /**
+   * Optional custom logger instance.
+   * If not provided, SDK internal logging is completely silenced.
+   */
+  logger?: AembitLogger;
 }
