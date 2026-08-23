@@ -56,11 +56,13 @@ export class EdgeClient {
       }),
       resourceSet: config.resourceSet
     })
-    this.logger.debug("EdgeClient initialized", {
-      baseUrl: config.baseUrl,
-      clientId: config.clientId,
-      trustProviderId: config.trustProvider.id
-    })
+    if (this.logger.isEnabled) {
+      this.logger.debug("EdgeClient initialized", {
+        baseUrl: config.baseUrl,
+        clientId: config.clientId,
+        trustProviderId: config.trustProvider.id
+      })
+    }
   }
 
   /**
@@ -68,10 +70,12 @@ export class EdgeClient {
    * This method intentionally does not return raw access tokens.
    */
   async authenticate(): Promise<AuthSession> {
-    this.logger.info("Authenticating workload", {
-      clientId: this.config.clientId,
-      trustProviderId: this.config.trustProvider.id
-    })
+    if (this.logger.isEnabled) {
+      this.logger.info("Authenticating workload", {
+        clientId: this.config.clientId,
+        trustProviderId: this.config.trustProvider.id
+      })
+    }
     const effectiveResourceSet = resolveEffectiveResourceSet(this.config.resourceSet, undefined)
     const identity = await this.collectIdentityWithMetadata()
     const tokenState = await this.authenticateWithSingleFlight(
@@ -86,10 +90,12 @@ export class EdgeClient {
       expiresAt: formatExpiresAt(tokenState.expiresAtMs),
       trustProviderId: this.config.trustProvider.id
     }
-    this.logger.info("Workload authenticated successfully", {
-      trustProviderId: session.trustProviderId,
-      expiresAt: session.expiresAt
-    })
+    if (this.logger.isEnabled) {
+      this.logger.info("Workload authenticated successfully", {
+        trustProviderId: session.trustProviderId,
+        expiresAt: session.expiresAt
+      })
+    }
     return session
   }
 
@@ -123,10 +129,12 @@ export class EdgeClient {
     }
 
     const server = normalizeServerRef(input.server)
-    this.logger.info("Retrieving credential", {
-      server: `${server.host}:${server.port}`,
-      credentialType: input.credentialType
-    })
+    if (this.logger.isEnabled) {
+      this.logger.info("Retrieving credential", {
+        server: `${server.host}:${server.port}`,
+        credentialType: input.credentialType
+      })
+    }
     const effectiveResourceSet = resolveEffectiveResourceSet(
       this.config.resourceSet,
       options.resourceSet
@@ -155,16 +163,20 @@ export class EdgeClient {
         expiresAt: credentialBody.expiresAt ?? null,
         data: credentialBody.data ?? {}
       }
-      this.logger.info("Credential retrieved successfully", {
-        credentialType: result.credentialType,
-        expiresAt: result.expiresAt
-      })
+      if (this.logger.isEnabled) {
+        this.logger.info("Credential retrieved successfully", {
+          credentialType: result.credentialType,
+          expiresAt: result.expiresAt
+        })
+      }
       return result
     } catch (error) {
-      this.logger.error("Credential retrieval failed", {
-        server: `${server.host}:${server.port}`,
-        error: error instanceof Error ? error.message : String(error)
-      })
+      if (this.logger.isEnabled) {
+        this.logger.error("Credential retrieval failed", {
+          server: `${server.host}:${server.port}`,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
       throw error
     }
   }
@@ -180,10 +192,12 @@ export class EdgeClient {
       currentState.resourceSet === effectiveResourceSet &&
       currentState.authCacheKey === identity.authCacheKey
     ) {
-      this.logger.debug("Reusing valid cached access token", {
-        authCacheKey: identity.authCacheKey,
-        resourceSet: effectiveResourceSet
-      })
+      if (this.logger.isEnabled) {
+        this.logger.debug("Reusing valid cached access token", {
+          authCacheKey: identity.authCacheKey,
+          resourceSet: effectiveResourceSet
+        })
+      }
       return currentState.accessToken
     }
 
@@ -249,10 +263,12 @@ export class EdgeClient {
   ): Promise<CachedTokenState> {
     try {
       const collectedIdentity = identity ?? (await this.collectIdentityWithMetadata())
-      this.logger.debug("Sending authentication request to Edge API", {
-        clientId: this.config.clientId,
-        resourceSet: options.resourceSet
-      })
+      if (this.logger.isEnabled) {
+        this.logger.debug("Sending authentication request to Edge API", {
+          clientId: this.config.clientId,
+          resourceSet: options.resourceSet
+        })
+      }
       const response = await this.api.auth(
         {
           clientId: this.config.clientId,
@@ -274,15 +290,19 @@ export class EdgeClient {
         authCacheKey: collectedIdentity.authCacheKey
       }
       this.tokenState = tokenState
-      this.logger.debug("Authentication response received and token cached", {
-        expiresAtMs
-      })
+      if (this.logger.isEnabled) {
+        this.logger.debug("Authentication response received and token cached", {
+          expiresAtMs
+        })
+      }
       return tokenState
     } catch (error) {
-      this.logger.error("Authentication request failed", {
-        clientId: this.config.clientId,
-        error: error instanceof Error ? error.message : String(error)
-      })
+      if (this.logger.isEnabled) {
+        this.logger.error("Authentication request failed", {
+          clientId: this.config.clientId,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
       const currentTokenState = this.tokenState
       if (
         currentTokenState &&
@@ -333,9 +353,11 @@ export class EdgeClient {
   }
 
   private async collectIdentityWithMetadataOnce(): Promise<CollectedTrustProviderIdentity> {
-    this.logger.debug("Collecting identity from Trust Provider", {
-      trustProviderId: this.config.trustProvider.id
-    })
+    if (this.logger.isEnabled) {
+      this.logger.debug("Collecting identity from Trust Provider", {
+        trustProviderId: this.config.trustProvider.id
+      })
+    }
     try {
       const collected =
         typeof this.config.trustProvider.collectIdentityWithMetadata === "function"
@@ -344,20 +366,24 @@ export class EdgeClient {
               client: await this.config.trustProvider.collectIdentity()
             }
 
-      this.logger.debug("Identity collected from Trust Provider", {
-        trustProviderId: this.config.trustProvider.id,
-        authCacheKey: collected.authCacheKey
-      })
+      if (this.logger.isEnabled) {
+        this.logger.debug("Identity collected from Trust Provider", {
+          trustProviderId: this.config.trustProvider.id,
+          authCacheKey: collected.authCacheKey
+        })
+      }
 
       return {
         client: mergeClientWorkloadDetails(collected.client, this.config.clientWorkloadDetails),
         authCacheKey: collected.authCacheKey
       }
     } catch (error) {
-      this.logger.error("Trust Provider failed to collect identity", {
-        trustProviderId: this.config.trustProvider.id,
-        error: error instanceof Error ? error.message : String(error)
-      })
+      if (this.logger.isEnabled) {
+        this.logger.error("Trust Provider failed to collect identity", {
+          trustProviderId: this.config.trustProvider.id,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
       if (error instanceof TrustProviderError) {
         throw error
       }

@@ -34,7 +34,9 @@ from .types import JsonObject, JsonPrimitive, JsonValue
 
 # Ensure named logger has a NullHandler to avoid "No handler found" warnings
 # when host application has not configured logging.
-logging.getLogger("aembit_edge").addHandler(logging.NullHandler())
+_logger = logging.getLogger("aembit_edge")
+if not _logger.handlers:
+    _logger.addHandler(logging.NullHandler())
 
 __all__ = [
     "ApiError",

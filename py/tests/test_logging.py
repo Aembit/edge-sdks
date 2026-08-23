@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for SDK internal logging behavior and safety."""
 
-from __future__ import annotations
-
+import importlib
 import json
 import logging
 from typing import cast
 
 import pytest
 
+import aembit_edge
 from aembit_edge import (
     CollectedTrustProviderIdentity,
     CredentialServerRef,
@@ -109,6 +109,18 @@ def test_null_handler_configured_on_root_logger() -> None:
     logger = logging.getLogger("aembit_edge")
     null_handlers = [h for h in logger.handlers if isinstance(h, logging.NullHandler)]
     assert len(null_handlers) >= 1
+
+
+def test_null_handler_idempotent_on_module_reload() -> None:
+    """Verify that reloading the module does not accumulate duplicate NullHandlers."""
+    logger = logging.getLogger("aembit_edge")
+    initial_null_handlers = [h for h in logger.handlers if isinstance(h, logging.NullHandler)]
+    assert len(initial_null_handlers) == 1
+
+    importlib.reload(aembit_edge)
+
+    reloaded_null_handlers = [h for h in logger.handlers if isinstance(h, logging.NullHandler)]
+    assert len(reloaded_null_handlers) == 1
 
 
 def test_default_silent_execution(
