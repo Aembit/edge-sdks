@@ -165,7 +165,7 @@ class EdgeClient:
             )
             return result
         except Exception as error:
-            logger.error(
+            logger.exception(
                 "Credential retrieval failed (server=%s:%s, error=%s)",
                 server.get("host"),
                 server.get("port"),
@@ -264,7 +264,7 @@ class EdgeClient:
                 )
                 return next_state
             except Exception as error:
-                logger.error(
+                logger.exception(
                     "Authentication request failed (clientId=%s, error=%s)",
                     self._config.client_id,
                     str(error),
@@ -329,14 +329,14 @@ class EdgeClient:
             collector = cast(Callable[[], object], self._config.trust_provider.collect_identity)
             collected_value = collector()
         except TrustProviderError as error:
-            logger.error(
+            logger.exception(
                 "Trust Provider failed to collect identity (trustProviderId=%s, error=%s)",
                 self._config.trust_provider.id,
                 str(error),
             )
             raise
         except Exception as error:
-            logger.error(
+            logger.exception(
                 "Trust Provider failed to collect identity (trustProviderId=%s, error=%s)",
                 self._config.trust_provider.id,
                 str(error),
