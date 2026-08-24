@@ -11,15 +11,6 @@ The TypeScript SDK is in active development.
 - Node.js-first SDK target: `>=20`
 - Package output: ESM-only
 
-## v1 Scope
-
-Planned v1 behavior:
-
-- high-level Edge client for authentication and credential retrieval
-- automatic token lifecycle management
-- retry logic for transient failures
-- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
-
 ## Client API (Current)
 
 The SDK now exposes `EdgeClient` as the developer-facing API.
