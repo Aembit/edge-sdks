@@ -1,6 +1,8 @@
 ## Local artifacts
 .DS_Store
 node_modules/
+.venv/
+.pkg-venv/
 __pycache__/
 .mypy_cache/
 .pytest_cache/

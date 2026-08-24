@@ -51,6 +51,7 @@
     "pretypecheck": "npm run check:node",
     "pretest": "npm run check:node",
     "build": "tsc -p tsconfig.build.json",
+    "audit": "npm audit",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
