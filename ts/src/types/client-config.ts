@@ -50,7 +50,7 @@ export interface EdgeClientConfig {
   retry?: RetryPolicyOverride;
 
   /**
-   * Optional custom logger instance.
+   * Optional logger instance.
    * If not provided, SDK internal logging is completely silenced.
    */
   logger?: AembitLogger;

@@ -3,7 +3,7 @@
 import type { AembitLogger, LogContext } from "../../types/logger.js"
 
 /**
- * Safe logger wrapper that guards against missing methods or exceptions thrown by user loggers.
+ * Safe logger wrapper that guards against missing methods or exceptions thrown by injected loggers.
  */
 export class SafeLogger {
   private readonly logger?: AembitLogger
@@ -13,7 +13,7 @@ export class SafeLogger {
   }
 
   /**
-   * Whether a custom logger is attached.
+   * Whether logging is enabled.
    */
   get isEnabled(): boolean {
     return this.logger !== undefined
