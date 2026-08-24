@@ -2,8 +2,6 @@
 
 TypeScript SDK for interacting with the Aembit Edge API.
 
-This SDK is the reference implementation for behavior and concepts used by other language SDKs in this repository.
-
 ## Status
 
 The TypeScript SDK is in active development.
@@ -12,15 +10,6 @@ The TypeScript SDK is in active development.
 
 - Node.js-first SDK target: `>=20`
 - Package output: ESM-only
-
-## v1 Scope
-
-Planned v1 behavior:
-
-- high-level Edge client for authentication and credential retrieval
-- automatic token lifecycle management
-- retry logic for transient failures
-- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
 
 ## Client API (Current)
 
@@ -129,8 +118,8 @@ Run from `ts/`:
 
 Package status:
 
-- `ts/package.json` is currently marked `private: true`.
-- Revisit package publish metadata and release workflow when publish work starts.
+- Published to npm as `@aembit/edge-sdk`.
+- Automated release workflows publish release candidates (`@rc`) and production releases (`@latest`).
 
 ## Planned Layout
 

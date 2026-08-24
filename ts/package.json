@@ -1,7 +1,10 @@
 {
   "name": "@aembit/edge-sdk",
-  "version": "0.4.0",
-  "private": true,
+  "version": "1.34.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "description": "TypeScript SDK for the Aembit Edge API",
   "license": "Apache-2.0",
   "type": "module",
@@ -39,7 +42,8 @@
   },
   "files": [
     "dist",
-    "LICENSE"
+    "LICENSE",
+    "README.md"
   ],
   "engines": {
     "node": ">=20"
@@ -50,6 +54,7 @@
     "prelint": "npm run check:node",
     "pretypecheck": "npm run check:node",
     "pretest": "npm run check:node",
+    "prepublishOnly": "npm run build && npm test",
     "build": "tsc -p tsconfig.build.json",
     "audit": "npm audit",
     "lint": "eslint \"src/**/*.ts\"",
@@ -72,10 +77,10 @@
     "example:aws-role-lambda:zip": "npm run build:example:aws-role-lambda && cd ./examples/aws-role-lambda/dist && zip aws-role-lambda.zip index.mjs"
   },
   "dependencies": {
-    "@aws-sdk/credential-provider-node": "3.972.71",
-    "@smithy/hash-node": "4.4.13",
-    "@smithy/protocol-http": "5.5.13",
-    "@smithy/signature-v4": "5.6.9"
+    "@aws-sdk/credential-provider-node": "^3.972.71",
+    "@smithy/hash-node": "^4.4.13",
+    "@smithy/protocol-http": "^5.5.13",
+    "@smithy/signature-v4": "^5.6.9"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
