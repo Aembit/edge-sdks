@@ -14,7 +14,15 @@ const repoRoot = resolve(tsRoot, '..');
 const args = process.argv.slice(2);
 const isAll = args.includes('--all');
 const sinceIndex = args.indexOf('--since');
-const sinceRef = sinceIndex !== -1 ? args[sinceIndex + 1] : 'origin/main';
+let sinceRef = 'origin/main';
+if (sinceIndex !== -1) {
+  const value = args[sinceIndex + 1];
+  if (!value || value.startsWith('--')) {
+    console.error('Error: --since requires a Git revision or branch ref (e.g., origin/main, HEAD~1).');
+    process.exit(1);
+  }
+  sinceRef = value;
+}
 
 function getChangedTsFiles(since) {
   let output = '';

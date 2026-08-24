@@ -23,6 +23,8 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "tomli" },
+    { name = "tomli-w" },
 ]
 
 [package.metadata]
@@ -34,6 +36,8 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.2" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.14.0" },
+    { name = "tomli", marker = "extra == 'dev'", specifier = ">=2.0.1" },
+    { name = "tomli-w", marker = "extra == 'dev'", specifier = ">=1.0.0" },
 ]
 provides-extras = ["dev"]
 

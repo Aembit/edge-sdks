@@ -111,7 +111,15 @@ def main() -> int:
     original_pyproject_bytes = pyproject_file.read_bytes()
 
     try:
-        if target_files and not args.all:
+        if args.all:
+            with pyproject_file.open("rb") as f:
+                cfg = tomli.load(f)
+
+            if "tool" in cfg and "mutmut" in cfg["tool"] and "only_mutate" in cfg["tool"]["mutmut"]:
+                del cfg["tool"]["mutmut"]["only_mutate"]
+                with pyproject_file.open("wb") as f:
+                    tomli_w.dump(cfg, f)
+        elif target_files:
             with pyproject_file.open("rb") as f:
                 cfg = tomli.load(f)
 
