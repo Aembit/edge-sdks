@@ -76,12 +76,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: "22.x"
+          node-version: "24.x"
           cache: npm
           cache-dependency-path: ts/package-lock.json
-
-      - name: Upgrade npm for Trusted Publishing
-        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci
