@@ -80,6 +80,9 @@ jobs:
           cache: npm
           cache-dependency-path: ts/package-lock.json
 
+      - name: Upgrade npm for Trusted Publishing
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: npm ci
 
