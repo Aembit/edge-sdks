@@ -118,8 +118,8 @@ Run from `ts/`:
 
 Package status:
 
-- `ts/package.json` is currently marked `private: true`.
-- Revisit package publish metadata and release workflow when publish work starts.
+- Published to npm as `@aembit/edge-sdk`.
+- Automated release workflows publish release candidates (`@rc`) and production releases (`@latest`).
 
 ## Planned Layout
 

@@ -2,7 +2,7 @@ name: TypeScript SDK Release Deployment
 
 on:
   release:
-    types: [prereleased, released]
+    types: [published]
 
 permissions:
   contents: read
@@ -21,16 +21,31 @@ jobs:
     steps:
       - id: get-version
         name: Get Version and Tag Mode
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
         run: |
-          # Get the full tag name (e.g. v1.34.0-rc.1 or v1.34.0)
-          TAG=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG#v}
+          TAG="$REF_NAME"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "::error::Release tag '$TAG' does not match valid SemVer tag format (e.g. v1.34.0 or v1.34.0-rc.1)"
+            exit 1
+          fi
 
-          if [[ "$TAG" == *"-rc"* ]] || [ "${{ github.event.release.prerelease }}" = "true" ]; then
+          VERSION="${TAG#v}"
+
+          if [[ "$TAG" == *"-rc"* ]]; then
+            if [ "$IS_PRERELEASE" != "true" ]; then
+              echo "::error::Tag '$TAG' is an RC tag but release was not marked as a pre-release!"
+              exit 1
+            fi
             IS_RC="true"
             NPM_TAG="rc"
             ENVIRONMENT="npm-rc"
           else
+            if [ "$IS_PRERELEASE" = "true" ]; then
+              echo "::error::Tag '$TAG' is a GA release tag but release was marked as a pre-release!"
+              exit 1
+            fi
             IS_RC="false"
             NPM_TAG="latest"
             ENVIRONMENT="npm-production"
@@ -64,14 +79,14 @@ jobs:
           node-version: "22.x"
           cache: npm
           cache-dependency-path: ts/package-lock.json
-          registry-url: 'https://registry.npmjs.org/'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Verify package version matches release tag
+        env:
+          TAG_VERSION: ${{ needs.get-version.outputs.version }}
         run: |
-          TAG_VERSION="${{ needs.get-version.outputs.version }}"
           PKG_VERSION=$(node -p "require('./package.json').version")
           echo "Release Tag Version: $TAG_VERSION"
           echo "package.json Version: $PKG_VERSION"
@@ -98,9 +113,9 @@ jobs:
           tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/dist/index.d.ts"
 
       - name: Publish to npm
-        run: npm publish --tag "${{ needs.get-version.outputs.npm_tag }}" --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TAG: ${{ needs.get-version.outputs.npm_tag }}
+        run: npm publish --tag "$NPM_TAG" --provenance --access public
 
       - name: Fetch Slack Token
         if: always()
@@ -115,20 +130,20 @@ jobs:
 
       - name: 📋 Build Slack Notification
         if: always()
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+          TAG: ${{ needs.get-version.outputs.npm_tag }}
+          STATUS: ${{ job.status }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          VERSION="${{ needs.get-version.outputs.version }}"
-          TAG="${{ needs.get-version.outputs.npm_tag }}"
-          STATUS="${{ job.status }}"
-          REPO="${{ github.repository }}"
-          RUN_ID="${{ github.run_id }}"
-
-          if [[ "$STATUS" == "success" ]]; then
+          if [ "$STATUS" = "success" ]; then
             ICON="white_check_mark"
           else
             ICON="x"
           fi
 
-          if [[ "$TAG" == "rc" ]]; then
+          if [ "$TAG" = "rc" ]; then
             TITLE="TypeScript SDK Release Candidate Deployment"
             PKG_DESC="@aembit/edge-sdk@rc"
           else
