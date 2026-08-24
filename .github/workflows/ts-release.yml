@@ -88,9 +88,13 @@ jobs:
           TAG_VERSION: ${{ needs.get-version.outputs.version }}
         run: |
           echo "Synchronizing package manifest version to release tag: $TAG_VERSION"
-          npm version "$TAG_VERSION" --no-git-tag-version --allow-same-version
+          npm version "$TAG_VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
           PKG_VERSION=$(node -p "require('./package.json').version")
-          echo "Verified package.json version is now: $PKG_VERSION"
+          echo "Updated package.json Version: $PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Updated package.json version ($PKG_VERSION) does not match expected tag version ($TAG_VERSION)!"
+            exit 1
+          fi
 
       - name: Lint
         run: npm run lint
