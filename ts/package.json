@@ -1,7 +1,10 @@
 {
   "name": "@aembit/edge-sdk",
   "version": "0.4.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "description": "TypeScript SDK for the Aembit Edge API",
   "license": "Apache-2.0",
   "type": "module",
@@ -39,7 +42,8 @@
   },
   "files": [
     "dist",
-    "LICENSE"
+    "LICENSE",
+    "README.md"
   ],
   "engines": {
     "node": ">=20"
@@ -50,6 +54,7 @@
     "prelint": "npm run check:node",
     "pretypecheck": "npm run check:node",
     "pretest": "npm run check:node",
+    "prepublishOnly": "npm run build && npm test",
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
