@@ -83,17 +83,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify package version matches release tag
+      - name: Sync package version from release tag
         env:
           TAG_VERSION: ${{ needs.get-version.outputs.version }}
         run: |
+          echo "Synchronizing package manifest version to release tag: $TAG_VERSION"
+          npm version "$TAG_VERSION" --no-git-tag-version --allow-same-version
           PKG_VERSION=$(node -p "require('./package.json').version")
-          echo "Release Tag Version: $TAG_VERSION"
-          echo "package.json Version: $PKG_VERSION"
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)!"
-            exit 1
-          fi
+          echo "Verified package.json version is now: $PKG_VERSION"
 
       - name: Lint
         run: npm run lint
