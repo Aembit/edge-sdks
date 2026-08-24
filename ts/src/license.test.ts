@@ -51,7 +51,7 @@ describe("License and Copyright Header Compliance", () => {
       const entries = fs.readdirSync(dir, { withFileTypes: true })
       const results: string[] = []
       for (const entry of entries) {
-        if (["node_modules", "dist", "coverage", ".git"].includes(entry.name)) {
+        if (["node_modules", "dist", "coverage", ".git", ".stryker", ".stryker-tmp", "reports"].includes(entry.name)) {
           continue
         }
         const fullPath = path.join(dir, entry.name)

@@ -9,3 +9,6 @@ build/
 *.egg-info/
 .coverage
 coverage.xml
+mutants/
+.mutmut-cache/
+.mutmut-cache
