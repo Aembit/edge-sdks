@@ -1,8 +1,8 @@
-name: TypeScript SDK Release Candidate Deployment
+name: TypeScript SDK Release Deployment
 
 on:
   release:
-    types: [prereleased]
+    types: [prereleased, released]
 
 permissions:
   contents: read
@@ -11,29 +11,43 @@ permissions:
 jobs:
   get-version:
     name: Get Version from Tag
-    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-version.outputs.version }}
+      is_rc: ${{ steps.get-version.outputs.is_rc }}
+      npm_tag: ${{ steps.get-version.outputs.npm_tag }}
+      environment: ${{ steps.get-version.outputs.environment }}
     steps:
       - id: get-version
-        name: Get Version
+        name: Get Version and Tag Mode
         run: |
-          # Get the full tag name (e.g. v0.4.0-rc.1)
+          # Get the full tag name (e.g. v1.34.0-rc.1 or v1.34.0)
           TAG=${GITHUB_REF#refs/tags/}
-
-          # Strip the leading 'v' (e.g. 0.4.0-rc.1)
           VERSION=${TAG#v}
 
-          printf "version=%s\n" "$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$TAG" == *"-rc"* ]] || [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            IS_RC="true"
+            NPM_TAG="rc"
+            ENVIRONMENT="npm-rc"
+          else
+            IS_RC="false"
+            NPM_TAG="latest"
+            ENVIRONMENT="npm-production"
+          fi
 
-  deploy-rc:
-    name: Deploy Release Candidate to npm
+          printf "version=%s\n" "$VERSION" >> "$GITHUB_OUTPUT"
+          printf "is_rc=%s\n" "$IS_RC" >> "$GITHUB_OUTPUT"
+          printf "npm_tag=%s\n" "$NPM_TAG" >> "$GITHUB_OUTPUT"
+          printf "environment=%s\n" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy Package to npm
     needs: [get-version]
-    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment:
-      name: npm-rc
+      name: ${{ needs.get-version.outputs.environment }}
       url: https://www.npmjs.com/package/@aembit/edge-sdk/v/${{ needs.get-version.outputs.version }}
     defaults:
       run:
@@ -83,8 +97,8 @@ jobs:
           tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/README.md"
           tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/dist/index.d.ts"
 
-      - name: Publish Release Candidate to npm
-        run: npm publish --tag rc --provenance --access public
+      - name: Publish to npm
+        run: npm publish --tag "${{ needs.get-version.outputs.npm_tag }}" --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -103,6 +117,7 @@ jobs:
         if: always()
         run: |
           VERSION="${{ needs.get-version.outputs.version }}"
+          TAG="${{ needs.get-version.outputs.npm_tag }}"
           STATUS="${{ job.status }}"
           REPO="${{ github.repository }}"
           RUN_ID="${{ github.run_id }}"
@@ -113,12 +128,22 @@ jobs:
             ICON="x"
           fi
 
+          if [[ "$TAG" == "rc" ]]; then
+            TITLE="TypeScript SDK Release Candidate Deployment"
+            PKG_DESC="@aembit/edge-sdk@rc"
+          else
+            TITLE="TypeScript SDK Release Deployment"
+            PKG_DESC="@aembit/edge-sdk@latest"
+          fi
+
           jq -n \
             --arg channel "C0A9RML07MF" \
             --arg repo "$REPO" \
             --arg run_id "$RUN_ID" \
             --arg version "$VERSION" \
             --arg icon "$ICON" \
+            --arg title "$TITLE" \
+            --arg pkg "$PKG_DESC" \
             '{
               "channel": $channel,
               "blocks": [
@@ -126,7 +151,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": (":" + $icon + ": *TypeScript SDK Release Candidate Deployment*")
+                    "text": (":" + $icon + ": *" + $title + "*")
                   }
                 },
                 {
@@ -134,7 +159,7 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": ("*Package:*\n@aembit/edge-sdk@rc\n*Version:*\n" + $version)
+                      "text": ("*Package:*\n" + $pkg + "\n*Version:*\n" + $version)
                     },
                     {
                       "type": "mrkdwn",
