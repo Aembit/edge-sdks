@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 import time
 from collections.abc import Callable, Mapping
@@ -39,6 +40,8 @@ from .retry import RetryPolicy
 from .trust_providers import ClientWorkloadDetails, CollectedTrustProviderIdentity
 from .types import JsonValue
 
+logger = logging.getLogger("aembit_edge.client")
+
 
 class EdgeClient:
     """High-level sync SDK client for authentication and credential retrieval."""
@@ -59,6 +62,12 @@ class EdgeClient:
             resource_set=config.resource_set,
         )
         self._now_ms: Callable[[], int] = lambda: int(time.time() * 1000)
+        logger.debug(
+            "EdgeClient initialized (base_url=%s, client_id=%s, trust_provider_id=%s)",
+            config.base_url,
+            config.client_id,
+            config.trust_provider.id,
+        )
 
     @property
     def config(self) -> EdgeClientConfig:
@@ -68,6 +77,11 @@ class EdgeClient:
 
     def authenticate(self) -> AuthSession:
         """Authenticate the configured workload."""
+        logger.info(
+            "Authenticating workload (clientId=%s, trustProviderId=%s)",
+            self._config.client_id,
+            self._config.trust_provider.id,
+        )
         self._validate_resiliency_settings(self._config.retry, operation="authenticate")
         effective_resource_set = resolve_effective_resource_set(self._config.resource_set, None)
         identity = self._retrieve_workload_identity_proof()
@@ -77,10 +91,16 @@ class EdgeClient:
             force=True,
             identity=identity,
         )
-        return AuthSession(
+        session = AuthSession(
             expires_at=format_expires_at(token_state.expires_at_ms),
             trust_provider_id=self._config.trust_provider.id,
         )
+        logger.info(
+            "Workload authenticated successfully (trustProviderId=%s, expiresAt=%s)",
+            self._config.trust_provider.id,
+            session.expires_at,
+        )
+        return session
 
     def get_credential(
         self,
@@ -94,6 +114,12 @@ class EdgeClient:
         self._validate_resiliency_settings(self._config.retry, operation="get_credential")
         self._validate_resiliency_settings(effective_options.retry, operation="get_credential")
         server = normalize_server_ref(request.server)
+        logger.info(
+            "Retrieving credential (server=%s:%s, credentialType=%s)",
+            server.get("host"),
+            server.get("port"),
+            request.credential_type,
+        )
         effective_resource_set = resolve_effective_resource_set(
             self._config.resource_set,
             effective_options.resource_set,
@@ -116,21 +142,36 @@ class EdgeClient:
         if request.cert_signing_request is not None:
             body["certSigningRequest"] = request.cert_signing_request
 
-        credential_body = parse_credential_success_body(
-            self._api.credentials(
-                body,
-                bearer_token,
-                EdgeApiRequestOptions(
-                    resource_set=effective_options.resource_set,
-                    retry=effective_options.retry,
-                ),
+        try:
+            credential_body = parse_credential_success_body(
+                self._api.credentials(
+                    body,
+                    bearer_token,
+                    EdgeApiRequestOptions(
+                        resource_set=effective_options.resource_set,
+                        retry=effective_options.retry,
+                    ),
+                )
             )
-        )
-        return CredentialResult(
-            credential_type=credential_body.get("credentialType"),
-            expires_at=credential_body.get("expiresAt"),
-            data=credential_body.get("data", {}),
-        )
+            result = CredentialResult(
+                credential_type=credential_body.get("credentialType"),
+                expires_at=credential_body.get("expiresAt"),
+                data=credential_body.get("data", {}),
+            )
+            logger.info(
+                "Credential retrieved successfully (credentialType=%s, expiresAt=%s)",
+                result.credential_type,
+                result.expires_at,
+            )
+            return result
+        except Exception as error:
+            logger.exception(
+                "Credential retrieval failed (server=%s:%s, error=%s)",
+                server.get("host"),
+                server.get("port"),
+                str(error),
+            )
+            raise
 
     def _get_valid_access_token(
         self,
@@ -146,7 +187,14 @@ class EdgeClient:
             and current_state.resource_set == resource_set
             and current_state.auth_cache_key == identity.auth_cache_key
         ):
+            logger.debug(
+                "Reusing valid cached access token (authCacheKey=%s, resourceSet=%s)",
+                identity.auth_cache_key,
+                resource_set,
+            )
             return current_state.access_token
+
+        logger.debug("Acquiring new access token")
 
         next_state = self._acquire_session_token(
             resource_set=resource_set,
@@ -189,6 +237,7 @@ class EdgeClient:
 
         def do_auth() -> CachedTokenState:
             try:
+                logger.debug("Sending authentication request to Edge API")
                 auth_body = parse_auth_success_body(
                     self._api.auth(
                         {
@@ -209,8 +258,17 @@ class EdgeClient:
                 )
                 with self._state_lock:
                     self._token_state = next_state
+                logger.debug(
+                    "Authentication response received and token cached (expires_at_ms=%s)",
+                    next_state.expires_at_ms,
+                )
                 return next_state
-            except Exception:
+            except Exception as error:
+                logger.exception(
+                    "Authentication request failed (clientId=%s, error=%s)",
+                    self._config.client_id,
+                    str(error),
+                )
                 with self._state_lock:
                     curr = self._token_state
                     if (
@@ -263,18 +321,37 @@ class EdgeClient:
         return key
 
     def _collect_identity_uncached(self) -> CollectedTrustProviderIdentity:
+        logger.debug(
+            "Collecting identity from Trust Provider (trustProviderId=%s)",
+            self._config.trust_provider.id,
+        )
         try:
             collector = cast(Callable[[], object], self._config.trust_provider.collect_identity)
             collected_value = collector()
-        except TrustProviderError:
+        except TrustProviderError as error:
+            logger.exception(
+                "Trust Provider failed to collect identity (trustProviderId=%s, error=%s)",
+                self._config.trust_provider.id,
+                str(error),
+            )
             raise
         except Exception as error:
+            logger.exception(
+                "Trust Provider failed to collect identity (trustProviderId=%s, error=%s)",
+                self._config.trust_provider.id,
+                str(error),
+            )
             raise TrustProviderError(
                 f"Trust Provider '{self._config.trust_provider.id}' failed to collect identity",
                 retryable=False,
             ) from error
 
         collected = self._verify_trust_provider_response(collected_value)
+        logger.debug(
+            "Identity collected from Trust Provider (trustProviderId=%s, authCacheKey=%s)",
+            self._config.trust_provider.id,
+            collected.auth_cache_key,
+        )
 
         return CollectedTrustProviderIdentity(
             client=_merge_client_workload_details(

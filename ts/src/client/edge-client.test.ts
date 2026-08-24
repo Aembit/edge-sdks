@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { AuthError, CredentialError, TrustProviderError } from "../internal/protocol/errors.js"
+import type { AembitLogger } from "../types/logger.js"
 import type {
   CollectedTrustProviderIdentity,
   TrustProvider
@@ -2035,5 +2036,585 @@ describe("EdgeClient", () => {
     )
 
     await Promise.all([first, second])
+  })
+
+  describe("Logging integration", () => {
+    it("calls injected logger methods during authenticate and getCredential", async () => {
+      const fetchMock = vi.fn((input: unknown) => {
+        const path = new URL(String(input)).pathname
+        if (path === "/edge/v1/auth") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: "secret-token-value",
+                tokenType: "Bearer",
+                expiresIn: 3600
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        if (path === "/edge/v1/credentials") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                credentialType: "ApiKey",
+                expiresAt: "2030-01-01T00:00:00Z",
+                data: { secretKey: "super-secret-password" }
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        return Promise.reject(new Error("unexpected"))
+      })
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const debugSpy = vi.fn()
+      const infoSpy = vi.fn()
+      const warnSpy = vi.fn()
+      const errorSpy = vi.fn()
+
+      const mockLogger: AembitLogger = {
+        debug: debugSpy,
+        info: infoSpy,
+        warn: warnSpy,
+        error: errorSpy
+      }
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } })),
+        logger: mockLogger
+      })
+
+      // Constructor logging
+      expect(debugSpy).toHaveBeenCalledWith(
+        "EdgeClient initialized",
+        expect.objectContaining({
+          baseUrl: "https://tenant.aembit.io",
+          clientId: "client-id",
+          trustProviderId: "tp-1"
+        })
+      )
+
+      // Authenticate
+      const session = await client.authenticate()
+      expect(session.authenticated).toBe(true)
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Authenticating workload",
+        expect.objectContaining({ clientId: "client-id", trustProviderId: "tp-1" })
+      )
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Workload authenticated successfully",
+        expect.objectContaining({ trustProviderId: "tp-1" })
+      )
+
+      // First getCredential (token cache hit from authenticate)
+      const cred1 = await client.getCredential({
+        server: { host: "db.internal", port: 443 },
+        credentialType: "ApiKey"
+      })
+      expect(cred1.credentialType).toBe("ApiKey")
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Retrieving credential",
+        expect.objectContaining({ server: "db.internal:443", credentialType: "ApiKey" })
+      )
+      expect(debugSpy).toHaveBeenCalledWith(
+        "Reusing valid cached access token",
+        expect.any(Object)
+      )
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Credential retrieved successfully",
+        expect.objectContaining({ credentialType: "ApiKey" })
+      )
+
+      // Ensure NO sensitive tokens or secret payload values were passed to logger
+      const allCalls = [
+        ...debugSpy.mock.calls,
+        ...infoSpy.mock.calls,
+        ...warnSpy.mock.calls,
+        ...errorSpy.mock.calls
+      ]
+
+      for (const call of allCalls) {
+        const serialized = JSON.stringify(call)
+        expect(serialized).not.toContain("secret-token-value")
+        expect(serialized).not.toContain("super-secret-password")
+      }
+    })
+
+    it("logs error details when credential retrieval fails", async () => {
+      const fetchMock = vi.fn((input: unknown) => {
+        const path = new URL(String(input)).pathname
+        if (path === "/edge/v1/auth") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: "token-1",
+                tokenType: "Bearer",
+                expiresIn: 3600
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        if (path === "/edge/v1/credentials") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                code: "server_not_found",
+                message: "Target server is unknown"
+              }),
+              { status: 404, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        return Promise.reject(new Error("unexpected"))
+      })
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const errorSpy = vi.fn()
+      const mockLogger: AembitLogger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: errorSpy
+      }
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } })),
+        logger: mockLogger
+      })
+
+      await expect(
+        client.getCredential({ server: { host: "unknown.internal", port: 443 } })
+      ).rejects.toThrow()
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Credential retrieval failed",
+        expect.objectContaining({ server: "unknown.internal:443" })
+      )
+    })
+
+    it("does not fail SDK operations when logger throws", async () => {
+      const fetchMock = vi.fn((input: unknown) => {
+        const path = new URL(String(input)).pathname
+        if (path === "/edge/v1/auth") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: "token-1",
+                tokenType: "Bearer",
+                expiresIn: 3600
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        if (path === "/edge/v1/credentials") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                credentialType: "ApiKey",
+                expiresAt: null,
+                data: { apiKey: "key-1" }
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        return Promise.reject(new Error("unexpected"))
+      })
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const throwingLogger: AembitLogger = {
+        debug: () => {
+          throw new Error("Logger bug")
+        },
+        info: () => {
+          throw new Error("Logger bug")
+        },
+        warn: () => {
+          throw new Error("Logger bug")
+        },
+        error: () => {
+          throw new Error("Logger bug")
+        }
+      }
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } })),
+        logger: throwingLogger
+      })
+
+      const session = await client.authenticate()
+      expect(session.authenticated).toBe(true)
+
+      const cred = await client.getCredential({ server: { host: "db.internal", port: 443 } })
+      expect(cred.credentialType).toBe("ApiKey")
+    })
+
+    it("logs error when authentication fails and logger is enabled", async () => {
+      const fetchMock = vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ code: "invalid_auth", message: "Auth failed" }), {
+            status: 401,
+            headers: { "content-type": "application/json" }
+          })
+        )
+      )
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const errorSpy = vi.fn()
+      const mockLogger: AembitLogger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: errorSpy
+      }
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } })),
+        logger: mockLogger
+      })
+
+      await expect(client.authenticate()).rejects.toThrow(AuthError)
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Authentication request failed",
+        expect.objectContaining({ clientId: "client-id" })
+      )
+    })
+
+    it("logs error with stringified error when collectIdentity fails with non-Error", async () => {
+      const errorSpy = vi.fn()
+      const mockLogger: AembitLogger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: errorSpy
+      }
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => {
+          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+          return Promise.reject("raw rejection string")
+        }),
+        logger: mockLogger
+      })
+
+      await expect(client.authenticate()).rejects.toThrow(TrustProviderError)
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Trust Provider failed to collect identity",
+        expect.objectContaining({ error: "raw rejection string" })
+      )
+    })
+
+    it("logs error when collectIdentity throws TrustProviderError with logger enabled", async () => {
+      const errorSpy = vi.fn()
+      const mockLogger: AembitLogger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: errorSpy
+      }
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => {
+          throw new TrustProviderError("OIDC token unavailable", { retryable: false })
+        }),
+        logger: mockLogger
+      })
+
+      await expect(client.authenticate()).rejects.toThrow("OIDC token unavailable")
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Trust Provider failed to collect identity",
+        expect.objectContaining({
+          trustProviderId: "tp-1",
+          error: "OIDC token unavailable"
+        })
+      )
+    })
+
+    it("logs error and wraps in TrustProviderError when collectIdentity throws generic error with logger enabled", async () => {
+      const errorSpy = vi.fn()
+      const mockLogger: AembitLogger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: errorSpy
+      }
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => {
+          throw new Error("Local filesystem error")
+        }),
+        logger: mockLogger
+      })
+
+      await expect(client.authenticate()).rejects.toThrow(TrustProviderError)
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Trust Provider failed to collect identity",
+        expect.objectContaining({
+          trustProviderId: "tp-1",
+          error: "Local filesystem error"
+        })
+      )
+    })
+
+    it("rethrows TrustProviderError when getIdentitySingleFlightKey throws TrustProviderError", async () => {
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(
+          async () => ({ aws: { doc: "doc" } }),
+          undefined,
+          () => {
+            throw new TrustProviderError("Key generation error", { retryable: false })
+          }
+        )
+      })
+
+      await expect(client.authenticate()).rejects.toThrow("Key generation error")
+    })
+
+    it("clears cached token state when re-authentication fails with expired token", async () => {
+      let authCallCount = 0
+      const fetchMock = vi.fn((input: unknown) => {
+        const path = new URL(String(input)).pathname
+        if (path === "/edge/v1/auth") {
+          authCallCount += 1
+          if (authCallCount === 1) {
+            return Promise.resolve(
+              new Response(
+                JSON.stringify({
+                  accessToken: "initial-token",
+                  tokenType: "Bearer",
+                  expiresIn: 1 // expires in 1 second
+                }),
+                { status: 200, headers: { "content-type": "application/json" } }
+              )
+            )
+          }
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                code: "invalid_auth",
+                message: "Session expired"
+              }),
+              { status: 401, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        if (path === "/edge/v1/credentials") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                credentialType: "ApiKey",
+                expiresAt: null,
+                data: { apiKey: "key-1" }
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        return Promise.reject(new Error("unexpected"))
+      })
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { instanceIdentityDocument: "doc" } }))
+      })
+
+      // 1. Initial auth succeeds
+      await client.authenticate()
+
+      // 2. Advance time past token expiry (1 second + skew)
+      vi.setSystemTime(Date.now() + 10000)
+
+      // 3. Second getCredential attempts re-auth, which fails (500)
+      await expect(
+        client.getCredential({ server: { host: "db.internal", port: 443 } })
+      ).rejects.toThrow()
+
+      // 4. Verify token state was cleared (private state check via subsequent auth)
+      expect(authCallCount).toBe(2)
+      vi.useRealTimers()
+    })
+
+    it("validates input when missing server in getCredential", async () => {
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { doc: "doc" } }))
+      })
+
+      // @ts-expect-error testing missing server property
+      await expect(client.getCredential({})).rejects.toThrow(
+        "getCredential() requires input.server"
+      )
+    })
+
+    it("validates options when non-object options passed to getCredential", async () => {
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { doc: "doc" } }))
+      })
+
+      // @ts-expect-error testing invalid options type
+      await expect(client.getCredential({ server: { host: "db.internal", port: 443 } }, "invalid")).rejects.toThrow(
+        "getCredential() options must be an object"
+      )
+    })
+
+    it("does not overwrite non-undefined primitive values in mergeClientWorkloadDetails", async () => {
+      const fetchMock = vi.fn((input: unknown) => {
+        const path = new URL(String(input)).pathname
+        if (path === "/edge/v1/auth") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: "token-1",
+                tokenType: "Bearer",
+                expiresIn: 3600
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        return Promise.reject(new Error("unexpected"))
+      })
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({
+          aws: {
+            instanceId: "i-12345",
+            nested: { existingKey: "keep-this" }
+          }
+        })),
+        clientWorkloadDetails: {
+          aws: {
+            instanceId: "override-attempt-should-be-ignored",
+            nested: { newKey: "add-this" },
+            newTopKey: "added"
+          }
+        }
+      })
+
+      await client.authenticate()
+      const authBody = parseRequestBody(fetchMock, 0) as { client: Record<string, unknown> }
+      expect(authBody.client).toEqual({
+        aws: {
+          instanceId: "i-12345",
+          nested: {
+            existingKey: "keep-this",
+            newKey: "add-this"
+          },
+          newTopKey: "added"
+        }
+      })
+    })
+
+    it("returns cached state in authenticateWithSingleFlight when not forced and valid", async () => {
+      const fetchMock = vi.fn((input: unknown) => {
+        const path = new URL(String(input)).pathname
+        if (path === "/edge/v1/auth") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: "token-1",
+                tokenType: "Bearer",
+                expiresIn: 3600
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        return Promise.reject(new Error("unexpected"))
+      })
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { doc: "doc" } }))
+      })
+
+      // Authenticate to populate cache
+      await client.authenticate()
+
+      // Call internal authenticateWithSingleFlight with force=false
+      const state = await (
+        client as unknown as {
+          authenticateWithSingleFlight: (
+            options: object,
+            force: boolean,
+            expectedResourceSet?: string,
+            expectedRetry?: unknown,
+            identity?: unknown
+          ) => Promise<{ accessToken: string }>
+        }
+      ).authenticateWithSingleFlight({}, false, undefined, undefined, {
+        client: { aws: { doc: "doc" } },
+        authCacheKey: undefined
+      })
+
+      expect(state.accessToken).toBe("token-1")
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it("collects identity in runAuthentication when identity parameter is omitted", async () => {
+      const fetchMock = vi.fn((input: unknown) => {
+        const path = new URL(String(input)).pathname
+        if (path === "/edge/v1/auth") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: "token-fallback",
+                tokenType: "Bearer",
+                expiresIn: 3600
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          )
+        }
+        return Promise.reject(new Error("unexpected"))
+      })
+      vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+      const client = new EdgeClient({
+        baseUrl: "https://tenant.aembit.io",
+        clientId: "client-id",
+        trustProvider: createTrustProvider(async () => ({ aws: { doc: "doc" } }))
+      })
+
+      const state = await (
+        client as unknown as {
+          runAuthentication: (options: object) => Promise<{ accessToken: string }>
+        }
+      ).runAuthentication({})
+
+      expect(state.accessToken).toBe("token-fallback")
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
   })
 })

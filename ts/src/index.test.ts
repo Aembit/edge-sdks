@@ -11,7 +11,9 @@ import {
   createGitHubIdentityTokenTrustProvider,
   createOidcIdTokenTrustProvider,
   trustProviders,
-  type AuthSession
+  type AembitLogger,
+  type AuthSession,
+  type LogContext
 } from "./index.js";
 
 describe("public type exports", () => {
@@ -24,6 +26,19 @@ describe("public type exports", () => {
 
     expect(session.authenticated).toBe(true);
     expect(session.trustProviderId).toBe("test-provider");
+  });
+
+  it("supports AembitLogger typing", () => {
+    const context: LogContext = { key: "value" };
+    const logger: AembitLogger = {
+      debug: (_msg, _ctx) => {},
+      info: (_msg, _ctx) => {},
+      warn: (_msg, _ctx) => {},
+      error: (_msg, _ctx) => {}
+    };
+
+    expect(typeof logger.debug).toBe("function");
+    expect(context.key).toBe("value");
   });
 
   it("exports EdgeClient runtime class", () => {

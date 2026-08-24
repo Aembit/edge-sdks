@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Public package exports for the Aembit Edge Python SDK."""
 
+import logging
+
 from .auth import AuthSession
 from .client import EdgeClient
 from .config import EdgeClientConfig
@@ -29,6 +31,12 @@ from .trust_providers import (
     TrustProviderKind,
 )
 from .types import JsonObject, JsonPrimitive, JsonValue
+
+# Ensure named logger has a NullHandler to avoid "No handler found" warnings
+# when host application has not configured logging.
+_logger = logging.getLogger("aembit_edge")
+if not _logger.handlers:
+    _logger.addHandler(logging.NullHandler())
 
 __all__ = [
     "ApiError",

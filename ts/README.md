@@ -78,6 +78,31 @@ Preview note:
 - Keep the Azure provider and example as reference implementations for when backend support lands.
 - See `ts/examples/azure-imds-vm/README.md` for current limitations and example status.
 
+## Logging
+
+By default, the SDK remains completely silent and outputs nothing to the console. To capture internal operational events (e.g. token caching, request lifecycles, and errors), supply an optional `logger` implementing `AembitLogger`:
+
+```ts
+import { EdgeClient, trustProviders, type AembitLogger } from "@aembit/edge-sdk"
+
+// Adapt any logger (e.g. Winston, Pino, or standard console)
+const logger: AembitLogger = {
+  debug: (message, context) => console.debug(`[DEBUG] ${message}`, context ?? ""),
+  info: (message, context) => console.info(`[INFO] ${message}`, context ?? ""),
+  warn: (message, context) => console.warn(`[WARN] ${message}`, context ?? ""),
+  error: (message, context) => console.error(`[ERROR] ${message}`, context ?? "")
+}
+
+const client = new EdgeClient({
+  baseUrl: "https://tenant.aembit.io",
+  clientId: "your-edge-sdk-client-id",
+  trustProvider: trustProviders.awsMetadataService(),
+  logger
+})
+```
+
+See [`ts/examples/logging_integration/`](./examples/logging_integration/) for runnable examples with Winston and Pino.
+
 ## Documentation
 
 - Implementation and agent guidance: `ts/AGENTS.md`
@@ -122,6 +147,7 @@ Current runnable examples:
 - `ts/examples/azure-function-entra-oidc/` for Azure Functions + Entra managed identity token validation through the OIDC Trust Provider
 - `ts/examples/oidc-vercel-function/` for Vercel Functions + OIDC ID Token end-to-end validation
 - `ts/examples/gcp-identity-token-function/` for Google Cloud function-style GCP Identity Token validation
+- `ts/examples/logging_integration/` for Winston and Pino logger integration
 
 Preview / pending backend support:
 

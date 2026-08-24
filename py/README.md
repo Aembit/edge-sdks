@@ -126,6 +126,20 @@ result = client.get_credential(request)
 print("Credential Data:", result.data)
 ```
 
+## Logging
+
+By default, the SDK is completely silent and configures a `logging.NullHandler` on the `aembit_edge` namespace:
+
+```python
+import logging
+
+# Enable debug logging for the Aembit SDK in host applications
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("aembit_edge").setLevel(logging.DEBUG)
+```
+
+For integration examples with Loguru or Structlog, see [`py/examples/logging_integration/`](./examples/logging_integration/).
+
 ## Current Limitations
 
 - `EdgeClient` is implemented for synchronous authentication and credential retrieval.

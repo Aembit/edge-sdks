@@ -17,6 +17,7 @@ import {
   parseCredentialSuccessBody,
   resolveAuthExpirySkewMs,
   resolveEffectiveResourceSet,
+  SafeLogger,
   serializeAuthSingleFlightKey,
   serializeEffectiveRetryPolicyKey,
   type CachedTokenState
@@ -38,12 +39,14 @@ export class EdgeClient {
   private readonly config: EdgeClientConfig
   private readonly api: EdgeApi
   private readonly authExpirySkewMs: number
+  private readonly logger: SafeLogger
   private tokenState?: CachedTokenState
   private readonly inFlightAuthByKey = new Map<string, Promise<CachedTokenState>>()
   private readonly inFlightIdentityByKey = new Map<string, Promise<CollectedTrustProviderIdentity>>()
 
   constructor(config: EdgeClientConfig) {
     this.config = config
+    this.logger = new SafeLogger(config.logger)
     this.authExpirySkewMs = resolveAuthExpirySkewMs(config.authExpirySkewMs)
     this.api = new EdgeApi({
       transport: new EdgeHttpTransport({
@@ -53,6 +56,13 @@ export class EdgeClient {
       }),
       resourceSet: config.resourceSet
     })
+    if (this.logger.isEnabled) {
+      this.logger.debug("EdgeClient initialized", {
+        baseUrl: config.baseUrl,
+        clientId: config.clientId,
+        trustProviderId: config.trustProvider.id
+      })
+    }
   }
 
   /**
@@ -60,6 +70,12 @@ export class EdgeClient {
    * This method intentionally does not return raw access tokens.
    */
   async authenticate(): Promise<AuthSession> {
+    if (this.logger.isEnabled) {
+      this.logger.info("Authenticating workload", {
+        clientId: this.config.clientId,
+        trustProviderId: this.config.trustProvider.id
+      })
+    }
     const effectiveResourceSet = resolveEffectiveResourceSet(this.config.resourceSet, undefined)
     const identity = await this.collectIdentityWithMetadata()
     const tokenState = await this.authenticateWithSingleFlight(
@@ -69,11 +85,18 @@ export class EdgeClient {
       undefined,
       identity
     )
-    return {
+    const session: AuthSession = {
       authenticated: true,
       expiresAt: formatExpiresAt(tokenState.expiresAtMs),
       trustProviderId: this.config.trustProvider.id
     }
+    if (this.logger.isEnabled) {
+      this.logger.info("Workload authenticated successfully", {
+        trustProviderId: session.trustProviderId,
+        expiresAt: session.expiresAt
+      })
+    }
+    return session
   }
 
   /**
@@ -85,24 +108,33 @@ export class EdgeClient {
     options: GetCredentialOptions = {}
   ): Promise<CredentialResult> {
     if (!input || typeof input !== "object") {
+      this.logger.error("getCredential() failed: invalid input object")
       throw new CredentialError("getCredential() requires a valid input object", {
         retryable: false
       })
     }
 
     if (!("server" in input)) {
+      this.logger.error("getCredential() failed: missing input.server")
       throw new CredentialError("getCredential() requires input.server", {
         retryable: false
       })
     }
 
     if (!options || typeof options !== "object") {
+      this.logger.error("getCredential() failed: options must be an object")
       throw new CredentialError("getCredential() options must be an object", {
         retryable: false
       })
     }
 
     const server = normalizeServerRef(input.server)
+    if (this.logger.isEnabled) {
+      this.logger.info("Retrieving credential", {
+        server: `${server.host}:${server.port}`,
+        credentialType: input.credentialType
+      })
+    }
     const effectiveResourceSet = resolveEffectiveResourceSet(
       this.config.resourceSet,
       options.resourceSet
@@ -120,16 +152,32 @@ export class EdgeClient {
       connectionMetadata: input.connectionMetadata,
       certSigningRequest: input.certSigningRequest
     }
-    const response = await this.api.credentials(body, bearerToken, {
-      resourceSet: options.resourceSet,
-      retry: options.retry
-    })
-    const credentialBody = parseCredentialSuccessBody(response)
-
-    return {
-      credentialType: credentialBody.credentialType,
-      expiresAt: credentialBody.expiresAt ?? null,
-      data: credentialBody.data ?? {}
+    try {
+      const response = await this.api.credentials(body, bearerToken, {
+        resourceSet: options.resourceSet,
+        retry: options.retry
+      })
+      const credentialBody = parseCredentialSuccessBody(response)
+      const result: CredentialResult = {
+        credentialType: credentialBody.credentialType,
+        expiresAt: credentialBody.expiresAt ?? null,
+        data: credentialBody.data ?? {}
+      }
+      if (this.logger.isEnabled) {
+        this.logger.info("Credential retrieved successfully", {
+          credentialType: result.credentialType,
+          expiresAt: result.expiresAt
+        })
+      }
+      return result
+    } catch (error) {
+      if (this.logger.isEnabled) {
+        this.logger.error("Credential retrieval failed", {
+          server: `${server.host}:${server.port}`,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+      throw error
     }
   }
 
@@ -144,9 +192,16 @@ export class EdgeClient {
       currentState.resourceSet === effectiveResourceSet &&
       currentState.authCacheKey === identity.authCacheKey
     ) {
+      if (this.logger.isEnabled) {
+        this.logger.debug("Reusing valid cached access token", {
+          authCacheKey: identity.authCacheKey,
+          resourceSet: effectiveResourceSet
+        })
+      }
       return currentState.accessToken
     }
 
+    this.logger.debug("Acquiring new access token")
     const nextState = await this.authenticateWithSingleFlight(
       {
         resourceSet: options.resourceSet,
@@ -208,6 +263,12 @@ export class EdgeClient {
   ): Promise<CachedTokenState> {
     try {
       const collectedIdentity = identity ?? (await this.collectIdentityWithMetadata())
+      if (this.logger.isEnabled) {
+        this.logger.debug("Sending authentication request to Edge API", {
+          clientId: this.config.clientId,
+          resourceSet: options.resourceSet
+        })
+      }
       const response = await this.api.auth(
         {
           clientId: this.config.clientId,
@@ -229,8 +290,19 @@ export class EdgeClient {
         authCacheKey: collectedIdentity.authCacheKey
       }
       this.tokenState = tokenState
+      if (this.logger.isEnabled) {
+        this.logger.debug("Authentication response received and token cached", {
+          expiresAtMs
+        })
+      }
       return tokenState
     } catch (error) {
+      if (this.logger.isEnabled) {
+        this.logger.error("Authentication request failed", {
+          clientId: this.config.clientId,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
       const currentTokenState = this.tokenState
       if (
         currentTokenState &&
@@ -281,6 +353,11 @@ export class EdgeClient {
   }
 
   private async collectIdentityWithMetadataOnce(): Promise<CollectedTrustProviderIdentity> {
+    if (this.logger.isEnabled) {
+      this.logger.debug("Collecting identity from Trust Provider", {
+        trustProviderId: this.config.trustProvider.id
+      })
+    }
     try {
       const collected =
         typeof this.config.trustProvider.collectIdentityWithMetadata === "function"
@@ -289,11 +366,24 @@ export class EdgeClient {
               client: await this.config.trustProvider.collectIdentity()
             }
 
+      if (this.logger.isEnabled) {
+        this.logger.debug("Identity collected from Trust Provider", {
+          trustProviderId: this.config.trustProvider.id,
+          authCacheKey: collected.authCacheKey
+        })
+      }
+
       return {
         client: mergeClientWorkloadDetails(collected.client, this.config.clientWorkloadDetails),
         authCacheKey: collected.authCacheKey
       }
     } catch (error) {
+      if (this.logger.isEnabled) {
+        this.logger.error("Trust Provider failed to collect identity", {
+          trustProviderId: this.config.trustProvider.id,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
       if (error instanceof TrustProviderError) {
         throw error
       }
