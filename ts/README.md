@@ -2,8 +2,6 @@
 
 TypeScript SDK for interacting with the Aembit Edge API.
 
-This SDK is the reference implementation for behavior and concepts used by other language SDKs in this repository.
-
 ## Status
 
 The TypeScript SDK is in active development.
