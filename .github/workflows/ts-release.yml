@@ -1,0 +1,195 @@
+name: TypeScript SDK Release Deployment
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  get-version:
+    name: Get Version from Tag
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      is_rc: ${{ steps.get-version.outputs.is_rc }}
+      npm_tag: ${{ steps.get-version.outputs.npm_tag }}
+      environment: ${{ steps.get-version.outputs.environment }}
+    steps:
+      - id: get-version
+        name: Get Version and Tag Mode
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          TAG="$REF_NAME"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "::error::Release tag '$TAG' does not match valid SemVer tag format (e.g. v1.34.0 or v1.34.0-rc.1)"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+
+          if [[ "$TAG" == *"-rc"* ]]; then
+            if [ "$IS_PRERELEASE" != "true" ]; then
+              echo "::error::Tag '$TAG' is an RC tag but release was not marked as a pre-release!"
+              exit 1
+            fi
+            IS_RC="true"
+            NPM_TAG="rc"
+            ENVIRONMENT="npm-rc"
+          else
+            if [ "$IS_PRERELEASE" = "true" ]; then
+              echo "::error::Tag '$TAG' is a GA release tag but release was marked as a pre-release!"
+              exit 1
+            fi
+            IS_RC="false"
+            NPM_TAG="latest"
+            ENVIRONMENT="npm-production"
+          fi
+
+          printf "version=%s\n" "$VERSION" >> "$GITHUB_OUTPUT"
+          printf "is_rc=%s\n" "$IS_RC" >> "$GITHUB_OUTPUT"
+          printf "npm_tag=%s\n" "$NPM_TAG" >> "$GITHUB_OUTPUT"
+          printf "environment=%s\n" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy Package to npm
+    needs: [get-version]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ needs.get-version.outputs.environment }}
+      url: https://www.npmjs.com/package/@aembit/edge-sdk/v/${{ needs.get-version.outputs.version }}
+    defaults:
+      run:
+        working-directory: ts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22.x"
+          cache: npm
+          cache-dependency-path: ts/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify package version matches release tag
+        env:
+          TAG_VERSION: ${{ needs.get-version.outputs.version }}
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "Release Tag Version: $TAG_VERSION"
+          echo "package.json Version: $PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)!"
+            exit 1
+          fi
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test with Coverage
+        run: npm run test:coverage
+
+      - name: Build and verify package artifact
+        run: |
+          npm run build
+          npm pack
+          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/LICENSE"
+          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/README.md"
+          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/dist/index.d.ts"
+
+      - name: Publish to npm
+        env:
+          NPM_TAG: ${{ needs.get-version.outputs.npm_tag }}
+        run: npm publish --tag "$NPM_TAG" --provenance --access public
+
+      - name: Fetch Slack Token
+        if: always()
+        id: slack-token
+        uses: Aembit/get-credentials@0b519d6b50789a1a7f6f82d5c18badd17c62415b # v1.2.0
+        with:
+          client-id: aembit:devbroadangle:3c49ef:identity:github_idtoken:b65f00e6-9fad-4298-bd46-a70d017eeb2a
+          domain: 'devbroadangle.aembit-eng.com'
+          credential-type: 'ApiKey'
+          server-host: 'slack.com'
+        continue-on-error: true
+
+      - name: 📋 Build Slack Notification
+        if: always()
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
+          TAG: ${{ needs.get-version.outputs.npm_tag }}
+          STATUS: ${{ job.status }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          if [ "$STATUS" = "success" ]; then
+            ICON="white_check_mark"
+          else
+            ICON="x"
+          fi
+
+          if [ "$TAG" = "rc" ]; then
+            TITLE="TypeScript SDK Release Candidate Deployment"
+            PKG_DESC="@aembit/edge-sdk@rc"
+          else
+            TITLE="TypeScript SDK Release Deployment"
+            PKG_DESC="@aembit/edge-sdk@latest"
+          fi
+
+          jq -n \
+            --arg channel "C0A9RML07MF" \
+            --arg repo "$REPO" \
+            --arg run_id "$RUN_ID" \
+            --arg version "$VERSION" \
+            --arg icon "$ICON" \
+            --arg title "$TITLE" \
+            --arg pkg "$PKG_DESC" \
+            '{
+              "channel": $channel,
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": (":" + $icon + ": *" + $title + "*")
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Package:*\n" + $pkg + "\n*Version:*\n" + $version)
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Details:*\n<https://github.com/" + $repo + "/actions/runs/" + $run_id + "|View GitHub Job>")
+                    }
+                  ]
+                }
+              ]
+            }' > slack_payload.json
+
+      - name: Send Notification
+        if: always() && steps.slack-token.outputs.api-key != ''
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ steps.slack-token.outputs.api-key }}
+          payload-file-path: ts/slack_payload.json
+        continue-on-error: true
