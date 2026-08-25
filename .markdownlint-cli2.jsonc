@@ -1,11 +1,17 @@
 {
-  "globs": [
-    "**/*.md",
-    "!**/node_modules/**",
-    "!**/dist/**"
-  ],
   "config": {
-    "default": true,
     "MD013": false
-  }
+  },
+  "globs": [
+    "**/*.md"
+  ],
+  "ignores": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.venv/**",
+    "**/.pkg-venv/**",
+    "**/.stryker/**",
+    "**/reports/**",
+    "**/mutants/**"
+  ]
 }

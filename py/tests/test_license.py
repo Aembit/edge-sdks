@@ -8,8 +8,18 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-PY_ROOT = Path(__file__).resolve().parent.parent
+
+def _find_repo_root() -> Path:
+    current = Path(__file__).resolve().parent
+    while current.parent != current:
+        if (current / ".git").exists() or (current / "NOTICE.md").exists():
+            return current
+        current = current.parent
+    return Path(__file__).resolve().parent.parent.parent
+
+
+REPO_ROOT = _find_repo_root()
+PY_ROOT = REPO_ROOT / "py"
 
 
 def test_root_license_exists_and_valid() -> None:
@@ -43,7 +53,15 @@ def test_python_source_files_have_copyright_headers() -> None:
     """Verify all python source and test files have the required copyright header."""
     expected_header = "# Copyright 2024-present Aembit, Inc.\n# SPDX-License-Identifier: Apache-2.0"
 
-    ignored_dirs = [".venv", ".pkg-venv", "__pycache__", "dist", "build"]
+    ignored_dirs = [
+        ".venv",
+        ".pkg-venv",
+        "__pycache__",
+        "dist",
+        "build",
+        "mutants",
+        ".mutmut-cache",
+    ]
     py_files: list[Path] = []
     for dirpath, _, filenames in os.walk(PY_ROOT):
         if any(ignored in dirpath for ignored in ignored_dirs):

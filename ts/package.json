@@ -65,12 +65,15 @@
     "pretest": "npm run check:node",
     "prepublishOnly": "npm run build && npm test",
     "build": "tsc -p tsconfig.build.json",
+    "audit": "npm audit",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:mutation": "stryker run",
+    "test:mutation:changed": "node ./scripts/run-mutation-tests.mjs",
     "build:example:aws-imds-ec2": "npm run build && esbuild ./examples/aws-imds-ec2/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-imds-ec2/dist/index.mjs",
     "build:example:azure-function-entra-oidc": "npm run build && rm -rf ./examples/azure-function-entra-oidc/dist/deploy && mkdir -p ./examples/azure-function-entra-oidc/dist/deploy/src/functions && esbuild ./examples/azure-function-entra-oidc/src/functions/aembitAzureEntraOidc.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --external:@azure/functions --outfile=./examples/azure-function-entra-oidc/dist/deploy/src/functions/aembitAzureEntraOidc.js && cp ./examples/azure-function-entra-oidc/host.json ./examples/azure-function-entra-oidc/dist/deploy/host.json && cp ./examples/azure-function-entra-oidc/package.deploy.json ./examples/azure-function-entra-oidc/dist/deploy/package.json && npm install --prefix ./examples/azure-function-entra-oidc/dist/deploy --omit=dev",
     "build:example:azure-imds-vm": "npm run build && esbuild ./examples/azure-imds-vm/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/azure-imds-vm/dist/index.mjs",
@@ -90,6 +93,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
+    "@stryker-mutator/core": "^10.0.0",
+    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.0.18",
     "esbuild": "0.28.1",
@@ -98,5 +103,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.0",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "qs": "^6.15.2"
   }
 }
