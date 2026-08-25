@@ -76,22 +76,23 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: "22.x"
+          node-version: "24.x"
           cache: npm
           cache-dependency-path: ts/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify package version matches release tag
+      - name: Sync package version from release tag
         env:
           TAG_VERSION: ${{ needs.get-version.outputs.version }}
         run: |
+          echo "Synchronizing package manifest version to release tag: $TAG_VERSION"
+          npm version "$TAG_VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
           PKG_VERSION=$(node -p "require('./package.json').version")
-          echo "Release Tag Version: $TAG_VERSION"
-          echo "package.json Version: $PKG_VERSION"
+          echo "Updated package.json Version: $PKG_VERSION"
           if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)!"
+            echo "::error::Updated package.json version ($PKG_VERSION) does not match expected tag version ($TAG_VERSION)!"
             exit 1
           fi
 
@@ -117,14 +118,13 @@ jobs:
           NPM_TAG: ${{ needs.get-version.outputs.npm_tag }}
         run: npm publish --tag "$NPM_TAG" --provenance --access public
 
-      - name: Fetch Slack Token
+      - name: Fetch Slack OAuth Token
         if: always()
         id: slack-token
         uses: Aembit/get-credentials@0b519d6b50789a1a7f6f82d5c18badd17c62415b # v1.2.0
         with:
-          client-id: aembit:devbroadangle:3c49ef:identity:github_idtoken:b65f00e6-9fad-4298-bd46-a70d017eeb2a
-          domain: 'devbroadangle.aembit-eng.com'
-          credential-type: 'ApiKey'
+          client-id: '${{ secrets.AEMBIT_GITHUB_CLIENT_ID }}'
+          credential-type: 'OAuthToken'
           server-host: 'slack.com'
         continue-on-error: true
 
@@ -136,6 +136,7 @@ jobs:
           STATUS: ${{ job.status }}
           REPO: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          CHANNEL: "C0BACLES4DB"
         run: |
           if [ "$STATUS" = "success" ]; then
             ICON="white_check_mark"
@@ -152,7 +153,7 @@ jobs:
           fi
 
           jq -n \
-            --arg channel "C0A9RML07MF" \
+            --arg channel "$CHANNEL" \
             --arg repo "$REPO" \
             --arg run_id "$RUN_ID" \
             --arg version "$VERSION" \
@@ -186,10 +187,10 @@ jobs:
             }' > slack_payload.json
 
       - name: Send Notification
-        if: always() && steps.slack-token.outputs.api-key != ''
+        if: always() && steps.slack-token.outputs.token != ''
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.postMessage
-          token: ${{ steps.slack-token.outputs.api-key }}
+          token: ${{ steps.slack-token.outputs.token }}
           payload-file-path: ts/slack_payload.json
         continue-on-error: true
