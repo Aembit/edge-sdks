@@ -30,7 +30,7 @@ class ExampleTrustProvider:
 
 
 def main() -> None:
-    # 1. Configure standard logging for the 'aembit_edge' namespace
+    # Configure standard logging for the 'aembit_edge' namespace
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(
         logging.Formatter(
@@ -45,7 +45,7 @@ def main() -> None:
 
     print("--- Initializing EdgeClient with standard logging enabled ---")
 
-    # 2. Initialize EdgeClient
+    # Initialize EdgeClient
     client = EdgeClient(
         EdgeClientConfig(
             base_url="https://tenant.aembit.io",

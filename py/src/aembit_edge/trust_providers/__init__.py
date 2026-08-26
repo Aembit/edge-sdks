@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Public Trust Provider exports."""
 
+from .aws_metadata_service import AwsMetadataServiceTrustProvider
 from .aws_role import AwsRoleTrustProvider
 from .base import (
     AsyncTrustProvider,
@@ -18,6 +19,7 @@ from .oidc_providers import (
 
 __all__ = [
     "AsyncTrustProvider",
+    "AwsMetadataServiceTrustProvider",
     "AwsRoleTrustProvider",
     "ClientWorkloadDetails",
     "CollectedTrustProviderIdentity",
