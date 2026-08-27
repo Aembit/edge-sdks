@@ -121,7 +121,7 @@ def test_aws_role_trust_provider_surface_is_exported() -> None:
 def test_package_exports_and_all_declarations() -> None:
     """Verify all expected public symbols are cleanly exported and __all__ matches."""
     import aembit_edge
-    
+
     expected_exports = {
         "ApiKeyData",
         "ApiError",
@@ -150,10 +150,10 @@ def test_package_exports_and_all_declarations() -> None:
         "TrustProviderKind",
         "UsernamePasswordData",
     }
-    
+
     # Assert __all__ is exactly equal to our expected set of public exports
     assert set(aembit_edge.__all__) == expected_exports
-    
+
     # Verify we can access every single exported name dynamically from the package
     for name in expected_exports:
         assert hasattr(aembit_edge, name)
@@ -162,7 +162,7 @@ def test_package_exports_and_all_declarations() -> None:
 def test_trust_providers_subpackage_exports() -> None:
     """Verify all expected symbols are exported from trust_providers and __all__ matches."""
     import aembit_edge.trust_providers
-    
+
     expected_trust_providers = {
         "AsyncTrustProvider",
         "AwsMetadataServiceTrustProvider",
@@ -175,7 +175,7 @@ def test_trust_providers_subpackage_exports() -> None:
         "TrustProvider",
         "TrustProviderKind",
     }
-    
+
     assert set(aembit_edge.trust_providers.__all__) == expected_trust_providers
     for name in expected_trust_providers:
         assert hasattr(aembit_edge.trust_providers, name)
@@ -184,5 +184,6 @@ def test_trust_providers_subpackage_exports() -> None:
 def test_package_logger_is_correct() -> None:
     """Verify that the package level internal logger is named correctly."""
     import aembit_edge
+
     logger = getattr(aembit_edge, "_logger")
     assert logger.name == "aembit_edge"
