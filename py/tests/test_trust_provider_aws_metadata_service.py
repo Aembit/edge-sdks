@@ -33,7 +33,7 @@ def test_collect_identity_returns_metadata_payload() -> None:
 
     token_data = b"mock-token-123"
     doc_data = b'{"instanceId": "i-1234567890abcdef0", "region": "us-east-1"}'
-    sig_data = b"mock-signature-456"
+    sig_data = b"mock-signature-456\n\r"
 
     responses = [
         MockHTTPResponse(token_data),
@@ -46,19 +46,39 @@ def test_collect_identity_returns_metadata_payload() -> None:
         identity = provider.collect_identity()
 
         assert mock_urlopen.call_count == 3
+        
         # Check first call (Token PUT)
-        first_call_args = mock_urlopen.call_args_list[0][0]
+        first_call = mock_urlopen.call_args_list[0]
+        first_call_args = first_call[0]
+        first_call_kwargs = first_call[1]
         assert first_call_args[0].method == "PUT"
         assert first_call_args[0].full_url == "http://169.254.169.254/latest/api/token"
+        assert first_call_args[0].headers["X-aws-ec2-metadata-token-ttl-seconds"] == "2160"
+        assert first_call_kwargs["timeout"] == 1.0
 
         # Check second call (Document GET)
-        second_call_args = mock_urlopen.call_args_list[1][0]
+        second_call = mock_urlopen.call_args_list[1]
+        second_call_args = second_call[0]
+        second_call_kwargs = second_call[1]
         assert second_call_args[0].method == "GET"
         assert (
             second_call_args[0].full_url
             == "http://169.254.169.254/latest/dynamic/instance-identity/document"
         )
         assert second_call_args[0].headers["X-aws-ec2-metadata-token"] == "mock-token-123"
+        assert second_call_kwargs["timeout"] == 1.0
+
+        # Check third call (Signature GET)
+        third_call = mock_urlopen.call_args_list[2]
+        third_call_args = third_call[0]
+        third_call_kwargs = third_call[1]
+        assert third_call_args[0].method == "GET"
+        assert (
+            third_call_args[0].full_url
+            == "http://169.254.169.254/latest/dynamic/instance-identity/signature"
+        )
+        assert third_call_args[0].headers["X-aws-ec2-metadata-token"] == "mock-token-123"
+        assert third_call_kwargs["timeout"] == 1.0
 
         # Check identity structure
         assert identity.auth_cache_key is None
@@ -66,17 +86,18 @@ def test_collect_identity_returns_metadata_payload() -> None:
         assert identity.client == {
             "aws": {
                 "instanceIdentityDocument": expected_b64_doc,
+                # Newlines and carriage returns must be stripped cleanly
                 "instanceIdentityDocumentSignature": "mock-signature-456",
             }
         }
 
 
 def test_custom_provider_id_and_base_url() -> None:
-    """The provider should honor custom ID and base URL."""
+    """The provider should honor custom ID and base URL with whitespace trimming."""
 
     provider = AwsMetadataServiceTrustProvider(
-        id="custom-id",
-        base_url="http://custom.local",
+        id="  custom-id  ",
+        base_url="  http://custom.local  ",
         timeout_ms=500,
         token_ttl_seconds=60,
     )
@@ -132,7 +153,9 @@ def test_document_fetch_failure_raises_trust_provider_error() -> None:
 
     with patch("urllib.request.urlopen", side_effect=responses):
         provider = AwsMetadataServiceTrustProvider(retry=RetryPolicy(enabled=False))
-        with pytest.raises(TrustProviderError, match="Failed to fetch instance identity document"):
+        with pytest.raises(
+            TrustProviderError, match="Failed to fetch instance identity document"
+        ):
             provider.collect_identity()
 
 
@@ -154,7 +177,7 @@ def test_signature_fetch_failure_raises_trust_provider_error() -> None:
 
 
 def test_imds_provider_retries_on_failure() -> None:
-    """The provider should retry according to the retry policy on failures."""
+    """The provider should retry according to the retry policy on failures, sleeping correctly."""
 
     responses = [
         Exception("First transient error"),
@@ -165,7 +188,11 @@ def test_imds_provider_retries_on_failure() -> None:
 
     sleeps: list[float] = []
 
-    with patch("urllib.request.urlopen", side_effect=responses):
+    with patch("urllib.request.urlopen", side_effect=responses), \
+         patch(
+             "aembit_edge.trust_providers.aws_metadata_service.calculate_backoff_delay_ms",
+             return_value=1500,
+         ):
         provider = AwsMetadataServiceTrustProvider(
             retry=RetryPolicy(max_attempts=3, enabled=True),
             sleep=lambda secs: sleeps.append(secs),
@@ -173,7 +200,8 @@ def test_imds_provider_retries_on_failure() -> None:
         identity = provider.collect_identity()
 
         assert len(sleeps) == 1
-        assert sleeps[0] > 0
+        # The milliseconds backoff must be divided by 1000 to get seconds sleep
+        assert sleeps[0] == 1.5
         expected_b64_doc = base64.b64encode(b"document-content").decode("utf-8")
         assert identity.client == {
             "aws": {
