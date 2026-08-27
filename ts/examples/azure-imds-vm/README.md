@@ -89,7 +89,7 @@ npm run example:azure-imds-vm
 
 This deploy workflow is kept as a reference for when the backend feature gap is closed.
 
-Copy the built artifact to your Azure VM:
+From `ts/`, copy the built artifact to your Azure VM:
 
 ```bash
 scp -i ~/.ssh/your-key.pem ./examples/azure-imds-vm/dist/index.mjs azureuser@<vm-host>:~/index.mjs

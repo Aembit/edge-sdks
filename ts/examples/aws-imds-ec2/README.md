@@ -71,7 +71,7 @@ npm run example:aws-imds-ec2
 
 ## Deploy The Bundle To EC2
 
-Copy the built artifact to your EC2 instance:
+From `ts/`, copy the built artifact to your EC2 instance:
 
 ```bash
 scp -i ~/.ssh/your-key.pem ./examples/aws-imds-ec2/dist/index.mjs ubuntu@<ec2-host>:~/index.mjs

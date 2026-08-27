@@ -78,7 +78,7 @@ const client = new EdgeClient({
   baseUrl: "https://tenant.aembit.io",
   clientId: "your-edge-sdk-client-id",
   trustProvider: trustProviders.githubIdentityToken({
-    identityToken: process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN!,
+    identityToken: "YOUR_GITHUB_OIDC_TOKEN", // Or a dynamic resolver function: () => fetchOidcToken()
   }),
 })
 ```
