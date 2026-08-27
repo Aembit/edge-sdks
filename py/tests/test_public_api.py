@@ -116,3 +116,73 @@ def test_aws_role_trust_provider_surface_is_exported() -> None:
     assert provider.kind == "aws_role"
     assert provider.get_identity_single_flight_key() == "aws_role:aws-role"
     assert isinstance(provider, TrustProvider)
+
+
+def test_package_exports_and_all_declarations() -> None:
+    """Verify all expected public symbols are cleanly exported and __all__ matches."""
+    import aembit_edge
+    
+    expected_exports = {
+        "ApiKeyData",
+        "ApiError",
+        "AsyncTrustProvider",
+        "AuthError",
+        "AuthSession",
+        "AwsStsData",
+        "ConnectionMetadata",
+        "CredentialError",
+        "CredentialResult",
+        "CredentialServerRef",
+        "CollectedTrustProviderIdentity",
+        "ClientWorkloadDetails",
+        "EdgeClient",
+        "EdgeClientConfig",
+        "EdgeSdkError",
+        "GetCredentialInput",
+        "GetCredentialOptions",
+        "JsonObject",
+        "JsonPrimitive",
+        "JsonValue",
+        "RetryPolicy",
+        "TransportError",
+        "TrustProvider",
+        "TrustProviderError",
+        "TrustProviderKind",
+        "UsernamePasswordData",
+    }
+    
+    # Assert __all__ is exactly equal to our expected set of public exports
+    assert set(aembit_edge.__all__) == expected_exports
+    
+    # Verify we can access every single exported name dynamically from the package
+    for name in expected_exports:
+        assert hasattr(aembit_edge, name)
+
+
+def test_trust_providers_subpackage_exports() -> None:
+    """Verify all expected symbols are exported from trust_providers and __all__ matches."""
+    import aembit_edge.trust_providers
+    
+    expected_trust_providers = {
+        "AsyncTrustProvider",
+        "AwsMetadataServiceTrustProvider",
+        "AwsRoleTrustProvider",
+        "ClientWorkloadDetails",
+        "CollectedTrustProviderIdentity",
+        "GitHubTrustProvider",
+        "GitLabTrustProvider",
+        "TerraformTrustProvider",
+        "TrustProvider",
+        "TrustProviderKind",
+    }
+    
+    assert set(aembit_edge.trust_providers.__all__) == expected_trust_providers
+    for name in expected_trust_providers:
+        assert hasattr(aembit_edge.trust_providers, name)
+
+
+def test_package_logger_is_correct() -> None:
+    """Verify that the package level internal logger is named correctly."""
+    import aembit_edge
+    logger = getattr(aembit_edge, "_logger")
+    assert logger.name == "aembit_edge"
