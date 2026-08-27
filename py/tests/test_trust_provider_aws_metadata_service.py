@@ -46,7 +46,7 @@ def test_collect_identity_returns_metadata_payload() -> None:
         identity = provider.collect_identity()
 
         assert mock_urlopen.call_count == 3
-        
+
         # Check first call (Token PUT)
         first_call = mock_urlopen.call_args_list[0]
         first_call_args = first_call[0]
@@ -153,9 +153,7 @@ def test_document_fetch_failure_raises_trust_provider_error() -> None:
 
     with patch("urllib.request.urlopen", side_effect=responses):
         provider = AwsMetadataServiceTrustProvider(retry=RetryPolicy(enabled=False))
-        with pytest.raises(
-            TrustProviderError, match="Failed to fetch instance identity document"
-        ):
+        with pytest.raises(TrustProviderError, match="Failed to fetch instance identity document"):
             provider.collect_identity()
 
 
@@ -188,11 +186,13 @@ def test_imds_provider_retries_on_failure() -> None:
 
     sleeps: list[float] = []
 
-    with patch("urllib.request.urlopen", side_effect=responses), \
-         patch(
-             "aembit_edge.trust_providers.aws_metadata_service.calculate_backoff_delay_ms",
-             return_value=1500,
-         ):
+    with (
+        patch("urllib.request.urlopen", side_effect=responses),
+        patch(
+            "aembit_edge.trust_providers.aws_metadata_service.calculate_backoff_delay_ms",
+            return_value=1500,
+        ),
+    ):
         provider = AwsMetadataServiceTrustProvider(
             retry=RetryPolicy(max_attempts=3, enabled=True),
             sleep=lambda secs: sleeps.append(secs),
