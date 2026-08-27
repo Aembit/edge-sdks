@@ -31,4 +31,3 @@ class AwsStsData(TypedDict):
     awsAccessKeyId: str
     awsSecretAccessKey: str
     awsSessionToken: str
-

@@ -31,16 +31,19 @@ $env:AWS_REGION="us-east-1"
 You can run any of the examples directly using `uv run`:
 
 #### Run Logging Integration Example
+
 ```bash
 uv run examples/logging_integration/standard_logging_example.py
 ```
 
 #### Run AWS Role Example
+
 ```bash
 uv run examples/aws_role/main.py
 ```
 
 #### Run AWS Metadata Service (IMDS) Example
+
 ```bash
 uv run examples/aws_imds/main.py
 ```

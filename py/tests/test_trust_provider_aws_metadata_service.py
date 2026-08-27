@@ -54,7 +54,10 @@ def test_collect_identity_returns_metadata_payload() -> None:
         # Check second call (Document GET)
         second_call_args = mock_urlopen.call_args_list[1][0]
         assert second_call_args[0].method == "GET"
-        assert second_call_args[0].full_url == "http://169.254.169.254/latest/dynamic/instance-identity/document"
+        assert (
+            second_call_args[0].full_url
+            == "http://169.254.169.254/latest/dynamic/instance-identity/document"
+        )
         assert second_call_args[0].headers["X-aws-ec2-metadata-token"] == "mock-token-123"
 
         # Check identity structure
@@ -129,9 +132,7 @@ def test_document_fetch_failure_raises_trust_provider_error() -> None:
 
     with patch("urllib.request.urlopen", side_effect=responses):
         provider = AwsMetadataServiceTrustProvider(retry=RetryPolicy(enabled=False))
-        with pytest.raises(
-            TrustProviderError, match="Failed to fetch instance identity document"
-        ):
+        with pytest.raises(TrustProviderError, match="Failed to fetch instance identity document"):
             provider.collect_identity()
 
 

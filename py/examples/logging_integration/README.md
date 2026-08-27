@@ -39,6 +39,7 @@ import inspect
 import logging
 from loguru import logger
 
+
 class InterceptHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         level: str | int
@@ -53,6 +54,7 @@ class InterceptHandler(logging.Handler):
             depth += 1
 
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+
 
 # Redirect aembit_edge records to Loguru
 sdk_logger = logging.getLogger("aembit_edge")

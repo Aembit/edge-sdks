@@ -74,9 +74,7 @@ class AwsMetadataServiceTrustProvider:
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect AWS IMDSv2 metadata for `/edge/v1/auth`."""
         effective_retry_policy = merge_retry_policy(self.retry)
-        max_attempts = (
-            effective_retry_policy.max_attempts if effective_retry_policy.enabled else 1
-        )
+        max_attempts = effective_retry_policy.max_attempts if effective_retry_policy.enabled else 1
 
         last_error: Exception | None = None
         for attempt in range(1, max_attempts + 1):
@@ -136,11 +134,7 @@ class AwsMetadataServiceTrustProvider:
         try:
             with urllib.request.urlopen(sig_req, timeout=timeout_sec) as response:
                 signature = (
-                    response.read()
-                    .decode("utf-8")
-                    .strip()
-                    .replace("\n", "")
-                    .replace("\r", "")
+                    response.read().decode("utf-8").strip().replace("\n", "").replace("\r", "")
                 )
         except Exception as e:
             raise TrustProviderError(
