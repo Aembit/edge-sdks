@@ -1,110 +1,38 @@
 # Aembit Edge Python SDK
 
-Python SDK for interacting with the Aembit Edge API.
+[![PyPI version](https://img.shields.io/pypi/v/aembit-edge-sdk.svg)](https://pypi.org/project/aembit-edge-sdk/)
+[![Python](https://img.shields.io/pypi/pyversions/aembit-edge-sdk.svg)](https://pypi.org/project/aembit-edge-sdk/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Aembit/edge-sdks/blob/main/LICENSE)
 
-This SDK should follow the conceptual design established by the TypeScript SDK while providing idiomatic Python APIs for backend services, serverless functions, web applications, and MCP servers.
+Official Python SDK for interacting with the [Aembit Edge API](https://docs.aembit.io/api-guide/edge/).
 
-## Status
+The Aembit Edge SDK allows Python backend services, serverless functions, web applications, AI agents, and MCP servers to authenticate and retrieve credentials dynamically without managing static secrets.
 
-The Python SDK is in early implementation.
+## Features
 
-Current scope in this directory:
+- 🔐 **Zero Hardcoded Secrets**: Authenticate via workload identity (AWS STS Role, GitHub Actions OIDC, GitLab CI/CD OIDC, Terraform Cloud OIDC).
+- 🔄 **Automatic Token Lifecycle**: Built-in in-memory bearer token caching and proactive background refresh.
+- 🪵 **Standard Library Logging**: Configured via the standard `logging` library under the `aembit_edge` namespace.
+- 📦 **Modern Python**: Strictly typed, supporting Python `>=3.10`.
 
-- package and tooling setup
-- Python-specific documentation and architecture notes
-- working sync `EdgeClient` authentication and credential retrieval
-- shared protocol, retry, token lifecycle, and error-mapping internals
+## Installation
 
-Async client support and built-in Trust Provider implementations will be added incrementally.
-
-## Runtime And Packaging
-
-- Python target: `>=3.10`
-- package distribution name: `aembit-edge-sdk`
-- import package: `aembit_edge`
-- build backend: `hatchling`
-
-## Planned v1 Scope
-
-Planned v1 behavior:
-
-- high-level sync and async clients for authentication and credential retrieval
-- automatic token lifecycle management
-- retry logic for transient failures
-- built-in Trust Provider coverage starting with AWS Role, followed by AWS Metadata Service (IMDS)
-
-## Client API
-
-The package now exposes the initial public sync API surface:
-
-```python
-from aembit_edge import EdgeClient, EdgeClientConfig
-from aembit_edge import CredentialResult, CredentialServerRef, GetCredentialInput
-from aembit_edge import AsyncTrustProvider, TrustProvider
+```bash
+pip install aembit-edge-sdk
 ```
 
-Current public concepts:
+Or using `uv`:
 
-- `authenticate()`
-- `get_credential()`
-- `client_id`
-- `resource_set`
-- `Trust Provider`
-
-Current built-in Trust Provider surface (imported from `aembit_edge.trust_providers`):
-
-- `AwsRoleTrustProvider(region=...)` - AWS Role Trust Provider using the botocore credential chain and SigV4 signing for STS `GetCallerIdentity` request generation.
-- `GitHubTrustProvider(identity_token=...)` - GitHub Action Trust Provider using OIDC identity tokens.
-- `GitLabTrustProvider(identity_token=...)` - GitLab Job Trust Provider using OIDC identity tokens.
-- `TerraformTrustProvider(identity_token=...)` - Terraform Cloud Trust Provider using OIDC identity tokens.
-
-## Example Usage
-
-### Using OIDC Trust Providers (GitHub, GitLab, Terraform)
-
-To authenticate a workload using an OIDC-based trust provider, retrieve the OIDC identity token from your environment and construct the appropriate provider:
-
-```python
-from aembit_edge import EdgeClient, EdgeClientConfig, GetCredentialInput, CredentialServerRef
-from aembit_edge.trust_providers import GitHubTrustProvider
-
-# 1. Initialize the trust provider with the environment's identity token
-github_provider = GitHubTrustProvider(identity_token="YOUR_GITHUB_OIDC_TOKEN")
-
-# 2. Configure the Edge Client
-config = EdgeClientConfig(
-    base_url="https://your-tenant.aembit.io",
-    client_id="your-client-id",
-    trust_provider=github_provider,
-)
-client = EdgeClient(config)
-
-# 3. Request credentials for a target server
-server = CredentialServerRef(host="database.internal", port=5432)
-request = GetCredentialInput(server=server, credential_type="api_key")
-
-result = client.get_credential(request)
-print("Retrieved Credential Data:", result.data)
+```bash
+uv add aembit-edge-sdk
 ```
 
-Other OIDC trust providers (`GitLabTrustProvider`, `TerraformTrustProvider`) follow the same pattern:
+## Quickstart
+
+### Using AWS IAM Role (STS)
 
 ```python
-from aembit_edge.trust_providers import GitLabTrustProvider, TerraformTrustProvider
-
-# For GitLab CI/CD:
-gitlab_provider = GitLabTrustProvider(identity_token="YOUR_GITLAB_OIDC_TOKEN")
-
-# For Terraform Cloud:
-terraform_provider = TerraformTrustProvider(identity_token="YOUR_TERRAFORM_OIDC_TOKEN")
-```
-
-### Using AWS Role Trust Provider
-
-For workloads running on AWS:
-
-```python
-from aembit_edge import EdgeClient, EdgeClientConfig, GetCredentialInput, CredentialServerRef
+from aembit_edge import CredentialServerRef, EdgeClient, EdgeClientConfig, GetCredentialInput
 from aembit_edge.trust_providers import AwsRoleTrustProvider
 
 # 1. Initialize the AWS Role Trust Provider
@@ -119,73 +47,83 @@ config = EdgeClientConfig(
 client = EdgeClient(config)
 
 # 3. Retrieve target server credentials
+server = CredentialServerRef(host="database.internal", port=5432)
+request = GetCredentialInput(server=server, credential_type="api_key")
+
+result = client.get_credential(request)
+print("Retrieved Credential Data:", result.data)
+```
+
+### Using OIDC Trust Providers (GitHub, GitLab, Terraform)
+
+```python
+from aembit_edge import CredentialServerRef, EdgeClient, EdgeClientConfig, GetCredentialInput
+from aembit_edge.trust_providers import GitHubTrustProvider
+
+# 1. Initialize the trust provider with the environment's identity token
+github_provider = GitHubTrustProvider(identity_token="YOUR_GITHUB_OIDC_TOKEN")
+
+# 2. Configure the Edge Client
+config = EdgeClientConfig(
+    base_url="https://your-tenant.aembit.io",
+    client_id="your-client-id",
+    trust_provider=github_provider,
+)
+client = EdgeClient(config)
+
+# 3. Request credentials for a target server
 server = CredentialServerRef(host="api.internal", port=443)
 request = GetCredentialInput(server=server, credential_type="api_key")
 
 result = client.get_credential(request)
-print("Credential Data:", result.data)
+print("Retrieved Credential Data:", result.data)
 ```
 
-## Logging
+Other OIDC providers (`GitLabTrustProvider`, `TerraformTrustProvider`) follow the same pattern:
 
-By default, the SDK is completely silent and configures a `logging.NullHandler` on the `aembit_edge` namespace:
+```python
+from aembit_edge.trust_providers import GitLabTrustProvider, TerraformTrustProvider
+
+# For GitLab CI/CD:
+gitlab_provider = GitLabTrustProvider(identity_token="YOUR_GITLAB_OIDC_TOKEN")
+
+# For Terraform Cloud:
+terraform_provider = TerraformTrustProvider(identity_token="YOUR_TERRAFORM_OIDC_TOKEN")
+```
+
+## Supported Trust Providers
+
+| Trust Provider | Class Name | Import Path |
+| :--- | :--- | :--- |
+| **AWS IAM Role (STS)** | `AwsRoleTrustProvider(region=...)` | `aembit_edge.trust_providers` |
+| **GitHub Actions OIDC** | `GitHubTrustProvider(identity_token=...)` | `aembit_edge.trust_providers` |
+| **GitLab CI/CD OIDC** | `GitLabTrustProvider(identity_token=...)` | `aembit_edge.trust_providers` |
+| **Terraform Cloud OIDC** | `TerraformTrustProvider(identity_token=...)` | `aembit_edge.trust_providers` |
+
+## Logging & Observability
+
+By default, the SDK remains silent with a `logging.NullHandler` attached to the `aembit_edge` namespace. To enable operational debug logging:
 
 ```python
 import logging
 
-# Enable debug logging for the Aembit SDK in host applications
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("aembit_edge").setLevel(logging.DEBUG)
 ```
 
-For integration examples with Loguru or Structlog, see [`py/examples/logging_integration/`](./examples/logging_integration/).
+## Examples
 
-## Current Limitations
+Runnable integration examples are available in the GitHub repository:
 
-- `EdgeClient` is implemented for synchronous authentication and credential retrieval.
-- Async client support is still planned but not yet exposed.
+- [Logging Integration (Loguru & Structlog)](https://github.com/Aembit/edge-sdks/tree/main/py/examples/logging_integration)
 
-## Documentation
+## Documentation & Resources
 
-- implementation and agent guidance: `py/AGENTS.md`
-- Python architecture design: `py/architecture.md`
-- cross-language contracts and API snapshots: `spec/` and `spec/openapi/`
-- cross-language architecture: `docs/architecture.md`
-- official Aembit Edge API docs: <https://docs.aembit.io/api-guide/edge/>
+- [Official Aembit Edge API Guide](https://docs.aembit.io/api-guide/edge/)
+- [Aembit Documentation](https://docs.aembit.io/)
+- [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
+- [Contributing Guide](https://github.com/Aembit/edge-sdks/blob/main/CONTRIBUTING.md)
 
-## Local Development
+## License
 
-Run from `py/`:
-
-- `uv sync --extra dev --locked`
-- `uv run ruff check .`
-- `uv run ruff format --check .`
-- `uv run pyright`
-- `uv run pytest`
-- `uv build --wheel --sdist` for packaging or build configuration changes
-
-Auto-format locally when needed:
-
-- `uv run ruff format .`
-- `uv run ruff check . --fix`
-
-## Planned Layout
-
-Expected Python SDK structure:
-
-- `py/src/aembit_edge/` SDK source code
-- `py/tests/` tests
-- `py/examples/` runnable examples
-
-## Testing
-
-Planned testing and quality stack:
-
-- test runner: `pytest`
-- linter and formatter: `ruff`
-- static type checking: `pyright`
-- environment and dependency management: `uv`
-
-## Security
-
-Do not include real tenant URLs, tokens, or secrets in examples or tests.
+This project is licensed under the [Apache-2.0 License](https://github.com/Aembit/edge-sdks/blob/main/LICENSE).

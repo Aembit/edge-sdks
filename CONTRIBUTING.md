@@ -1,59 +1,89 @@
-# Contributing
+# Contributing to Aembit Edge SDKs
 
-Thanks for contributing to Aembit Edge SDKs.
+Thank you for your interest in contributing to the Aembit Edge SDKs! We welcome contributions, bug reports, and suggestions from the community.
 
-## Branching
+## Code of Conduct & Security
 
-Use short, descriptive branch names:
+- **No Secrets**: Never commit real tenant URLs, live API tokens, or secrets to the repository or tests. Always use representative placeholder values (e.g. `https://tenant.aembit.io`, `your-client-id`).
+- **Clean Code & Typing**: Maintain strict type safety across all SDKs. Avoid `any` in TypeScript and provide full type annotations in Python.
+- **License**: All contributions to this project will be licensed under the [Apache-2.0 License](./LICENSE).
 
-- `feat/<topic>` for new features
-- `fix/<topic>` for bug fixes
-- `docs/<topic>` for documentation-only changes
-- `chore/<topic>` for maintenance/tooling
+## Branching Conventions
 
-Avoid committing directly to `main`.
+When opening pull requests, use short, descriptive branch names:
 
-## Local Checks
+- `feat/<topic>` for new features or Trust Provider support
+- `fix/<topic>` for bug fixes and patches
+- `docs/<topic>` for documentation-only improvements
+- `chore/<topic>` for tooling, dependency updates, and maintenance
 
-For TypeScript SDK changes (from `ts/`):
+Please avoid committing directly to `main`.
+
+## Local Development & Quality Checks
+
+Before submitting a pull request, ensure all relevant checks pass locally for the components you touched.
+
+### TypeScript SDK (`ts/`)
+
+Run from the `ts/` directory:
 
 ```bash
+# Install dependencies
+npm ci
+
+# Run static analysis and linting
 npm run lint
+
+# Run TypeScript compilation and type checks
 npm run typecheck
+
+# Run test suite with Vitest
 npm test
+
+# Run tests with coverage assertions
+npm run test:coverage
+
+# (Optional) Run Stryker mutation tests
+npm run test:mutation:changed
 ```
 
-For Python SDK changes (from `py/`):
+### Python SDK (`py/`)
+
+Run from the `py/` directory using [`uv`](https://docs.astral.sh/uv/):
 
 ```bash
+# Sync virtual environment and dev dependencies
 uv sync --extra dev --locked
+
+# Run Ruff linter and formatter checks
 uv run ruff check .
 uv run ruff format --check .
+
+# Run Pyright static type checker
 uv run pyright
+
+# Run pytest test suite
 uv run pytest
-```
 
-For Python packaging or build configuration changes (from `py/`):
-
-```bash
+# Verify packaging and distribution builds
 uv build --wheel --sdist
 ```
 
-For Markdown/documentation changes (from repo root):
+### Documentation & Repository Tools (Root)
+
+Run from the repository root:
 
 ```bash
+# Verify license headers across all source files
+npm run lint:headers
+
+# Verify Markdown formatting and link integrity
 npm run lint:md
 ```
 
-If shell scripts changed (from repo root):
+## Pull Request Guidelines
 
-```bash
-shellcheck scripts/*.sh
-```
-
-## Pull Requests
-
-- Keep PRs small and focused.
-- Include a clear summary and validation evidence.
-- Update documentation/examples when behavior or public interfaces change.
-- Do not include secrets, tokens, or real tenant identifiers.
+1. **Focused Scope**: Keep pull requests focused on a single change, feature, or bug fix.
+2. **Tests Included**: Add deterministic unit or integration tests for all bug fixes and new features.
+3. **Documentation**: Update the corresponding `README.md` and examples if modifying public interfaces, config options, or behavior.
+4. **CI Verification**: Ensure all GitHub Actions status checks pass before requesting a review.

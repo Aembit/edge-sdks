@@ -71,28 +71,15 @@ npm run example:aws-imds-ec2
 
 ## Deploy The Bundle To EC2
 
-From the repository root, copy the built artifact to your EC2 instance:
+From `ts/`, copy the built artifact to your EC2 instance:
 
 ```bash
-./scripts/deploy-ts-example-bundle-to-vm.sh \
-  --artifact ./ts/examples/aws-imds-ec2/dist/index.mjs \
-  --host ec2-xx-xx-xx-xx.compute.amazonaws.com \
-  --user ubuntu \
-  --key ~/.ssh/your-key.pem \
-  --remote-dir ~/aembit-examples/aws-imds-ec2
-```
-
-Using a config file:
-
-```bash
-cp ./scripts/deploy-ts-example-bundle-to-vm.env.example ./scripts/deploy-ts-example-bundle-to-vm.env
-./scripts/deploy-ts-example-bundle-to-vm.sh --config ./scripts/deploy-ts-example-bundle-to-vm.env
+scp -i ~/.ssh/your-key.pem ./examples/aws-imds-ec2/dist/index.mjs ubuntu@<ec2-host>:~/index.mjs
 ```
 
 On the EC2 instance:
 
 ```bash
-cd ~/aembit-examples/aws-imds-ec2
 node index.mjs
 ```
 
