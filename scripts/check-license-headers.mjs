@@ -40,6 +40,11 @@ const IGNORED_DIRS = new Set([
   '.pytest_cache',
   '__pycache__',
   '.gemini',
+  '.stryker',
+  '.stryker-tmp',
+  'reports',
+  'mutants',
+  '.mutmut-cache',
 ]);
 
 const IGNORED_FILES = new Set([

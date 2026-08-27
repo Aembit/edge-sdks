@@ -1,110 +1,44 @@
 # Aembit Edge SDKs
 
-SDKs and examples for integrating applications and services with the [Aembit Edge API](https://docs.aembit.io/api-guide/edge/).
+Official multi-language SDKs and examples for integrating applications, serverless functions, AI agents, and services with the [Aembit Edge API](https://docs.aembit.io/api-guide/edge/).
 
-These libraries make it easier for developers to authenticate workloads and retrieve credentials through Aembit without interacting with raw Aembit Edge API HTTP requests directly.
+The Aembit Edge SDKs make it easy for developers to authenticate workloads and retrieve credentials dynamically through Aembit without managing static secrets or interacting directly with low-level HTTP protocols.
 
-The SDKs are intended for:
+## Why Aembit Edge SDKs?
 
-- AI agents and MCP servers  
-- serverless functions  
-- backend services  
-- automation and CI/CD systems  
-- other applications that need programmatic access to credentials managed by Aembit
+- 🔐 **Workload Identity Native**: Authenticate workloads using native cloud metadata (AWS IMDSv2, GCP Identity Tokens) or federated OIDC (GitHub Actions, GitLab CI/CD, Terraform Cloud, Kubernetes).
+- 🚫 **Zero Secret Storage**: Eliminate long-lived credentials, static tokens, and secret sprawl in application code, configuration files, and environments.
+- 🔄 **Automatic Lifecycle Management**: Automatic in-memory token caching, refresh window evaluation, and transient error resilience.
+- ⚡ **Lightweight & Modular**: High-performance, minimal dependencies, and tree-shakeable subpath imports designed for modern serverless and edge runtimes.
 
-Each SDK provides a developer-friendly interface for the Aembit Edge API authentication and credential retrieval flow while handling common concerns such as request construction, token lifecycle management, and error handling.
+## Available SDKs
 
-## Repository Structure
+| Language | Package | Status | Package Registry | Source Code |
+| :--- | :--- | :--- | :--- | :--- |
+| **TypeScript / Node.js** | `@aembit/edge-sdk` | [![npm version](https://img.shields.io/npm/v/@aembit/edge-sdk.svg)](https://www.npmjs.com/package/@aembit/edge-sdk) | [npm](https://www.npmjs.com/package/@aembit/edge-sdk) | [`ts/`](./ts) |
+| **Python** | `aembit-edge-sdk` | [![PyPI version](https://img.shields.io/pypi/v/aembit-edge-sdk.svg)](https://pypi.org/project/aembit-edge-sdk/) | [PyPI](https://pypi.org/project/aembit-edge-sdk/) | [`py/`](./py) |
+| **Go** | `github.com/Aembit/edge-sdks/go` | Planned | — | `go/` |
 
-This repository is organized as a multi-language SDK workspace.
+## Repository Organization
 
-Repository layout:
+This repository is organized as a multi-language SDK monorepo:
 
-- `/` repository-level governance and overview docs (`README.md`, `AGENTS.md`)
-- `docs/` architecture and design documentation
-- `spec/` cross-language SDK contracts
-- `spec/openapi/` pinned OpenAPI snapshots and snapshot metadata
-- `ts/` TypeScript SDK (reference implementation)
-- `py/` Python SDK
-- `go/` planned Go SDK directory
+- [`ts/`](./ts): Official TypeScript SDK reference implementation and runnable examples.
+- [`py/`](./py): Official Python SDK implementation and runnable examples.
+- [`docs/`](./docs): High-level SDK design and architectural documentation.
+- [`spec/`](./spec): Cross-language contracts and pinned OpenAPI specifications.
 
-Each language SDK directory should contain:
+## Documentation & Resources
 
-- the SDK implementation  
-- examples demonstrating common usage  
-- language-specific documentation
-
-## Project Status
-
-This repository hosts SDKs for the Aembit Edge API.
-
-The **TypeScript SDK** is the first implementation and serves as the
-reference design for the SDK architecture.
-
-The **Python SDK** is in early implementation and follows the same
-conceptual design where practical.
-
-Additional SDKs for other languages (such as Go) will follow the same
-conceptual design where possible.
-
-## Examples
-
-Each SDK will include runnable example applications that demonstrate common usage patterns such as:
-
-- authenticating a workload  
-- retrieving credentials  
-- using credentials to access protected services
-
-Examples are intended to be minimal, practical, and easy to run.  
-Examples should live in language-specific directories such as `ts/examples/`, `py/examples/`, and `go/examples/`.
+- [Official Aembit Edge API Guide](https://docs.aembit.io/api-guide/edge/)
+- [Aembit Documentation](https://docs.aembit.io/)
+- [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
+- [Contributing Guidelines](./CONTRIBUTING.md)
 
 ## Contributing
 
-Contributions are welcome.
-
-If you are contributing code, please review:
-
-`AGENTS.md`
-
-This file contains repository guidelines and development conventions intended for both human contributors and coding agents.
-
-## Documentation
-
-Additional documentation about the architecture and SDK design can be found in:
-
-- `docs/` for architecture and design notes
-- `spec/` for cross-language SDK design contracts
-- `spec/openapi/` for pinned OpenAPI snapshots used in SDK development
-- official Aembit Edge API docs: <https://docs.aembit.io/api-guide/edge/>
-
-## Quality Checks
-
-Run TypeScript SDK checks from `ts/`:
-
-- `npm run lint`
-- `npm run typecheck`
-- `npm test`
-
-Run Python SDK checks from `py/`:
-
-- `uv sync --extra dev --locked`
-- `uv run ruff check .`
-- `uv run ruff format --check .`
-- `uv run pyright`
-- `uv run pytest`
-
-Run Markdown checks from repository root:
-
-- `npm run lint:md`
-
-## Dependency Management
-
-This repository adheres to standard industry dependency patterns for public SDK development:
-
-- **Flexible Ranges for Consumers**: Public SDK dependencies are kept flexible using semantic ranges (`^` / `~` / `>=`) to avoid downstream dependency conflicts.
-- **Strict Internal Lockfiles**: Committed lockfiles (`package-lock.json` and `uv.lock`) guarantee secure and reproducible environments for internal development and CI testing.
-- **Automated Upgrades with Renovate**: Renovate is integrated to automatically scan our dependencies and open unified pull requests monthly to keep our dependencies and GitHub Actions securely updated.
+Contributions are welcome! Please review our [Contributing Guide](./CONTRIBUTING.md) for branch naming standards, local development checks, and pull request workflows.
 
 ## License
 
-This project will be released under an open source license prior to public release.
+This project is licensed under the [Apache-2.0 License](./LICENSE).

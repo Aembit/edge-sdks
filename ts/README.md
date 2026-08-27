@@ -1,88 +1,122 @@
 # Aembit Edge TypeScript SDK
 
-TypeScript SDK for interacting with the Aembit Edge API.
+[![npm version](https://img.shields.io/npm/v/@aembit/edge-sdk.svg)](https://www.npmjs.com/package/@aembit/edge-sdk)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Aembit/edge-sdks/blob/main/LICENSE)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
 
-This SDK is the reference implementation for behavior and concepts used by other language SDKs in this repository.
+Official TypeScript / JavaScript SDK for interacting with the [Aembit Edge API](https://docs.aembit.io/api-guide/edge/).
 
-## Status
+The Aembit Edge SDK enables workloads, serverless functions, AI agents, and MCP servers to authenticate and retrieve credentials dynamically without managing static secrets.
 
-The TypeScript SDK is in active development.
+## Features
 
-## Runtime And Packaging
+- 🔐 **Zero Hardcoded Secrets**: Authenticate via workload identity (AWS IMDSv2, AWS STS Role, GCP Identity Token, GitHub Actions OIDC, Generic OIDC).
+- 🔄 **Automatic Token Lifecycle**: Built-in in-memory bearer token caching and proactive background refresh.
+- ⚡ **Tree-Shakeable Subpath Imports**: Optimize bundle sizes by importing only the trust providers you need.
+- 🪵 **Structured Logging**: Pluggable `AembitLogger` interface compatible with Winston, Pino, or standard console.
+- 📦 **Modern ESM & TypeScript**: Strict type safety targeting Node.js `>=20`.
 
-- Node.js-first SDK target: `>=20`
-- Package output: ESM-only
+## Installation
 
-## v1 Scope
+```bash
+npm install @aembit/edge-sdk
+```
 
-Planned v1 behavior:
+## Quickstart
 
-- high-level Edge client for authentication and credential retrieval
-- automatic token lifecycle management
-- retry logic for transient failures
-- built-in Trust Provider coverage for AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
+```typescript
+import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
 
-## Client API (Current)
+// 1. Initialize the client with your Aembit tenant and Trust Provider
+const client = new EdgeClient({
+  baseUrl: "https://tenant.aembit.io",
+  clientId: "your-edge-sdk-client-id",
+  trustProvider: trustProviders.awsMetadataService(),
+})
 
-The SDK now exposes `EdgeClient` as the developer-facing API.
+// 2. Retrieve credentials for your target server
+const credential = await client.getCredential({
+  server: {
+    host: "db.internal",
+    port: 5432,
+  },
+})
 
-```ts
+console.log("Retrieved credential data:", credential.data)
+```
+
+## Supported Trust Providers
+
+| Trust Provider | Factory Method | Subpath Import |
+| :--- | :--- | :--- |
+| **AWS IMDSv2 (EC2)** | `trustProviders.awsMetadataService()` | `@aembit/edge-sdk/trust-providers/aws-metadata-service` |
+| **AWS IAM Role (Lambda/ECS)** | `trustProviders.awsRole({ region: "us-east-1" })` | `@aembit/edge-sdk/trust-providers/aws-role` |
+| **GCP Identity Token** | `trustProviders.gcpIdentityToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/gcp-identity-token` |
+| **GitHub Actions OIDC** | `trustProviders.githubIdentityToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/github-identity-token` |
+| **Generic OIDC Token** | `trustProviders.oidcIdToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/oidc-id-token` |
+
+### Provider Usage Examples
+
+#### AWS IAM Role (STS)
+
+```typescript
 import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
 
 const client = new EdgeClient({
   baseUrl: "https://tenant.aembit.io",
   clientId: "your-edge-sdk-client-id",
-  trustProvider: trustProviders.awsMetadataService()
-})
-
-await client.authenticate()
-
-const credential = await client.getCredential({
-  server: {
-    host: "db.internal",
-    port: 443
-  }
+  trustProvider: trustProviders.awsRole({ region: "us-east-1" }),
 })
 ```
 
-Notes:
+#### GitHub Actions / OIDC Identity Tokens
 
-- `authenticate()` updates SDK session state and does not return raw bearer tokens.
-- `getCredential()` auto-authenticates when no valid token is cached.
-- `trustProviders.awsMetadataService()` collects identity from AWS IMDSv2.
-- `trustProviders.awsRole({ region: "us-east-1" })` builds signed AWS STS `GetCallerIdentity` request data for `/edge/v1/auth`.
-- `trustProviders.oidcIdToken({ identityToken })` sends `client.oidc.identityToken` in `/edge/v1/auth`.
-- `trustProviders.gcpIdentityToken({ identityToken })` sends `client.gcp.identityToken` in `/edge/v1/auth`.
-- `clientId` is the Edge SDK Client ID from Trust Provider configuration.
-- `clientId` is not the client workload `Client Identifier` value used in policy configuration.
-- `server.host` and `server.port` are required.
-- `server.transportProtocol` currently supports only `"TCP"` and defaults to `"TCP"` if omitted.
-- AWS Role provider `region` is required.
-- For OIDC, the application must supply the token value or a lazy token source.
-  The SDK does not auto-discover OIDC tokens because token retrieval is runtime-specific.
+```typescript
+import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
 
-When bundle size matters, import only the Trust Provider factory you need:
+const client = new EdgeClient({
+  baseUrl: "https://tenant.aembit.io",
+  clientId: "your-edge-sdk-client-id",
+  trustProvider: trustProviders.githubIdentityToken({
+    identityToken: "YOUR_GITHUB_OIDC_TOKEN", // Or a dynamic resolver function: () => fetchOidcToken()
+  }),
+})
+```
 
-```ts
-import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk"
+#### Google Cloud (GCP Identity Token)
+
+```typescript
+import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
+
+const client = new EdgeClient({
+  baseUrl: "https://tenant.aembit.io",
+  clientId: "your-edge-sdk-client-id",
+  trustProvider: trustProviders.gcpIdentityToken({
+    identityToken: "YOUR_GCP_ID_TOKEN",
+  }),
+})
+```
+
+### Optimizing Bundle Size (Subpath Imports)
+
+When bundling for serverless functions (AWS Lambda, Cloudflare Workers, Vercel) where bundle size is critical, import individual provider factories via subpaths:
+
+```typescript
+import { EdgeClient } from "@aembit/edge-sdk"
 import { createAwsRoleTrustProvider } from "@aembit/edge-sdk/trust-providers/aws-role"
-import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/gcp-identity-token"
-import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/oidc-id-token"
+
+const client = new EdgeClient({
+  baseUrl: "https://tenant.aembit.io",
+  clientId: "your-edge-sdk-client-id",
+  trustProvider: createAwsRoleTrustProvider({ region: "us-east-1" }),
+})
 ```
 
-Use `trustProviders` for convenience when bundle size is not a concern.
+## Logging & Observability
 
-Preview note:
+By default, the SDK remains completely silent and outputs nothing to the console. To capture internal operational events (token caching, request lifecycles, and errors), supply an optional `logger` implementing `AembitLogger`:
 
-- `trustProviders.azureMetadataService()` is implemented in the SDK, but the current Aembit Edge API does not yet fully support the Azure IMDS flow.
-- Keep the Azure provider and example as reference implementations for when backend support lands.
-- See `ts/examples/azure-imds-vm/README.md` for current limitations and example status.
-
-## Logging
-
-By default, the SDK remains completely silent and outputs nothing to the console. To capture internal operational events (e.g. token caching, request lifecycles, and errors), supply an optional `logger` implementing `AembitLogger`:
-
-```ts
+```typescript
 import { EdgeClient, trustProviders, type AembitLogger } from "@aembit/edge-sdk"
 
 // Adapt any logger (e.g. Winston, Pino, or standard console)
@@ -90,155 +124,35 @@ const logger: AembitLogger = {
   debug: (message, context) => console.debug(`[DEBUG] ${message}`, context ?? ""),
   info: (message, context) => console.info(`[INFO] ${message}`, context ?? ""),
   warn: (message, context) => console.warn(`[WARN] ${message}`, context ?? ""),
-  error: (message, context) => console.error(`[ERROR] ${message}`, context ?? "")
+  error: (message, context) => console.error(`[ERROR] ${message}`, context ?? ""),
 }
 
 const client = new EdgeClient({
   baseUrl: "https://tenant.aembit.io",
   clientId: "your-edge-sdk-client-id",
   trustProvider: trustProviders.awsMetadataService(),
-  logger
+  logger,
 })
 ```
 
-See [`ts/examples/logging_integration/`](./examples/logging_integration/) for runnable examples with Winston and Pino.
-
-## Documentation
-
-- Implementation and agent guidance: `ts/AGENTS.md`
-- TypeScript architecture design: `ts/architecture.md`
-- Cross-language contracts and API snapshots: `spec/` and `spec/openapi/`
-- Cross-language architecture: `docs/architecture.md`
-- Official Aembit Edge API docs (canonical API semantics): <https://docs.aembit.io/api-guide/edge/>
-
-Caching note:
-
-- `EdgeClient` caches the bearer token from `/edge/v1/auth` in memory
-- the SDK does not cache credentials returned by `/edge/v1/credentials`
-- see `ts/architecture.md` for the current caching model, including OIDC auth-session scoping
-
-## Local Development
-
-Run from `ts/`:
-
-- `npm install`
-- `npm run lint`
-- `npm run typecheck`
-- `npm test`
-- `npm run build`
-
-Package status:
-
-- `ts/package.json` is currently marked `private: true`.
-- Revisit package publish metadata and release workflow when publish work starts.
-
-## Planned Layout
-
-Expected TypeScript SDK structure:
-
-- `ts/src/` SDK source code
-- `ts/examples/` runnable examples
-- colocated tests as `*.test.ts` beside source files
-
-Current runnable examples:
-
-- `ts/examples/aws-imds-ec2/` for EC2 + AWS IMDSv2 end-to-end validation
-- `ts/examples/aws-role-lambda/` for AWS Lambda + AWS Role end-to-end validation
-- `ts/examples/azure-function-entra-oidc/` for Azure Functions + Entra managed identity token validation through the OIDC Trust Provider
-- `ts/examples/oidc-vercel-function/` for Vercel Functions + OIDC ID Token end-to-end validation
-- `ts/examples/gcp-identity-token-function/` for Google Cloud function-style GCP Identity Token validation
-- `ts/examples/logging_integration/` for Winston and Pino logger integration
-
-Preview / pending backend support:
-
-- `ts/examples/azure-imds-vm/` for Azure VM + Azure IMDS attested-data validation
-
-## Testing
-
-- Test runner: Vitest
-- Local development and test commands should use `npm`
-- Linter: ESLint with `typescript-eslint` recommended checks
-
 ## Examples
 
-Run from `ts/`:
+Runnable end-to-end examples are available in the GitHub repository:
 
-- `npm run build:example:aws-imds-ec2`
-- `npm run example:aws-imds-ec2`
-- `npm run build:example:aws-role-lambda`
-- `npm run example:aws-role-lambda:zip`
-- `npm run build:example:azure-function-entra-oidc`
-- `npm run example:azure-function-entra-oidc:zip`
-- `cd examples/oidc-vercel-function && vercel env pull`
-- `cd examples/oidc-vercel-function && vercel dev`
-- `npm run build:example:gcp-identity-token-function`
-- example docs: `ts/examples/aws-imds-ec2/README.md`
-- integration example: `ts/examples/aws-imds-ec2/index.ts`
-- Lambda example docs: `ts/examples/aws-role-lambda/README.md`
-- Lambda example source: `ts/examples/aws-role-lambda/index.ts`
-- Azure Functions example docs: `ts/examples/azure-function-entra-oidc/README.md`
-- Azure Functions example source: `ts/examples/azure-function-entra-oidc/src/functions/aembitAzureEntraOidc.ts`
-- Vercel example docs: `ts/examples/oidc-vercel-function/README.md`
-- Vercel example source: `ts/examples/oidc-vercel-function/api/index.ts`
-- GCP example docs: `ts/examples/gcp-identity-token-function/README.md`
-- GCP example source: `ts/examples/gcp-identity-token-function/index.ts`
+- [AWS EC2 + IMDSv2](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/aws-imds-ec2)
+- [AWS Lambda + IAM Role](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/aws-role-lambda)
+- [Azure Functions + Entra ID OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/azure-function-entra-oidc)
+- [Google Cloud Functions + GCP Identity Token](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/gcp-identity-token-function)
+- [Vercel Functions + OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/oidc-vercel-function)
+- [Winston & Pino Logging Integration](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/logging_integration)
 
-Preview / pending backend support:
+## Documentation & Resources
 
-- `npm run build:example:azure-imds-vm`
-- `npm run example:azure-imds-vm`
-- Azure VM example docs: `ts/examples/azure-imds-vm/README.md`
-- Azure VM example source: `ts/examples/azure-imds-vm/index.ts`
+- [Official Aembit Edge API Guide](https://docs.aembit.io/api-guide/edge/)
+- [Aembit Documentation](https://docs.aembit.io/)
+- [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
+- [Contributing Guide](https://github.com/Aembit/edge-sdks/blob/main/CONTRIBUTING.md)
 
-Note: current Edge behavior requires setting `credentialType` on `/edge/v1/credentials` requests, so both examples set it explicitly.
+## License
 
-For the current GCP example, `npm run build:example:gcp-identity-token-function`
-produces a bundled `dist/index.js` and `dist/package.json` that can be copied
-into the Google Cloud console editor as a temporary testing workaround.
-
-Deploy a bundled example artifact to a VM (from repo root):
-
-```bash
-./scripts/deploy-ts-example-bundle-to-vm.sh \
-  --artifact ./ts/examples/aws-imds-ec2/dist/index.mjs \
-  --host ec2-xx-xx-xx-xx.compute.amazonaws.com \
-  --user ubuntu \
-  --key ~/.ssh/your-key.pem \
-  --remote-dir ~/aembit-examples/aws-imds-ec2
-```
-
-The script uploads a built example bundle such as `dist/index.mjs`, not the whole `ts/` workspace.
-
-Use a deploy config file:
-
-```bash
-cp ./scripts/deploy-ts-example-bundle-to-vm.env.example ./scripts/deploy-ts-example-bundle-to-vm.env
-./scripts/deploy-ts-example-bundle-to-vm.sh --config ./scripts/deploy-ts-example-bundle-to-vm.env
-```
-
-Or via environment variables:
-
-```bash
-export DEPLOY_ARTIFACT=./ts/examples/aws-imds-ec2/dist/index.mjs
-export DEPLOY_HOST=ec2-xx-xx-xx-xx.compute.amazonaws.com
-export DEPLOY_USER=ubuntu
-export DEPLOY_REMOTE_DIR=~/aembit-examples/aws-imds-ec2
-./scripts/deploy-ts-example-bundle-to-vm.sh
-```
-
-## Troubleshooting
-
-- Verify runtime version: `node -v` (must be `>=20`).
-- Run `npm run check:node` to validate the active runtime before build/test commands.
-- Some IDE, CI, or coding-agent shells may use a different Node version than your interactive terminal.
-- `npm run build`, `npm run typecheck`, and `npm test` run a Node version precheck automatically.
-- If commands fail with runtime/tooling import errors, switch to Node `>=20` using your preferred tool and reinstall dependencies:
-  - `npm install` (or `npm ci` in clean environments)
-
-## Roadmap Notes
-
-- Bundler/tooling decision is pending; package output remains ESM-only
-
-## Security
-
-Do not include real tenant URLs, tokens, or secrets in examples or tests.
+This project is licensed under the [Apache-2.0 License](https://github.com/Aembit/edge-sdks/blob/main/LICENSE).
