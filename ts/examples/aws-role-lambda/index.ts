@@ -1,6 +1,6 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient, trustProviders } from "../../src/index.js"
+import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
 
 /**
  * Minimal AWS Lambda example for the AWS Role Trust Provider.

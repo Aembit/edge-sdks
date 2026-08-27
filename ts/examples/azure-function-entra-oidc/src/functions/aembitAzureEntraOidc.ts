@@ -7,9 +7,8 @@ import {
   type InvocationContext
 } from "@azure/functions"
 
-import { EdgeClient } from "../../../../src/index.js"
-import { TrustProviderError } from "../../../../src/internal/protocol/errors.js"
-import { createOidcIdTokenTrustProvider } from "../../../../src/trust-providers/oidc-id-token.js"
+import { EdgeClient } from "@aembit/edge-sdk"
+import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/oidc-id-token"
 
 /**
  * Minimal Azure Functions example for Azure managed identity + the Aembit OIDC
@@ -158,10 +157,9 @@ async function resolveAzureEntraToken(context: InvocationContext): Promise<strin
     accessToken = await managedIdentityCredential.getToken(scope)
   } catch (error) {
     context.error("Azure managed identity token request failed", error)
-    throw new TrustProviderError(
+    throw new Error(
       "Azure managed identity token request failed",
       {
-        retryable: false,
         cause: error
       }
     )
@@ -170,11 +168,8 @@ async function resolveAzureEntraToken(context: InvocationContext): Promise<strin
   const token = accessToken?.token?.trim()
   if (!token) {
     context.error("Azure managed identity returned an empty Entra access token")
-    throw new TrustProviderError(
-      "Azure managed identity returned an empty Entra access token",
-      {
-        retryable: false
-      }
+    throw new Error(
+      "Azure managed identity returned an empty Entra access token"
     )
   }
 
@@ -189,11 +184,8 @@ function normalizeEntraScope(audience: string): string {
   const normalizedAudience = trimmedAudience.replace(/\/+$/, "")
 
   if (!normalizedAudience) {
-    throw new TrustProviderError(
-      "Azure Functions example requires EXAMPLE_CONFIG.entraAudience",
-      {
-        retryable: false
-      }
+    throw new Error(
+      "Azure Functions example requires EXAMPLE_CONFIG.entraAudience"
     )
   }
 
@@ -212,10 +204,9 @@ async function createManagedIdentityCredential(): Promise<{
   try {
     azureIdentity = await import("@azure/identity")
   } catch (error) {
-    throw new TrustProviderError(
+    throw new Error(
       "Azure managed identity libraries are unavailable. Set AZURE_ENTRA_ACCESS_TOKEN for local testing or install the example's Azure dependencies.",
       {
-        retryable: false,
         cause: error
       }
     )

@@ -1,7 +1,7 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient } from "../../src/index.js"
-import { createAwsMetadataServiceTrustProvider } from "../../src/trust-providers/aws-metadata-service.js"
+import { EdgeClient } from "@aembit/edge-sdk"
+import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk/trust-providers/aws-metadata-service"
 
 /**
  * Minimal EC2 example for the AWS Metadata Service Trust Provider.

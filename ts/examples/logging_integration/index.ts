@@ -1,7 +1,7 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient, createOidcIdTokenTrustProvider } from "../../src/index.js"
-import type { AembitLogger, LogContext } from "../../src/index.js"
+import { EdgeClient, createOidcIdTokenTrustProvider } from "@aembit/edge-sdk"
+import type { AembitLogger, LogContext } from "@aembit/edge-sdk"
 
 /**
  * Logging Integration Example for the TypeScript SDK.
