@@ -49,7 +49,7 @@ class AwsMetadataServiceTrustProvider:
     retry: RetryPolicy | None = None
     sleep: SleepFn = time.sleep
 
-    kind: str = "aws_metadata_service"
+    kind = "aws_metadata_service"
 
     def __post_init__(self) -> None:
         """Normalize options after dataclass construction."""
@@ -78,38 +78,32 @@ class AwsMetadataServiceTrustProvider:
 
         last_error: Exception | None = None
         for attempt in range(1, max_attempts + 1):
-            identity, last_error = self._try_collect_identity(
-                attempt, max_attempts, effective_retry_policy, last_error
-            )
-            if identity is not None:
-                return identity
-
+            try:
+                return self._collect_identity_once()
+            except Exception as error:
+                last_error = _map_imds_error(error)
+                self._handle_attempt_failure(
+                    attempt, max_attempts, last_error, effective_retry_policy
+                )
         else:  # pragma: no cover
             if last_error is not None:
                 raise last_error
             raise RuntimeError("unreachable retry state")
 
-    def _try_collect_identity(
+    def _handle_attempt_failure(
         self,
         attempt: int,
         max_attempts: int,
-        effective_retry_policy: RetryPolicy,
-        last_error: Exception | None,
-    ) -> CollectedTrustProviderIdentity:
-        try:
-            return self._collect_identity_once(), last_error
-        except Exception as error:
-            mapped_error = _map_imds_error(error)
-            last_error = mapped_error
-            if not is_retryable_error(mapped_error) or attempt >= max_attempts:
-                if mapped_error is error:
-                    raise
-                raise mapped_error from error
+        error: TrustProviderError,
+        policy: RetryPolicy,
+    ) -> None:
+        """Handle a failed collection attempt, performing backoff or raising immediately."""
+        if not is_retryable_error(error) or attempt >= max_attempts:
+            raise error
 
-            delay_ms = calculate_backoff_delay_ms(attempt, effective_retry_policy)
-            if delay_ms > 0:
-                self.sleep(delay_ms / 1000)
-            return None, last_error
+        delay_ms = calculate_backoff_delay_ms(attempt, policy)
+        if delay_ms > 0:
+            self.sleep(delay_ms / 1000)
 
     def _collect_identity_once(self) -> CollectedTrustProviderIdentity:
         timeout_sec = self.timeout_ms / 1000.0
