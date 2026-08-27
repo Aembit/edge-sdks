@@ -79,7 +79,8 @@ class AwsMetadataServiceTrustProvider:
         last_error: Exception | None = None
         for attempt in range(1, max_attempts + 1):
 
-            identity, last_error = self._try_collect_identity(attempt, max_attempts, effective_retry_policy, last_error)
+            identity, last_error = self._try_collect_identity(
+                attempt, max_attempts, effective_retry_policy, last_error)
             if identity is not None:
                 return identity
 
