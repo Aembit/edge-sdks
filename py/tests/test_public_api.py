@@ -184,6 +184,7 @@ def test_trust_providers_subpackage_exports() -> None:
 def test_package_logger_is_correct() -> None:
     """Verify that the package level internal logger is named correctly."""
     import aembit_edge
+
     logger_field = "_logger"
     logger = getattr(aembit_edge, logger_field)
     assert logger.name == "aembit_edge"
