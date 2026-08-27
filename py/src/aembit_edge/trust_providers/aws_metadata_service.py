@@ -12,6 +12,7 @@ from typing import Protocol
 
 from ..errors import TrustProviderError
 from ..internal.retry import (
+    EffectiveRetryPolicy,
     calculate_backoff_delay_ms,
     is_retryable_error,
     merge_retry_policy,
@@ -81,9 +82,10 @@ class AwsMetadataServiceTrustProvider:
             try:
                 return self._collect_identity_once()
             except Exception as error:
-                last_error = _map_imds_error(error)
+                mapped_error = _map_imds_error(error)
+                last_error = mapped_error
                 self._handle_attempt_failure(
-                    attempt, max_attempts, last_error, effective_retry_policy
+                    attempt, max_attempts, mapped_error, effective_retry_policy
                 )
         else:  # pragma: no cover
             if last_error is not None:
@@ -95,7 +97,7 @@ class AwsMetadataServiceTrustProvider:
         attempt: int,
         max_attempts: int,
         error: TrustProviderError,
-        policy: RetryPolicy,
+        policy: EffectiveRetryPolicy,
     ) -> None:
         """Handle a failed collection attempt, performing backoff or raising immediately."""
         if not is_retryable_error(error) or attempt >= max_attempts:
