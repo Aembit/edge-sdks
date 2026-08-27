@@ -19,7 +19,7 @@ import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk/trust-providers
  *   loads `VERCEL_OIDC_TOKEN` from that file during `vercel dev`
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

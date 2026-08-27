@@ -120,7 +120,7 @@ If `authenticate()` succeeds but credential retrieval returns `401`, verify that
 
 Example:
 
-- `https://<tenant>.ec.<region>.aembit.io`
+- `https://<tenant>.ec.<stack>.aembit.io`
 
 Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
 

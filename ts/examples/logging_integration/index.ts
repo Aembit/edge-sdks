@@ -1,7 +1,7 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient, createOidcIdTokenTrustProvider } from "@aembit/edge-sdk"
 import type { AembitLogger, LogContext } from "@aembit/edge-sdk"
+import { EdgeClient, createOidcIdTokenTrustProvider } from "@aembit/edge-sdk"
 
 /**
  * Logging Integration Example for the TypeScript SDK.
@@ -35,7 +35,7 @@ function createStructuredJsonLogger(name: string): AembitLogger {
 
 // --- 2. Example Configuration ---
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

@@ -17,7 +17,7 @@ import { createAwsMetadataServiceTrustProvider } from "@aembit/edge-sdk/trust-pr
  * instance with IMDSv2 enabled, then run `node index.mjs`.
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

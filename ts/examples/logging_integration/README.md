@@ -42,7 +42,7 @@ const aembitLogger: AembitLogger = {
 };
 
 const client = new EdgeClient({
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   trustProvider: trustProviders.awsRole({ region: "us-east-1" }),
   logger: aembitLogger,
@@ -70,7 +70,7 @@ const aembitLogger: AembitLogger = {
 };
 
 const client = new EdgeClient({
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   trustProvider: trustProviders.awsRole({ region: "us-east-1" }),
   logger: aembitLogger,
@@ -90,7 +90,7 @@ const consoleLogger: AembitLogger = {
 };
 
 const client = new EdgeClient({
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   trustProvider: trustProviders.awsRole({ region: "us-east-1" }),
   logger: consoleLogger,

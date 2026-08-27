@@ -16,7 +16,7 @@ import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
  * either `AWS_REGION` or `AWS_DEFAULT_REGION` before running the bundled file.
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

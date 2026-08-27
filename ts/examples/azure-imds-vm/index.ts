@@ -17,7 +17,7 @@ import { createAzureMetadataServiceTrustProvider } from "@aembit/edge-sdk/trust-
  * with Instance Metadata Service access, then run `node index.mjs`.
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

@@ -18,7 +18,7 @@ const GCP_METADATA_IDENTITY_URL =
  * - `credentialType`: the credential type returned by your Credential Provider
  * - `resourceSet`: optional, only when your tenant flow requires it
  * - `gcpIdentityTokenAudience`: required by the GCP metadata server when minting
- *   the token. Use the Aembit identity host (`https://<tenant>.id.<region>.aembit.io`),
+ *   the token. Use the Aembit identity host (`https://<tenant>.id.<stack>.aembit.io`),
  *   not the Edge API host. Aembit policy matching for this flow is based on
  *   the token's `email` claim, not the audience value
  *
@@ -28,13 +28,13 @@ const GCP_METADATA_IDENTITY_URL =
  *   exercise the SDK flow outside GCP
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,
   credentialType: "ApiKey",
   resourceSet: undefined as string | undefined,
-  gcpIdentityTokenAudience: "https://<tenant>.id.<region>.aembit.io",
+  gcpIdentityTokenAudience: "https://<tenant>.id.<stack>.aembit.io",
   printCredentialJson: false
 }
 
