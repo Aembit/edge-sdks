@@ -89,28 +89,15 @@ npm run example:azure-imds-vm
 
 This deploy workflow is kept as a reference for when the backend feature gap is closed.
 
-From the repository root, copy the built artifact to your VM:
+Copy the built artifact to your Azure VM:
 
 ```bash
-./scripts/deploy-ts-example-bundle-to-vm.sh \
-  --artifact ./ts/examples/azure-imds-vm/dist/index.mjs \
-  --host your-vm.example.com \
-  --user azureuser \
-  --key ~/.ssh/your-key.pem \
-  --remote-dir ~/aembit-examples/azure-imds-vm
-```
-
-Using a config file:
-
-```bash
-cp ./scripts/deploy-ts-example-bundle-to-vm.env.example ./scripts/deploy-ts-example-bundle-to-vm.env
-./scripts/deploy-ts-example-bundle-to-vm.sh --config ./scripts/deploy-ts-example-bundle-to-vm.env
+scp -i ~/.ssh/your-key.pem ./examples/azure-imds-vm/dist/index.mjs azureuser@<vm-host>:~/index.mjs
 ```
 
 On the Azure VM:
 
 ```bash
-cd ~/aembit-examples/azure-imds-vm
 node index.mjs
 ```
 
