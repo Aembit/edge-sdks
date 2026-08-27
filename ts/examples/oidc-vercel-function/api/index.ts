@@ -1,6 +1,6 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient } from "@aembit/edge-sdk"
+import { EdgeClient, TrustProviderError } from "@aembit/edge-sdk"
 import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/oidc-id-token"
 
 /**
@@ -90,7 +90,10 @@ function resolveOidcIdentityToken(request: Request): string {
     return envToken
   }
 
-  throw new Error(
-    "Missing Vercel OIDC token. Use the x-vercel-oidc-token request header in production or set VERCEL_OIDC_TOKEN for local development."
+  throw new TrustProviderError(
+    "Missing Vercel OIDC token. Use the x-vercel-oidc-token request header in production or set VERCEL_OIDC_TOKEN for local development.",
+    {
+      retryable: false
+    }
   )
 }

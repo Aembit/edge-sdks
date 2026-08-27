@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createRequire } from "node:module"
 
-import { EdgeClient } from "@aembit/edge-sdk"
+import { EdgeClient, TrustProviderError } from "@aembit/edge-sdk"
 import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/gcp-identity-token"
 
 const GCP_METADATA_IDENTITY_URL =
@@ -141,24 +141,31 @@ async function resolveGcpIdentityToken(): Promise<string> {
       }
     })
   } catch (error) {
-    throw new Error(
+    throw new TrustProviderError(
       "GCP metadata server request for identity token failed",
       {
+        retryable: true,
         cause: error
       }
     )
   }
 
   if (!response.ok) {
-    throw new Error(
-      `GCP metadata server returned ${String(response.status)} while fetching identity token`
+    throw new TrustProviderError(
+      `GCP metadata server returned ${String(response.status)} while fetching identity token`,
+      {
+        retryable: response.status === 408 || response.status === 429 || response.status >= 500
+      }
     )
   }
 
   const identityToken = (await response.text()).trim()
   if (!identityToken) {
-    throw new Error(
-      "GCP metadata server returned an empty identity token"
+    throw new TrustProviderError(
+      "GCP metadata server returned an empty identity token",
+      {
+        retryable: false
+      }
     )
   }
 
