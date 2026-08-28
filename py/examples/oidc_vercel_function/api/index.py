@@ -116,7 +116,7 @@ class handler(BaseHTTPRequestHandler):
             retryable=False,
         )
 
-    def send_success_response(self, data: dict[str, any]) -> None:
+    def send_success_response(self, data: dict[str, object]) -> None:
         """Format and return a 200 OK JSON response."""
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -124,7 +124,7 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data, indent=2).encode("utf-8"))
 
-    def send_error_response(self, code: int, error_data: dict[str, any]) -> None:
+    def send_error_response(self, code: int, error_data: dict[str, object]) -> None:
         """Format and return an error JSON response."""
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
