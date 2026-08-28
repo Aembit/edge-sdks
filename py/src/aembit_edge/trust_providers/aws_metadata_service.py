@@ -15,7 +15,7 @@ from ..retry import RetryPolicy
 from .base import CollectedTrustProviderIdentity
 
 DEFAULT_PROVIDER_ID = "aws-metadata-service"
-DEFAULT_IMDS_BASE_URL = "http://169.254.169.254"
+DEFAULT_IMDS_BASE_URL = "http://169.254.169.254" # Static, universal, Instance Metadata Service (IMDS) IP
 DEFAULT_IMDS_TIMEOUT_MS = 1000
 DEFAULT_IMDS_TOKEN_TTL_SECONDS = 2160
 
@@ -80,7 +80,7 @@ class AwsMetadataServiceTrustProvider:
     def _collect_identity_once(self) -> CollectedTrustProviderIdentity:
         timeout_sec = self.timeout_ms / 1000.0
 
-        # 1. Fetch IMDSv2 Token (PUT request)
+        # Fetch IMDSv2 Token (PUT request)
         token_url = f"{self.base_url}/latest/api/token"
         token_req = urllib.request.Request(
             token_url,
@@ -98,7 +98,7 @@ class AwsMetadataServiceTrustProvider:
 
         auth_headers = {"x-aws-ec2-metadata-token": token}
 
-        # 2. Fetch Instance Identity Document (GET request)
+        # Fetch Instance Identity Document (GET request)
         doc_url = f"{self.base_url}/latest/dynamic/instance-identity/document"
         doc_req = urllib.request.Request(doc_url, method="GET", headers=auth_headers)
         try:
@@ -109,7 +109,7 @@ class AwsMetadataServiceTrustProvider:
                 f"Failed to fetch instance identity document: {e}", retryable=True
             ) from e
 
-        # 3. Fetch Instance Identity Document Signature (GET request)
+        # Fetch Instance Identity Document Signature (GET request)
         sig_url = f"{self.base_url}/latest/dynamic/instance-identity/signature"
         sig_req = urllib.request.Request(sig_url, method="GET", headers=auth_headers)
         try:

@@ -16,7 +16,7 @@ from ..retry import RetryPolicy
 from .base import CollectedTrustProviderIdentity
 
 DEFAULT_PROVIDER_ID = "azure-metadata-service"
-DEFAULT_IMDS_BASE_URL = "http://169.254.169.254"
+DEFAULT_IMDS_BASE_URL = "http://169.254.169.254" # Static, universal, Instance Metadata Service (IMDS) IP
 DEFAULT_IMDS_TIMEOUT_MS = 1000
 DEFAULT_IMDS_API_VERSION = "2025-04-07"
 
@@ -96,7 +96,7 @@ class AzureMetadataServiceTrustProvider:
                 retryable=False,
             )
 
-        # 1. Fetch Attested Document (GET request)
+        # Fetch Attested Document (GET request)
         url = (
             f"{self.base_url}/metadata/attested/document"
             f"?api-version={self.api_version}&nonce={nonce_val}"
@@ -115,7 +115,7 @@ class AzureMetadataServiceTrustProvider:
                 retryable=True,
             ) from e
 
-        # 2. Parse response body
+        # Parse response body
         try:
             body_str = body_bytes.decode("utf-8")
             body_json = json.loads(body_str)
