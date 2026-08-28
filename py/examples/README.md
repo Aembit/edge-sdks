@@ -7,6 +7,10 @@ Current runnable examples:
 - [`logging_integration/`](./logging_integration/) - Standard logging and Loguru interception configuration
 - [`aws_role/`](./aws_role/) - Using the built-in AWS Role Trust Provider with AWS Lambda, ECS, etc.
 - [`aws_imds/`](./aws_imds/) - Using the built-in AWS Metadata Service (IMDS) Trust Provider with EC2 VMs
+- [`azure_function_entra_oidc/`](./azure_function_entra_oidc/) - Azure Functions using Azure managed identity tokens via the Aembit OIDC Trust Provider
+- [`azure_imds/`](./azure_imds/) - Using the built-in Azure Instance Metadata Service (IMDS) Trust Provider with Azure VMs
+- [`gcp_identity_token_function/`](./gcp_identity_token_function/) - GCP Cloud Function using GCP identity tokens via the Aembit GCP Trust Provider
+- [`oidc_vercel_function/`](./oidc_vercel_function/) - Vercel Serverless Function using Vercel OIDC tokens via the Aembit OIDC Trust Provider
 
 Examples must use placeholder values only and should remain small, runnable, and aligned with recommended SDK usage patterns.
 
@@ -46,4 +50,10 @@ uv run examples/aws_role/main.py
 
 ```bash
 uv run examples/aws_imds/main.py
+```
+
+#### Run Azure IMDS Example
+
+```bash
+uv run examples/azure_imds/main.py
 ```

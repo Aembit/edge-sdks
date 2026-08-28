@@ -21,7 +21,7 @@ from aembit_edge import (
 )
 from aembit_edge.trust_providers import AwsRoleTrustProvider
 
-# 1. Configuration
+# Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
     "base_url": "https://<tenant>.ec.<region>.aembit.io",
@@ -60,7 +60,7 @@ def resolve_client_workload_details() -> dict[str, dict[str, dict[str, str]]] | 
 
 
 def main() -> None:
-    # 2. Set up AWS Role Trust Provider
+    # Set up AWS Role Trust Provider
     # Reuses local IAM execution credentials automatically via boto3 to sign STS requests
     try:
         region = resolve_aws_region()
@@ -73,7 +73,7 @@ def main() -> None:
 
     client_workload_details = resolve_client_workload_details()
 
-    # 3. Create EdgeClient instance
+    # Create EdgeClient instance
     client = EdgeClient(
         EdgeClientConfig(
             base_url=EXAMPLE_CONFIG["base_url"],
@@ -88,7 +88,7 @@ def main() -> None:
     port = EXAMPLE_CONFIG["server_port"]
     print(f"Retrieving credentials for {host}:{port}...")
 
-    # 4. Request credential from Aembit Edge
+    # Request credential from Aembit Edge
     credential_input = GetCredentialInput(
         server=CredentialServerRef(
             host=EXAMPLE_CONFIG["server_host"],
@@ -106,7 +106,7 @@ def main() -> None:
 
     print("Credential retrieved successfully!")
 
-    # 5. Type-safe casting of the credential payload
+    # Type-safe casting of the credential payload
     # This provides full autocompletion and IDE support for ApiKeyData fields!
     api_key_payload = cast(ApiKeyData, result.data)
 

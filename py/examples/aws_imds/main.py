@@ -21,7 +21,7 @@ from aembit_edge import (
 )
 from aembit_edge.trust_providers import AwsMetadataServiceTrustProvider
 
-# 1. Configuration
+# Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
     "base_url": "https://<tenant>.ec.<region>.aembit.io",
