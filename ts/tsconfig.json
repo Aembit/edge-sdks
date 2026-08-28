@@ -9,7 +9,12 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "@aembit/edge-sdk": ["./src/index.ts"],
+      "@aembit/edge-sdk/trust-providers/*": ["./src/trust-providers/*.ts"],
+      "@aembit/edge-sdk/*": ["./src/*.ts"]
+    }
   },
   "include": ["src/**/*.ts", "examples/**/*.ts", "examples/**/*.d.ts", "vitest.config.ts"]
 }

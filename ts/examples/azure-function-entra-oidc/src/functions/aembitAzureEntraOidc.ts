@@ -7,9 +7,8 @@ import {
   type InvocationContext
 } from "@azure/functions"
 
-import { EdgeClient } from "../../../../src/index.js"
-import { TrustProviderError } from "../../../../src/internal/protocol/errors.js"
-import { createOidcIdTokenTrustProvider } from "../../../../src/trust-providers/oidc-id-token.js"
+import { EdgeClient, TrustProviderError } from "@aembit/edge-sdk"
+import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/oidc-id-token"
 
 /**
  * Minimal Azure Functions example for Azure managed identity + the Aembit OIDC
@@ -32,7 +31,7 @@ import { createOidcIdTokenTrustProvider } from "../../../../src/trust-providers/
  *   to exercise the SDK flow outside Azure
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

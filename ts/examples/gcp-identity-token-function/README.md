@@ -62,7 +62,7 @@ Important:
 
 - Google requires the audience to mint the token
 - use the Aembit identity host for this value, for example:
-  `https://<tenant>.id.<region>.aembit.io`
+  `https://<tenant>.id.<stack>.aembit.io`
 - Aembit policy matching for this flow is based on the token's `email` claim
 
 References:
@@ -94,8 +94,8 @@ configured in your Server Workload.
 
 Use:
 
-- `baseUrl`: `https://<tenant>.ec.<region>.aembit.io`
-- `gcpIdentityTokenAudience`: `https://<tenant>.id.<region>.aembit.io`
+- `baseUrl`: `https://<tenant>.ec.<stack>.aembit.io`
+- `gcpIdentityTokenAudience`: `https://<tenant>.id.<stack>.aembit.io`
 
 ## Function Entry Point
 

@@ -1,7 +1,7 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient } from "../../src/index.js"
-import { createAzureMetadataServiceTrustProvider } from "../../src/trust-providers/azure-metadata-service.js"
+import { EdgeClient } from "@aembit/edge-sdk"
+import { createAzureMetadataServiceTrustProvider } from "@aembit/edge-sdk/trust-providers/azure-metadata-service"
 
 /**
  * Minimal Azure VM example for the Azure Instance Metadata Service Trust Provider.
@@ -17,7 +17,7 @@ import { createAzureMetadataServiceTrustProvider } from "../../src/trust-provide
  * with Instance Metadata Service access, then run `node index.mjs`.
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

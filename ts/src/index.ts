@@ -1,6 +1,14 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
 export { EdgeClient } from "./client/edge-client.js";
+export {
+  ApiError,
+  AuthError,
+  CredentialError,
+  EdgeSdkError,
+  TransportError,
+  TrustProviderError,
+} from "./internal/protocol/errors.js";
 export { trustProviders } from "./trust-providers/index.js";
 export {
   createAwsMetadataServiceTrustProvider,
