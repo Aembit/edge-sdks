@@ -59,4 +59,22 @@ describe("public type exports", () => {
     expect(typeof createGitHubIdentityTokenTrustProvider).toBe("function");
     expect(typeof createOidcIdTokenTrustProvider).toBe("function");
   });
+
+  it("exports SDK error classes", async () => {
+    const {
+      ApiError,
+      AuthError,
+      CredentialError,
+      EdgeSdkError,
+      TransportError,
+      TrustProviderError
+    } = await import("./index.js");
+
+    expect(typeof ApiError).toBe("function");
+    expect(typeof AuthError).toBe("function");
+    expect(typeof CredentialError).toBe("function");
+    expect(typeof EdgeSdkError).toBe("function");
+    expect(typeof TransportError).toBe("function");
+    expect(typeof TrustProviderError).toBe("function");
+  });
 });

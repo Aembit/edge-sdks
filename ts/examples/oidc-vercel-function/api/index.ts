@@ -1,8 +1,7 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient } from "../../../src/index.js"
-import { TrustProviderError } from "../../../src/internal/protocol/errors.js"
-import { createOidcIdTokenTrustProvider } from "../../../src/trust-providers/oidc-id-token.js"
+import { EdgeClient, TrustProviderError } from "@aembit/edge-sdk"
+import { createOidcIdTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/oidc-id-token"
 
 /**
  * Minimal Vercel Function example for the OIDC ID Token Trust Provider.
@@ -20,7 +19,7 @@ import { createOidcIdTokenTrustProvider } from "../../../src/trust-providers/oid
  *   loads `VERCEL_OIDC_TOKEN` from that file during `vercel dev`
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,
@@ -92,8 +91,7 @@ function resolveOidcIdentityToken(request: Request): string {
   }
 
   throw new TrustProviderError(
-    "Missing Vercel OIDC token. Use the x-vercel-oidc-token request header in production or set VERCEL_OIDC_TOKEN for local development."
-    ,
+    "Missing Vercel OIDC token. Use the x-vercel-oidc-token request header in production or set VERCEL_OIDC_TOKEN for local development.",
     {
       retryable: false
     }

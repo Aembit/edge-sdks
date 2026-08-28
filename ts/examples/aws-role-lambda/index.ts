@@ -1,6 +1,6 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { EdgeClient, trustProviders } from "../../src/index.js"
+import { EdgeClient, trustProviders } from "@aembit/edge-sdk"
 
 /**
  * Minimal AWS Lambda example for the AWS Role Trust Provider.
@@ -16,7 +16,7 @@ import { EdgeClient, trustProviders } from "../../src/index.js"
  * either `AWS_REGION` or `AWS_DEFAULT_REGION` before running the bundled file.
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,

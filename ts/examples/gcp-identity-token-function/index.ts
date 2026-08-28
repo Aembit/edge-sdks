@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createRequire } from "node:module"
 
-import { EdgeClient } from "../../src/index.js"
-import { TrustProviderError } from "../../src/internal/protocol/errors.js"
-import { createGcpIdentityTokenTrustProvider } from "../../src/trust-providers/gcp-identity-token.js"
+import { EdgeClient, TrustProviderError } from "@aembit/edge-sdk"
+import { createGcpIdentityTokenTrustProvider } from "@aembit/edge-sdk/trust-providers/gcp-identity-token"
 
 const GCP_METADATA_IDENTITY_URL =
   "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
@@ -19,7 +18,7 @@ const GCP_METADATA_IDENTITY_URL =
  * - `credentialType`: the credential type returned by your Credential Provider
  * - `resourceSet`: optional, only when your tenant flow requires it
  * - `gcpIdentityTokenAudience`: required by the GCP metadata server when minting
- *   the token. Use the Aembit identity host (`https://<tenant>.id.<region>.aembit.io`),
+ *   the token. Use the Aembit identity host (`https://<tenant>.id.<stack>.aembit.io`),
  *   not the Edge API host. Aembit policy matching for this flow is based on
  *   the token's `email` claim, not the audience value
  *
@@ -29,13 +28,13 @@ const GCP_METADATA_IDENTITY_URL =
  *   exercise the SDK flow outside GCP
  */
 const EXAMPLE_CONFIG = {
-  baseUrl: "https://<tenant>.ec.<region>.aembit.io",
+  baseUrl: "https://<tenant>.ec.<stack>.aembit.io",
   clientId: "your-edge-sdk-client-id",
   serverHost: "target.example.com",
   serverPort: 443,
   credentialType: "ApiKey",
   resourceSet: undefined as string | undefined,
-  gcpIdentityTokenAudience: "https://<tenant>.id.<region>.aembit.io",
+  gcpIdentityTokenAudience: "https://<tenant>.id.<stack>.aembit.io",
   printCredentialJson: false
 }
 

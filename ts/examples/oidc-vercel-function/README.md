@@ -134,7 +134,7 @@ Verify that `baseUrl` in `EXAMPLE_CONFIG` is the final regional Edge host and do
 
 Example:
 
-- `https://<tenant>.ec.<region>.aembit.io`
+- `https://<tenant>.ec.<stack>.aembit.io`
 
 ### `200` with `credentialType: "Unknown"` and empty `dataKeys`
 
