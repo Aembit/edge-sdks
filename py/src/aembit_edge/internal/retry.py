@@ -9,6 +9,7 @@ import math
 import random as random_module
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TypeVar
 
 from ..errors import EdgeSdkError
 from ..retry import RetryPolicy
@@ -212,3 +213,37 @@ def _normalize_status_codes(status_codes: tuple[int, ...] | None) -> tuple[int, 
 
     normalized = sorted({int(code) for code in status_codes})
     return tuple(normalized)
+
+
+_T = TypeVar("_T")
+
+
+def execute_with_retry(
+    action: Callable[[], _T],
+    *,
+    retry: RetryPolicy | None,
+    map_error: Callable[[Exception], Exception],
+    sleep: Callable[[float], None],
+) -> _T:
+    """Execute an action with backoff and retry according to the retry policy."""
+    effective_retry_policy = merge_retry_policy(retry)
+    max_attempts = effective_retry_policy.max_attempts if effective_retry_policy.enabled else 1
+
+    last_error: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return action()
+        except Exception as error:
+            mapped_error = map_error(error)
+            last_error = mapped_error
+
+            if not is_retryable_error(mapped_error) or attempt >= max_attempts:
+                raise mapped_error from error
+
+            delay_ms = calculate_backoff_delay_ms(attempt, effective_retry_policy)
+            if delay_ms > 0:
+                sleep(delay_ms / 1000)
+
+    if last_error is not None:
+        raise last_error
+    raise RuntimeError("unreachable retry state")  # pragma: no cover

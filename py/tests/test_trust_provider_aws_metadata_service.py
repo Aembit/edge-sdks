@@ -189,7 +189,7 @@ def test_imds_provider_retries_on_failure() -> None:
     with (
         patch("urllib.request.urlopen", side_effect=responses),
         patch(
-            "aembit_edge.trust_providers.aws_metadata_service.calculate_backoff_delay_ms",
+            "aembit_edge.internal.retry.calculate_backoff_delay_ms",
             return_value=1500,
         ),
     ):

@@ -12,12 +12,6 @@ from dataclasses import dataclass
 from typing import ClassVar, Protocol
 
 from ..errors import TrustProviderError
-from ..internal.retry import (
-    EffectiveRetryPolicy,
-    calculate_backoff_delay_ms,
-    is_retryable_error,
-    merge_retry_policy,
-)
 from ..retry import RetryPolicy
 from .base import CollectedTrustProviderIdentity
 
@@ -82,38 +76,14 @@ class AzureMetadataServiceTrustProvider:
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect Azure IMDS attested document for `/edge/v1/auth`."""
-        effective_retry_policy = merge_retry_policy(self.retry)
-        max_attempts = effective_retry_policy.max_attempts if effective_retry_policy.enabled else 1
+        from ..internal.retry import execute_with_retry
 
-        last_error: Exception | None = None
-        for attempt in range(1, max_attempts + 1):
-            try:
-                return self._collect_identity_once()
-            except Exception as error:
-                mapped_error = _map_imds_error(error)
-                last_error = mapped_error
-                self._handle_attempt_failure(
-                    attempt, max_attempts, mapped_error, effective_retry_policy
-                )
-
-        if last_error is not None:
-            raise last_error
-        raise RuntimeError("unreachable retry state")  # pragma: no cover
-
-    def _handle_attempt_failure(
-        self,
-        attempt: int,
-        max_attempts: int,
-        error: TrustProviderError,
-        policy: EffectiveRetryPolicy,
-    ) -> None:
-        """Handle a failed collection attempt, performing backoff or raising immediately."""
-        if not is_retryable_error(error) or attempt >= max_attempts:
-            raise error
-
-        delay_ms = calculate_backoff_delay_ms(attempt, policy)
-        if delay_ms > 0:
-            self.sleep(delay_ms / 1000)
+        return execute_with_retry(
+            action=self._collect_identity_once,
+            retry=self.retry,
+            map_error=_map_imds_error,
+            sleep=self.sleep,
+        )
 
     def _collect_identity_once(self) -> CollectedTrustProviderIdentity:
         timeout_sec = self.timeout_ms / 1000.0
