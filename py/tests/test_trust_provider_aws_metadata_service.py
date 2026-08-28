@@ -209,3 +209,18 @@ def test_imds_provider_retries_on_failure() -> None:
                 "instanceIdentityDocumentSignature": "mock-signature",
             }
         }
+
+
+def test_map_imds_error_fallback() -> None:
+    """The _map_imds_error should map generic Exceptions to retryable TrustProviderError."""
+    import aembit_edge.trust_providers.aws_metadata_service as aws_meta
+
+    mapper_field = "_map_imds_error"
+    _map_imds_error = getattr(aws_meta, mapper_field)
+
+    raw_error = ValueError("transient-underlying-error")
+    mapped = _map_imds_error(raw_error)
+
+    assert isinstance(mapped, TrustProviderError)
+    assert mapped.retryable is True
+    assert "AWS Metadata Service Trust Provider failed: transient-underlying-error" in str(mapped)

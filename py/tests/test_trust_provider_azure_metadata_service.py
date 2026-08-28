@@ -155,3 +155,19 @@ def test_retry_on_failure() -> None:
                 }
             }
         }
+
+
+def test_map_imds_error_fallback() -> None:
+    """The _map_imds_error should map generic Exceptions to retryable TrustProviderError."""
+    import aembit_edge.trust_providers.azure_metadata_service as azure_meta
+
+    mapper_field = "_map_imds_error"
+    _map_imds_error = getattr(azure_meta, mapper_field)
+
+    raw_error = ValueError("transient-underlying-error")
+    mapped = _map_imds_error(raw_error)
+
+    assert isinstance(mapped, TrustProviderError)
+    assert mapped.retryable is True
+    assert "Azure Instance Metadata Service Trust Provider failed" in str(mapped)
+    assert "transient-underlying-error" in str(mapped)
