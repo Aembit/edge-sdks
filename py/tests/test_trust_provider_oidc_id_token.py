@@ -15,11 +15,7 @@ def test_collect_identity_static_string() -> None:
     assert provider.get_identity_single_flight_key() == "oidc_id_token:oidc-id-token"
 
     identity = provider.collect_identity()
-    assert identity.client == {
-        "oidc": {
-            "identityToken": "static-token-123"
-        }
-    }
+    assert identity.client == {"oidc": {"identityToken": "static-token-123"}}
 
 
 def test_collect_identity_custom_id() -> None:
@@ -47,11 +43,7 @@ def test_collect_identity_callable() -> None:
     assert provider.get_identity_single_flight_key() is None
 
     identity = provider.collect_identity()
-    assert identity.client == {
-        "oidc": {
-            "identityToken": "token-from-callable"
-        }
-    }
+    assert identity.client == {"oidc": {"identityToken": "token-from-callable"}}
     assert called_count == 1
 
 
@@ -65,6 +57,7 @@ def test_empty_token_raises_error() -> None:
 
 def test_callable_failure_raises_error() -> None:
     """The provider should raise TrustProviderError when the callable fails."""
+
     def failing_source() -> str:
         raise ValueError("Network timeout")
 

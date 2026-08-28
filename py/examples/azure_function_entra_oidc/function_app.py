@@ -86,24 +86,28 @@ def aembit_azure_entra_oidc(req: func.HttpRequest) -> func.HttpResponse:
     if EXAMPLE_CONFIG["print_credential_json"]:
         api_key_payload = cast(ApiKeyData, credential.data)
         return func.HttpResponse(
-            body=json_response({
-                **base_response,
-                "credential": {
-                    "credentialType": credential.credential_type,
-                    "expiresAt": credential.expires_at,
-                    "data": api_key_payload,
+            body=json_response(
+                {
+                    **base_response,
+                    "credential": {
+                        "credentialType": credential.credential_type,
+                        "expiresAt": credential.expires_at,
+                        "data": api_key_payload,
+                    },
                 }
-            }),
+            ),
             status_code=200,
             mimetype="application/json",
             headers={"Cache-Control": "no-store"},
         )
 
     return func.HttpResponse(
-        body=json_response({
-            **base_response,
-            "dataKeys": list(credential.data.keys()),
-        }),
+        body=json_response(
+            {
+                **base_response,
+                "dataKeys": list(credential.data.keys()),
+            }
+        ),
         status_code=200,
         mimetype="application/json",
         headers={"Cache-Control": "no-store"},
@@ -112,9 +116,7 @@ def aembit_azure_entra_oidc(req: func.HttpRequest) -> func.HttpResponse:
 
 def create_trust_provider() -> OidcIdTokenTrustProvider:
     """Create the OIDC ID Token Trust Provider with lazy token resolver."""
-    return OidcIdTokenTrustProvider(
-        identity_token=resolve_azure_entra_token
-    )
+    return OidcIdTokenTrustProvider(identity_token=resolve_azure_entra_token)
 
 
 def create_client(trust_provider: OidcIdTokenTrustProvider) -> EdgeClient:
@@ -185,4 +187,5 @@ def normalize_entra_scope(audience: str) -> str:
 def json_response(data: dict[str, Any]) -> str:
     """Format dictionary cleanly as a JSON string."""
     import json
+
     return json.dumps(data, indent=2)

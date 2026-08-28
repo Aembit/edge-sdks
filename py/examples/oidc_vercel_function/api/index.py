@@ -79,20 +79,24 @@ class handler(BaseHTTPRequestHandler):
 
         if EXAMPLE_CONFIG["print_credential_json"]:
             api_key_payload = cast(ApiKeyData, credential.data)
-            self.send_success_response({
-                **base_response,
-                "credential": {
-                    "credentialType": credential.credential_type,
-                    "expiresAt": credential.expires_at,
-                    "data": api_key_payload,
+            self.send_success_response(
+                {
+                    **base_response,
+                    "credential": {
+                        "credentialType": credential.credential_type,
+                        "expiresAt": credential.expires_at,
+                        "data": api_key_payload,
+                    },
                 }
-            })
+            )
             return
 
-        self.send_success_response({
-            **base_response,
-            "dataKeys": list(credential.data.keys()),
-        })
+        self.send_success_response(
+            {
+                **base_response,
+                "dataKeys": list(credential.data.keys()),
+            }
+        )
 
     def resolve_oidc_identity_token(self) -> str:
         """Resolve the OIDC token from Vercel request headers or env."""

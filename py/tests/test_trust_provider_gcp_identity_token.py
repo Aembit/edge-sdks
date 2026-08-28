@@ -15,11 +15,7 @@ def test_collect_identity_static_string() -> None:
     assert provider.get_identity_single_flight_key() == "gcp_identity_token:gcp-identity-token"
 
     identity = provider.collect_identity()
-    assert identity.client == {
-        "gcp": {
-            "identityToken": "static-gcp-123"
-        }
-    }
+    assert identity.client == {"gcp": {"identityToken": "static-gcp-123"}}
 
 
 def test_collect_identity_custom_id() -> None:
@@ -47,11 +43,7 @@ def test_collect_identity_callable() -> None:
     assert provider.get_identity_single_flight_key() is None
 
     identity = provider.collect_identity()
-    assert identity.client == {
-        "gcp": {
-            "identityToken": "token-from-callable"
-        }
-    }
+    assert identity.client == {"gcp": {"identityToken": "token-from-callable"}}
     assert called_count == 1
 
 
@@ -65,6 +57,7 @@ def test_empty_token_raises_error() -> None:
 
 def test_callable_failure_raises_error() -> None:
     """The provider should raise TrustProviderError when the callable fails."""
+
     def failing_source() -> str:
         raise ValueError("Network timeout")
 

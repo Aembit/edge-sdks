@@ -83,11 +83,7 @@ class AzureMetadataServiceTrustProvider:
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect Azure IMDS attested document for `/edge/v1/auth`."""
         effective_retry_policy = merge_retry_policy(self.retry)
-        max_attempts = (
-            effective_retry_policy.max_attempts
-            if effective_retry_policy.enabled
-            else 1
-        )
+        max_attempts = effective_retry_policy.max_attempts if effective_retry_policy.enabled else 1
 
         last_error: Exception | None = None
         for attempt in range(1, max_attempts + 1):
@@ -166,6 +162,7 @@ class AzureMetadataServiceTrustProvider:
             )
 
         from typing import cast
+
         body_dict = cast("dict[str, object]", body_json)
 
         # Cast keys safely using isinstance checks to satisfy strict Pyright typings

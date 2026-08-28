@@ -42,10 +42,7 @@ def test_collect_identity_returns_azure_payload() -> None:
         first_call_kwargs = first_call[1]
 
         assert first_call_args[0].method == "GET"
-        assert (
-            "http://169.254.169.254/metadata/attested/document"
-            in first_call_args[0].full_url
-        )
+        assert "http://169.254.169.254/metadata/attested/document" in first_call_args[0].full_url
         assert first_call_args[0].headers["Metadata"] == "true"
         assert first_call_kwargs["timeout"] == 1.0
 
@@ -132,11 +129,13 @@ def test_retry_on_failure() -> None:
 
     sleeps: list[float] = []
 
-    with patch("urllib.request.urlopen", side_effect=responses), \
-         patch(
-             "aembit_edge.trust_providers.azure_metadata_service.calculate_backoff_delay_ms",
-             return_value=1200,
-         ):
+    with (
+        patch("urllib.request.urlopen", side_effect=responses),
+        patch(
+            "aembit_edge.trust_providers.azure_metadata_service.calculate_backoff_delay_ms",
+            return_value=1200,
+        ),
+    ):
         provider = AzureMetadataServiceTrustProvider(
             retry=RetryPolicy(max_attempts=3, enabled=True),
             sleep=lambda secs: sleeps.append(secs),

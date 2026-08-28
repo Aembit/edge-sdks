@@ -25,8 +25,7 @@ EXAMPLE_CONFIG = {
 }
 
 GCP_METADATA_IDENTITY_URL = (
-    "http://metadata.google.internal/computeMetadata/v1/instance/"
-    "service-accounts/default/identity"
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
 )
 
 # Initialize EdgeClient lazily or on module load.
@@ -97,23 +96,27 @@ def aembitGcpIdentityToken(request: Any) -> Any:
     if EXAMPLE_CONFIG["print_credential_json"]:
         api_key_payload = cast(ApiKeyData, credential.data)
         return (
-            json_response({
-                **base_response,
-                "credential": {
-                    "credentialType": credential.credential_type,
-                    "expiresAt": credential.expires_at,
-                    "data": api_key_payload,
+            json_response(
+                {
+                    **base_response,
+                    "credential": {
+                        "credentialType": credential.credential_type,
+                        "expiresAt": credential.expires_at,
+                        "data": api_key_payload,
+                    },
                 }
-            }),
+            ),
             200,
             {"Content-Type": "application/json", "Cache-Control": "no-store"},
         )
 
     return (
-        json_response({
-            **base_response,
-            "dataKeys": list(credential.data.keys()),
-        }),
+        json_response(
+            {
+                **base_response,
+                "dataKeys": list(credential.data.keys()),
+            }
+        ),
         200,
         {"Content-Type": "application/json", "Cache-Control": "no-store"},
     )
@@ -152,12 +155,14 @@ def resolve_gcp_identity_token() -> str:
 def json_response(data: dict[str, Any]) -> str:
     """Format dictionary cleanly as a JSON string."""
     import json
+
     return json.dumps(data, indent=2)
 
 
 # Try to register the handler with functions-framework if available
 try:
     import functions_framework
+
     functions_framework.http(aembitGcpIdentityToken)
 except ImportError:
     pass
