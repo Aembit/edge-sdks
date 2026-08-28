@@ -14,13 +14,13 @@ from typing import Any, cast
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
-    "base_url": "https://<tenant>.ec.<region>.aembit.io",
+    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
     "client_id": "your-edge-sdk-client-id",
     "server_host": "target.example.com",
     "server_port": 443,
     "credential_type": "ApiKey",
     "resource_set": None,
-    "gcp_identity_token_audience": "https://<tenant>.id.<region>.aembit.io",
+    "gcp_identity_token_audience": "https://<tenant>.id.<stack>.aembit.io",
     "print_credential_json": False,
 }
 

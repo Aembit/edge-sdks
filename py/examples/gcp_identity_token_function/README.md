@@ -45,8 +45,8 @@ The metadata server request requires an `audience` query parameter. This example
 
 Use:
 
-- `baseUrl`: `https://<tenant>.ec.<region>.aembit.io`
-- `gcp_identity_token_audience`: `https://<tenant>.id.<region>.aembit.io`
+- `baseUrl`: `https://<tenant>.ec.<stack>.aembit.io`
+- `gcp_identity_token_audience`: `https://<tenant>.id.<stack>.aembit.io`
 
 ## Function Entry Point
 

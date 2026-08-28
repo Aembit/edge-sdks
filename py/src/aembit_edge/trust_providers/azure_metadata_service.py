@@ -16,7 +16,9 @@ from ..retry import RetryPolicy
 from .base import CollectedTrustProviderIdentity
 
 DEFAULT_PROVIDER_ID = "azure-metadata-service"
-DEFAULT_IMDS_BASE_URL = "http://169.254.169.254" # Static, universal, Instance Metadata Service (IMDS) IP
+DEFAULT_IMDS_BASE_URL = (
+    "http://169.254.169.254"  # Static, universal, Instance Metadata Service (IMDS) IP
+)
 DEFAULT_IMDS_TIMEOUT_MS = 1000
 DEFAULT_IMDS_API_VERSION = "2025-04-07"
 

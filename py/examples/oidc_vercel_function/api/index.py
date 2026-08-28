@@ -26,7 +26,7 @@ from aembit_edge.trust_providers import OidcIdTokenTrustProvider
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
-    "base_url": "https://<tenant>.ec.<region>.aembit.io",
+    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
     "client_id": "your-edge-sdk-client-id",
     "server_host": "target.example.com",
     "server_port": 443,
