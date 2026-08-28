@@ -9,7 +9,7 @@ import time
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from ..errors import TrustProviderError
 from ..internal.retry import (
@@ -57,7 +57,7 @@ class AzureMetadataServiceTrustProvider:
     sleep: SleepFn = time.sleep
     nonce: Callable[[], str] = default_nonce_generator
 
-    kind = "azure_metadata_service"
+    kind: ClassVar[str] = "azure_metadata_service"
 
     def __post_init__(self) -> None:
         """Normalize options after dataclass construction."""
@@ -95,10 +95,10 @@ class AzureMetadataServiceTrustProvider:
                 self._handle_attempt_failure(
                     attempt, max_attempts, mapped_error, effective_retry_policy
                 )
-        else:  # pragma: no cover
-            if last_error is not None:
-                raise last_error
-            raise RuntimeError("unreachable retry state")
+
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("unreachable retry state")  # pragma: no cover
 
     def _handle_attempt_failure(
         self,

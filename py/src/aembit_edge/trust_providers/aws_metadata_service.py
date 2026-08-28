@@ -8,7 +8,7 @@ import base64
 import time
 import urllib.request
 from dataclasses import dataclass
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from ..errors import TrustProviderError
 from ..internal.retry import (
@@ -50,7 +50,7 @@ class AwsMetadataServiceTrustProvider:
     retry: RetryPolicy | None = None
     sleep: SleepFn = time.sleep
 
-    kind = "aws_metadata_service"
+    kind: ClassVar[str] = "aws_metadata_service"
 
     def __post_init__(self) -> None:
         """Normalize options after dataclass construction."""
@@ -87,10 +87,10 @@ class AwsMetadataServiceTrustProvider:
                 self._handle_attempt_failure(
                     attempt, max_attempts, mapped_error, effective_retry_policy
                 )
-        else:  # pragma: no cover
-            if last_error is not None:
-                raise last_error
-            raise RuntimeError("unreachable retry state")
+
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("unreachable retry state")  # pragma: no cover
 
     def _handle_attempt_failure(
         self,
