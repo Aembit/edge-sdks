@@ -13,6 +13,7 @@ from .base import (
     TrustProviderKind,
 )
 from .gcp_identity_token import GcpIdentityTokenTrustProvider
+from .kubernetes_service_account import KubernetesServiceAccountTrustProvider
 from .oidc_id_token import OidcIdTokenTrustProvider
 from .oidc_providers import (
     GitHubTrustProvider,
@@ -30,6 +31,7 @@ __all__ = [
     "GcpIdentityTokenTrustProvider",
     "GitHubTrustProvider",
     "GitLabTrustProvider",
+    "KubernetesServiceAccountTrustProvider",
     "OidcIdTokenTrustProvider",
     "TerraformTrustProvider",
     "TrustProvider",
