@@ -51,6 +51,10 @@
     "./trust-providers/oidc-id-token": {
       "types": "./dist/trust-providers/oidc-id-token.d.ts",
       "import": "./dist/trust-providers/oidc-id-token.js"
+    },
+    "./trust-providers/terraform-cloud-identity-token": {
+      "types": "./dist/trust-providers/terraform-cloud-identity-token.d.ts",
+      "import": "./dist/trust-providers/terraform-cloud-identity-token.js"
     }
   },
   "files": [

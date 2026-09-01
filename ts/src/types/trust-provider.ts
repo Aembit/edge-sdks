@@ -11,6 +11,7 @@ export type TrustProviderKind =
   | "github_identity_token"
   | "gitlab_identity_token"
   | "oidc_id_token"
+  | "terraform_cloud_identity_token"
   | (string & {});
 
 /**

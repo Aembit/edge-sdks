@@ -18,6 +18,7 @@ export {
   createGitHubIdentityTokenTrustProvider,
   createGitLabIdentityTokenTrustProvider,
   createOidcIdTokenTrustProvider,
+  createTerraformCloudIdentityTokenTrustProvider,
 } from "./trust-providers/index.js";
 export type {
   AwsMetadataServiceTrustProviderOptions,
@@ -27,6 +28,7 @@ export type {
   GitHubIdentityTokenTrustProviderOptions,
   GitLabIdentityTokenTrustProviderOptions,
   OidcIdTokenTrustProviderOptions,
+  TerraformCloudIdentityTokenTrustProviderOptions,
 } from "./trust-providers/index.js";
 
 export type { AuthSession } from "./types/auth.js";

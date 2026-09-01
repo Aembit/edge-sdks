@@ -7,6 +7,7 @@ import { createGcpIdentityTokenTrustProvider } from "./gcp-identity-token.js"
 import { createGitHubIdentityTokenTrustProvider } from "./github-identity-token.js"
 import { createGitLabIdentityTokenTrustProvider } from "./gitlab-identity-token.js"
 import { createOidcIdTokenTrustProvider } from "./oidc-id-token.js"
+import { createTerraformCloudIdentityTokenTrustProvider } from "./terraform-cloud-identity-token.js"
 
 /**
  * Built-in Trust Provider factory functions.
@@ -18,7 +19,8 @@ export const trustProviders = {
   gcpIdentityToken: createGcpIdentityTokenTrustProvider,
   githubIdentityToken: createGitHubIdentityTokenTrustProvider,
   gitlabIdentityToken: createGitLabIdentityTokenTrustProvider,
-  oidcIdToken: createOidcIdTokenTrustProvider
+  oidcIdToken: createOidcIdTokenTrustProvider,
+  terraformCloudIdentityToken: createTerraformCloudIdentityTokenTrustProvider
 }
 
 export { createAwsMetadataServiceTrustProvider } from "./aws-metadata-service.js"
@@ -28,6 +30,7 @@ export { createGcpIdentityTokenTrustProvider } from "./gcp-identity-token.js"
 export { createGitHubIdentityTokenTrustProvider } from "./github-identity-token.js"
 export { createGitLabIdentityTokenTrustProvider } from "./gitlab-identity-token.js"
 export { createOidcIdTokenTrustProvider } from "./oidc-id-token.js"
+export { createTerraformCloudIdentityTokenTrustProvider } from "./terraform-cloud-identity-token.js"
 
 export type { AwsMetadataServiceTrustProviderOptions } from "./aws-metadata-service.js"
 export type { AwsRoleTrustProviderOptions } from "./aws-role.js"
@@ -36,3 +39,4 @@ export type { GcpIdentityTokenTrustProviderOptions } from "./gcp-identity-token.
 export type { GitHubIdentityTokenTrustProviderOptions } from "./github-identity-token.js"
 export type { GitLabIdentityTokenTrustProviderOptions } from "./gitlab-identity-token.js"
 export type { OidcIdTokenTrustProviderOptions } from "./oidc-id-token.js"
+export type { TerraformCloudIdentityTokenTrustProviderOptions } from "./terraform-cloud-identity-token.js"

@@ -54,6 +54,7 @@ console.log("Retrieved credential data:", credential.data)
 | **GCP Identity Token** | `trustProviders.gcpIdentityToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/gcp-identity-token` |
 | **GitHub Actions OIDC** | `trustProviders.githubIdentityToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/github-identity-token` |
 | **GitLab CI/CD OIDC** | `trustProviders.gitlabIdentityToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/gitlab-identity-token` |
+| **Terraform Cloud OIDC** | `trustProviders.terraformCloudIdentityToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/terraform-cloud-identity-token` |
 | **Generic OIDC Token** | `trustProviders.oidcIdToken({ identityToken })` | `@aembit/edge-sdk/trust-providers/oidc-id-token` |
 
 ### Provider Usage Examples
@@ -145,6 +146,7 @@ Runnable end-to-end examples are available in the GitHub repository:
 - [Azure Functions + Entra ID OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/azure-function-entra-oidc)
 - [GitLab CI + OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/gitlab-ci-oidc)
 - [Google Cloud Functions + GCP Identity Token](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/gcp-identity-token-function)
+- [Terraform Cloud + OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/terraform-cloud-oidc)
 - [Vercel Functions + OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/oidc-vercel-function)
 - [Winston & Pino Logging Integration](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/logging_integration)
 
