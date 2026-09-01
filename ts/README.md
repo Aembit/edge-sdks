@@ -99,6 +99,22 @@ const client = new EdgeClient({
 })
 ```
 
+### Customizing Provider IDs (Multi-Identity & Observability)
+
+All Trust Provider options accept an optional `id` parameter. This identifier is attached to structured logs (`trustProviderId`) and returned in `AuthSession` metadata when calling `client.authenticate()`.
+
+By default, providers use standard identifiers (e.g., `"gitlab-identity-token"`, `"terraform-cloud-identity-token"`). You can customize `id` when:
+
+- Running multiple client workloads or pipeline stages in the same application.
+- Correlating authentication events with internal APM, Datadog, or OpenTelemetry service registries.
+
+```typescript
+const trustProvider = trustProviders.terraformCloudIdentityToken({
+  id: "tfc-prod-workspace",
+  identityToken: process.env.TFC_WORKLOAD_IDENTITY_TOKEN!,
+})
+```
+
 ### Optimizing Bundle Size (Subpath Imports)
 
 When bundling for serverless functions (AWS Lambda, Cloudflare Workers, Vercel) where bundle size is critical, import individual provider factories via subpaths:

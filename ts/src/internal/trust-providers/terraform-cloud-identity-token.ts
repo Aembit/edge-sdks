@@ -14,7 +14,7 @@ const DEFAULT_PROVIDER_ID = "terraform-cloud-identity-token"
  */
 export interface TerraformCloudIdentityTokenTrustProviderOptions {
   /**
-   * Stable provider id reported in auth session metadata.
+   * Optional custom identifier for this Trust Provider instance used in structured logging and session metadata.
    * Defaults to `"terraform-cloud-identity-token"`.
    */
   id?: string

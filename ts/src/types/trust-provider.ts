@@ -37,7 +37,7 @@ export interface CollectedTrustProviderIdentity {
 
 export interface TrustProvider {
   /**
-   * Stable provider id for logging/telemetry and session metadata.
+   * Identifier for this Trust Provider instance, included in structured logs and AuthSession metadata.
    */
   readonly id: string;
 
