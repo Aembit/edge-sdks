@@ -9,6 +9,7 @@ export type TrustProviderKind =
   | "azure_metadata_service"
   | "gcp_identity_token"
   | "github_identity_token"
+  | "gitlab_identity_token"
   | "oidc_id_token"
   | (string & {});
 

@@ -16,6 +16,7 @@ export {
   createAzureMetadataServiceTrustProvider,
   createGcpIdentityTokenTrustProvider,
   createGitHubIdentityTokenTrustProvider,
+  createGitLabIdentityTokenTrustProvider,
   createOidcIdTokenTrustProvider,
 } from "./trust-providers/index.js";
 export type {
@@ -24,6 +25,7 @@ export type {
   AzureMetadataServiceTrustProviderOptions,
   GcpIdentityTokenTrustProviderOptions,
   GitHubIdentityTokenTrustProviderOptions,
+  GitLabIdentityTokenTrustProviderOptions,
   OidcIdTokenTrustProviderOptions,
 } from "./trust-providers/index.js";
 
