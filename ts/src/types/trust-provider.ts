@@ -9,7 +9,10 @@ export type TrustProviderKind =
   | "azure_metadata_service"
   | "gcp_identity_token"
   | "github_identity_token"
+  | "gitlab_identity_token"
+  | "k8s_service_account"
   | "oidc_id_token"
+  | "terraform_cloud_identity_token"
   | (string & {});
 
 /**
@@ -35,7 +38,7 @@ export interface CollectedTrustProviderIdentity {
 
 export interface TrustProvider {
   /**
-   * Stable provider id for logging/telemetry and session metadata.
+   * Identifier for this Trust Provider instance, included in structured logs and AuthSession metadata.
    */
   readonly id: string;
 

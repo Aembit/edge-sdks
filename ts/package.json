@@ -44,9 +44,21 @@
       "types": "./dist/trust-providers/github-identity-token.d.ts",
       "import": "./dist/trust-providers/github-identity-token.js"
     },
+    "./trust-providers/gitlab-identity-token": {
+      "types": "./dist/trust-providers/gitlab-identity-token.d.ts",
+      "import": "./dist/trust-providers/gitlab-identity-token.js"
+    },
+    "./trust-providers/k8s-service-account": {
+      "types": "./dist/trust-providers/k8s-service-account.d.ts",
+      "import": "./dist/trust-providers/k8s-service-account.js"
+    },
     "./trust-providers/oidc-id-token": {
       "types": "./dist/trust-providers/oidc-id-token.d.ts",
       "import": "./dist/trust-providers/oidc-id-token.js"
+    },
+    "./trust-providers/terraform-cloud-identity-token": {
+      "types": "./dist/trust-providers/terraform-cloud-identity-token.d.ts",
+      "import": "./dist/trust-providers/terraform-cloud-identity-token.js"
     }
   },
   "files": [
@@ -75,15 +87,21 @@
     "test:mutation": "stryker run",
     "test:mutation:changed": "node ./scripts/run-mutation-tests.mjs",
     "build:example:aws-imds-ec2": "npm run build && esbuild ./examples/aws-imds-ec2/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-imds-ec2/dist/index.mjs",
-    "build:example:azure-function-entra-oidc": "npm run build && rm -rf ./examples/azure-function-entra-oidc/dist/deploy && mkdir -p ./examples/azure-function-entra-oidc/dist/deploy/src/functions && esbuild ./examples/azure-function-entra-oidc/src/functions/aembitAzureEntraOidc.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --external:@azure/functions --outfile=./examples/azure-function-entra-oidc/dist/deploy/src/functions/aembitAzureEntraOidc.js && cp ./examples/azure-function-entra-oidc/host.json ./examples/azure-function-entra-oidc/dist/deploy/host.json && cp ./examples/azure-function-entra-oidc/package.deploy.json ./examples/azure-function-entra-oidc/dist/deploy/package.json && npm install --prefix ./examples/azure-function-entra-oidc/dist/deploy --omit=dev",
-    "build:example:azure-imds-vm": "npm run build && esbuild ./examples/azure-imds-vm/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/azure-imds-vm/dist/index.mjs",
     "example:aws-imds": "npm run example:aws-imds-ec2",
     "example:aws-imds-ec2": "npm run build:example:aws-imds-ec2 && node ./examples/aws-imds-ec2/dist/index.mjs",
+    "build:example:aws-role-lambda": "npm run build && esbuild ./examples/aws-role-lambda/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-role-lambda/dist/index.mjs",
+    "example:aws-role-lambda:zip": "npm run build:example:aws-role-lambda && cd ./examples/aws-role-lambda/dist && zip aws-role-lambda.zip index.mjs",
+    "build:example:azure-function-entra-oidc": "npm run build && rm -rf ./examples/azure-function-entra-oidc/dist/deploy && mkdir -p ./examples/azure-function-entra-oidc/dist/deploy/src/functions && esbuild ./examples/azure-function-entra-oidc/src/functions/aembitAzureEntraOidc.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --external:@azure/functions --outfile=./examples/azure-function-entra-oidc/dist/deploy/src/functions/aembitAzureEntraOidc.js && cp ./examples/azure-function-entra-oidc/host.json ./examples/azure-function-entra-oidc/dist/deploy/host.json && cp ./examples/azure-function-entra-oidc/package.deploy.json ./examples/azure-function-entra-oidc/dist/deploy/package.json && npm install --prefix ./examples/azure-function-entra-oidc/dist/deploy --omit=dev",
     "example:azure-function-entra-oidc:zip": "npm run build:example:azure-function-entra-oidc && cd ./examples/azure-function-entra-oidc/dist/deploy && zip -r ../azure-function-entra-oidc.zip .",
+    "build:example:azure-imds-vm": "npm run build && esbuild ./examples/azure-imds-vm/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/azure-imds-vm/dist/index.mjs",
     "example:azure-imds-vm": "npm run build:example:azure-imds-vm && node ./examples/azure-imds-vm/dist/index.mjs",
     "build:example:gcp-identity-token-function": "npm run build && esbuild ./examples/gcp-identity-token-function/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/gcp-identity-token-function/dist/index.js && mkdir -p ./examples/gcp-identity-token-function/dist && cp ./examples/gcp-identity-token-function/package.deploy.json ./examples/gcp-identity-token-function/dist/package.json",
-    "build:example:aws-role-lambda": "npm run build && esbuild ./examples/aws-role-lambda/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/aws-role-lambda/dist/index.mjs",
-    "example:aws-role-lambda:zip": "npm run build:example:aws-role-lambda && cd ./examples/aws-role-lambda/dist && zip aws-role-lambda.zip index.mjs"
+    "build:example:gitlab-ci-oidc": "npm run build && esbuild ./examples/gitlab-ci-oidc/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/gitlab-ci-oidc/dist/index.mjs",
+    "example:gitlab-ci-oidc": "npm run build:example:gitlab-ci-oidc && node ./examples/gitlab-ci-oidc/dist/index.mjs",
+    "build:example:k8s-service-account": "npm run build && esbuild ./examples/k8s-service-account/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/k8s-service-account/dist/index.mjs",
+    "example:k8s-service-account": "npm run build:example:k8s-service-account && node ./examples/k8s-service-account/dist/index.mjs",
+    "build:example:terraform-cloud-oidc": "npm run build && esbuild ./examples/terraform-cloud-oidc/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/terraform-cloud-oidc/dist/index.mjs",
+    "example:terraform-cloud-oidc": "npm run build:example:terraform-cloud-oidc && node ./examples/terraform-cloud-oidc/dist/index.mjs"
   },
   "dependencies": {
     "@aws-sdk/credential-provider-node": "^3.972.71",
@@ -105,6 +123,7 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "qs": "^6.15.2"
+    "qs": "^6.16.0"
   }
 }
+

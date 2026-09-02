@@ -24,7 +24,7 @@ const IMDS_ATTESTED_DOCUMENT_PATH = "/metadata/attested/document"
  */
 export interface AzureMetadataServiceTrustProviderOptions {
   /**
-   * Stable provider id reported in auth session metadata.
+   * Optional custom identifier for this Trust Provider instance used in structured logging and session metadata.
    * Defaults to `"azure-metadata-service"`.
    */
   id?: string

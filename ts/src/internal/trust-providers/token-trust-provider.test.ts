@@ -83,4 +83,26 @@ describe("createTokenTrustProviderClass", () => {
     })
     expect(identity?.authCacheKey).toMatch(/^test:/)
   })
+
+  it("supports custom payloadPropertyName", async () => {
+    const CustomTokenTrustProvider = createTokenTrustProviderClass({
+      defaultId: "custom-k8s-provider",
+      kind: "k8s_service_account",
+      subjectKey: "k8s",
+      payloadPropertyName: "serviceAccountToken",
+      authCacheKeyPrefix: "k8s",
+      errorLabel: "Kubernetes Service Account Trust Provider"
+    })
+
+    const provider = new CustomTokenTrustProvider({
+      identityToken: "k8s-jwt-token"
+    })
+
+    const identity = await provider.collectIdentity()
+    expect(identity).toEqual({
+      k8s: {
+        serviceAccountToken: "k8s-jwt-token"
+      }
+    })
+  })
 })

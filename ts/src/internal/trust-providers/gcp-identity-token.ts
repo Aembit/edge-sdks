@@ -14,7 +14,7 @@ const DEFAULT_PROVIDER_ID = "gcp-identity-token"
  */
 export interface GcpIdentityTokenTrustProviderOptions {
   /**
-   * Stable provider id reported in auth session metadata.
+   * Optional custom identifier for this Trust Provider instance used in structured logging and session metadata.
    * Defaults to `"gcp-identity-token"`.
    */
   id?: string
