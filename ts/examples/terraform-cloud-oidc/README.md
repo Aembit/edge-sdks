@@ -44,6 +44,36 @@ Edit [`index.ts`](./index.ts) and replace the placeholder values in `EXAMPLE_CON
 - `resourceSet` when needed
 - `printCredentialJson` if you want the full credential payload printed
 
+## Build The Bundle
+
+Run from `ts/`:
+
+```bash
+npm run build:example:terraform-cloud-oidc
+```
+
+This creates:
+
+- `./examples/terraform-cloud-oidc/dist/index.mjs`
+
+## Run The Example
+
+### In Terraform Cloud / Enterprise Runs
+
+Execute the bundled script during a run where Dynamic Provider Credentials / Workload Identity are configured:
+
+```bash
+node ./examples/terraform-cloud-oidc/dist/index.mjs
+```
+
+### Local Testing
+
+To test locally outside Terraform Cloud, provide a workload identity token via the `AEMBIT_TERRAFORM_OIDC_TOKEN` environment variable and run from `ts/`:
+
+```bash
+AEMBIT_TERRAFORM_OIDC_TOKEN="<tfc-oidc-token>" npm run example:terraform-cloud-oidc
+```
+
 ## Security Note
 
 Never commit real credentials or production tokens to source control.

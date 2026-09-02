@@ -53,6 +53,41 @@ Edit [`index.ts`](./index.ts) and replace the placeholder values in `EXAMPLE_CON
 - `resourceSet` when needed
 - `printCredentialJson` if you want the full credential payload printed
 
+## Build The Bundle
+
+Run from `ts/`:
+
+```bash
+npm run build:example:gitlab-ci-oidc
+```
+
+This creates:
+
+- `./examples/gitlab-ci-oidc/dist/index.mjs`
+
+## Run The Example
+
+### In GitLab CI/CD
+
+Include the bundled script in your job or build it during pipeline execution:
+
+```yaml
+job_with_aembit:
+  id_tokens:
+    AEMBIT_GITLAB_OIDC_TOKEN:
+      aud: "https://<tenant>.ec.<stack>.aembit.io"
+  script:
+    - node dist/index.mjs
+```
+
+### Local Testing
+
+To test locally outside GitLab CI, provide a valid identity token via the `AEMBIT_GITLAB_OIDC_TOKEN` environment variable and run from `ts/`:
+
+```bash
+AEMBIT_GITLAB_OIDC_TOKEN="<oidc-token>" npm run example:gitlab-ci-oidc
+```
+
 ## Security Note
 
 Never commit real credentials or production tokens to source control.

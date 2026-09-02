@@ -44,6 +44,36 @@ Edit [`index.ts`](./index.ts) and replace the placeholder values in `EXAMPLE_CON
 - `resourceSet` when needed
 - `printCredentialJson` if you want the full credential payload printed
 
+## Build The Bundle
+
+Run from `ts/`:
+
+```bash
+npm run build:example:k8s-service-account
+```
+
+This creates:
+
+- `./examples/k8s-service-account/dist/index.mjs`
+
+## Run The Example
+
+### In A Kubernetes Pod
+
+Execute the bundled script inside your container (or deploy it as a container command) where the service account token is projected:
+
+```bash
+node ./examples/k8s-service-account/dist/index.mjs
+```
+
+### Local Testing
+
+To test locally outside Kubernetes, provide a service account token via the `AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN` environment variable and run from `ts/`:
+
+```bash
+AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN="<service-account-token>" npm run example:k8s-service-account
+```
+
 ## Security Note
 
 Never commit real credentials or production tokens to source control.
