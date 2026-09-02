@@ -6,6 +6,7 @@ import { createAzureMetadataServiceTrustProvider } from "./azure-metadata-servic
 import { createGcpIdentityTokenTrustProvider } from "./gcp-identity-token.js"
 import { createGitHubIdentityTokenTrustProvider } from "./github-identity-token.js"
 import { createGitLabIdentityTokenTrustProvider } from "./gitlab-identity-token.js"
+import { createK8sServiceAccountTrustProvider } from "./k8s-service-account.js"
 import { createOidcIdTokenTrustProvider } from "./oidc-id-token.js"
 import { createTerraformCloudIdentityTokenTrustProvider } from "./terraform-cloud-identity-token.js"
 
@@ -19,6 +20,7 @@ export const trustProviders = {
   gcpIdentityToken: createGcpIdentityTokenTrustProvider,
   githubIdentityToken: createGitHubIdentityTokenTrustProvider,
   gitlabIdentityToken: createGitLabIdentityTokenTrustProvider,
+  k8sServiceAccount: createK8sServiceAccountTrustProvider,
   oidcIdToken: createOidcIdTokenTrustProvider,
   terraformCloudIdentityToken: createTerraformCloudIdentityTokenTrustProvider
 }
@@ -29,6 +31,7 @@ export { createAzureMetadataServiceTrustProvider } from "./azure-metadata-servic
 export { createGcpIdentityTokenTrustProvider } from "./gcp-identity-token.js"
 export { createGitHubIdentityTokenTrustProvider } from "./github-identity-token.js"
 export { createGitLabIdentityTokenTrustProvider } from "./gitlab-identity-token.js"
+export { createK8sServiceAccountTrustProvider } from "./k8s-service-account.js"
 export { createOidcIdTokenTrustProvider } from "./oidc-id-token.js"
 export { createTerraformCloudIdentityTokenTrustProvider } from "./terraform-cloud-identity-token.js"
 
@@ -38,5 +41,6 @@ export type { AzureMetadataServiceTrustProviderOptions } from "./azure-metadata-
 export type { GcpIdentityTokenTrustProviderOptions } from "./gcp-identity-token.js"
 export type { GitHubIdentityTokenTrustProviderOptions } from "./github-identity-token.js"
 export type { GitLabIdentityTokenTrustProviderOptions } from "./gitlab-identity-token.js"
+export type { K8sServiceAccountTrustProviderOptions } from "./k8s-service-account.js"
 export type { OidcIdTokenTrustProviderOptions } from "./oidc-id-token.js"
 export type { TerraformCloudIdentityTokenTrustProviderOptions } from "./terraform-cloud-identity-token.js"

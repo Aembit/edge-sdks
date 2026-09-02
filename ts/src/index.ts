@@ -17,6 +17,7 @@ export {
   createGcpIdentityTokenTrustProvider,
   createGitHubIdentityTokenTrustProvider,
   createGitLabIdentityTokenTrustProvider,
+  createK8sServiceAccountTrustProvider,
   createOidcIdTokenTrustProvider,
   createTerraformCloudIdentityTokenTrustProvider,
 } from "./trust-providers/index.js";
@@ -27,6 +28,7 @@ export type {
   GcpIdentityTokenTrustProviderOptions,
   GitHubIdentityTokenTrustProviderOptions,
   GitLabIdentityTokenTrustProviderOptions,
+  K8sServiceAccountTrustProviderOptions,
   OidcIdTokenTrustProviderOptions,
   TerraformCloudIdentityTokenTrustProviderOptions,
 } from "./trust-providers/index.js";

@@ -48,6 +48,10 @@
       "types": "./dist/trust-providers/gitlab-identity-token.d.ts",
       "import": "./dist/trust-providers/gitlab-identity-token.js"
     },
+    "./trust-providers/k8s-service-account": {
+      "types": "./dist/trust-providers/k8s-service-account.d.ts",
+      "import": "./dist/trust-providers/k8s-service-account.js"
+    },
     "./trust-providers/oidc-id-token": {
       "types": "./dist/trust-providers/oidc-id-token.d.ts",
       "import": "./dist/trust-providers/oidc-id-token.js"

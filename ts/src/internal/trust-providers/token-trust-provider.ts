@@ -49,13 +49,14 @@ export interface TokenTrustProviderDefinition {
   defaultId: string
   kind: TrustProviderKind
   subjectKey: string
+  payloadPropertyName?: string
   authCacheKeyPrefix: string
   errorLabel: string
 }
 
 /**
  * Creates an internal Trust Provider class for providers whose identity model
- * is just `{subjectKey: { identityToken }}`.
+ * is `{subjectKey: { [payloadPropertyName]: token }}`.
  *
  * The returned class preserves provider-specific outward behavior while
  * centralizing the shared lifecycle and error semantics.
@@ -104,11 +105,12 @@ export function createTokenTrustProviderClass(definition: TokenTrustProviderDefi
     private async collectIdentityOnce(): Promise<CollectedTrustProviderIdentity> {
       const identityToken = await resolveIdentityToken(this.identityToken, definition.errorLabel)
       const authCacheKey = await buildAuthCacheKey(identityToken, definition.authCacheKeyPrefix)
+      const tokenProperty = definition.payloadPropertyName ?? "identityToken"
 
       return {
         client: {
           [definition.subjectKey]: {
-            identityToken
+            [tokenProperty]: identityToken
           }
         },
         authCacheKey

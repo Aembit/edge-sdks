@@ -10,6 +10,7 @@ export type TrustProviderKind =
   | "gcp_identity_token"
   | "github_identity_token"
   | "gitlab_identity_token"
+  | "k8s_service_account"
   | "oidc_id_token"
   | "terraform_cloud_identity_token"
   | (string & {});
