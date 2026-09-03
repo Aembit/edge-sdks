@@ -41,17 +41,6 @@ To use this example, configure your Aembit tenant to trust your AWS IAM Role:
 
 ---
 
-## 2. Copying your Edge SDK Client ID
-
-Aembit Edge Controller requires a fully qualified Client ID ARN to identify the Trust Provider relation. 
-
-You do **not** need to formulate this manually:
-- Open your **Trust Provider** details in the Aembit Console.
-- Locate the **Edge SDK Client ID** field.
-- Copy the full ARN string (e.g. `aembit:aembit:<tenant-id>:identity:aws_role:<provider-external-id>`). This will be passed as the `client_id` in your configuration.
-
----
-
 ## 3. Running the Example
 
 Update the `EXAMPLE_CONFIG` parameters in `main.py` with your custom coordinates:
