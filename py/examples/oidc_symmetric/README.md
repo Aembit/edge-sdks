@@ -12,7 +12,7 @@ To use this example, configure your Aembit tenant to accept symmetrically signed
 
 ### A. Create a Symmetric OIDC Trust Provider
 1. Log in to your Aembit Console (e.g. `https://<tenant-id>.aembit.io`).
-2. Navigate to **Trust Providers** > **Add Trust Provider** > **OIDC**.
+2. Navigate to **Trust Providers** > **New** > **OIDC**.
 3. Configure the following properties:
    - **Name:** e.g., `OIDC HS256`
    - **Issuer (`iss`):** `https://mock-issuer.com` (or any custom URI)
@@ -24,18 +24,17 @@ To use this example, configure your Aembit tenant to accept symmetrically signed
 4. Save the configuration. 
 
 ### B. Create a Client Workload
-1. Navigate to **Workloads** > **Add Workload** > **Client Workload**.
-2. Assign the **OIDC HS256** Trust Provider you created above.
-3. Under the **Client Identification** configuration, select **OIDC ID Token** from the dropdown and configure the matching claims:
+1. Navigate to **Client Workloads** > **New**.
+2. Under the **Client Identification** configuration, select **OIDC ID Token** from the dropdown and configure the matching claims:
    - **Claim Name:** `sub`
    - **Operator:** `Equals`
    - **Value:** `test-workload-123`
-4. Save the Client Workload.
+3. Save the Client Workload.
 
 ### C. Create an Access Policy
-1. Navigate to **Policies** > **Add Access Policy**.
-2. Assign your **Client Workload**, your target **Server Workload** (the database or API you want credentials for), and your **OIDC HS256** Trust Provider (which links the two).
-3. **Important:** Ensure the Access Policy is set to **Active**.
+1. Navigate to **Access Policies** > **New**.
+2. Attach your **Client Workload**, your target **Server Workload**, your **Trust Provider**, and your desired **Credential Provider**.
+3. **Important:** Once everything is in place, ensure the Access Policy is set to **Active**.
 
 ---
 
@@ -44,7 +43,7 @@ To use this example, configure your Aembit tenant to accept symmetrically signed
 Aembit Edge Controller requires a fully qualified Client ID ARN to identify the Trust Provider relation. 
 
 You do **not** need to formulate this manually:
-- Open your **OIDC HS256** Trust Provider (or Client Workload configuration) details page in the Aembit Console.
+- Open your **Trust Provider** details in the Aembit Console.
 - Locate the **Edge SDK Client ID** field.
 - Copy the full ARN string (e.g. `aembit:aembit:<tenant-id>:identity:oidc_id_token:<provider-external-id>`). This will be passed as the `client_id` in your configuration.
 

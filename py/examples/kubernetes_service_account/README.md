@@ -11,7 +11,43 @@ The `KubernetesServiceAccountTrustProvider` automatically:
 2. Trims any leading/trailing whitespace.
 3. Automatically adapts to projected token lifetimes and rotation, which is managed dynamically by Kubernetes (the token is rewritten on disk roughly every hour). Reading directly from disk on each identity collection guarantees that expired cached tokens are never sent to the Aembit Edge API.
 
-## Configuration
+## 1. Aembit Console Configuration
+
+To use this example, configure your Aembit tenant to trust your Kubernetes Service Account:
+
+### A. Create a Kubernetes Trust Provider
+1. Log in to your Aembit Console (e.g. `https://<tenant-id>.aembit.io`).
+2. Navigate to **Trust Providers** > **New** > **Kubernetes**.
+3. Configure the following properties:
+   - **Name:** e.g., `K8s Service Account TP`
+   - **Match Rules:** Add at least one Match Rule (at least one is required). Select from the dropdown:
+     - **`subject`**: e.g., `system:serviceaccount:default:my-workload-sa` (matches the Kubernetes Service Account Subject).
+4. Save the configuration.
+
+### B. Create a Client Workload
+1. Navigate to **Client Workloads** > **New**.
+2. Under the **Client Identification** configuration, select **Service Account Token Subject** from the dropdown and paste your Kubernetes Service Account Subject (e.g., `system:serviceaccount:default:my-workload-sa`).
+3. Save the Client Workload.
+
+### C. Create an Access Policy
+1. Navigate to **Access Policies** > **New**.
+2. Attach your **Client Workload**, your target **Server Workload**, your **Trust Provider**, and your desired **Credential Provider**.
+3. **Important:** Once everything is in place, ensure the Access Policy is set to **Active**.
+
+---
+
+## 2. Copying your Edge SDK Client ID
+
+Aembit Edge Controller requires a fully qualified Client ID ARN to identify the Trust Provider relation. 
+
+You do **not** need to formulate this manually:
+- Open your **Trust Provider** details in the Aembit Console.
+- Locate the **Edge SDK Client ID** field.
+- Copy the full ARN string (e.g. `aembit:aembit:<tenant-id>:identity:kubernetes_service_account:<provider-external-id>`). This will be passed as the `client_id` in your configuration.
+
+---
+
+## 3. Configuration
 
 Update the `EXAMPLE_CONFIG` parameters in `main.py` with your Aembit coordinates:
 

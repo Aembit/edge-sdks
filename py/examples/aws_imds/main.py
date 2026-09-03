@@ -24,9 +24,13 @@ from aembit_edge.trust_providers import AwsMetadataServiceTrustProvider
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
-    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
-    "client_id": "your-edge-sdk-client-id",
-    "server_host": "target.example.com",
+    # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
+    "base_url": "https://d6b705.ec.devbroadangle.aembit-eng.com",
+    
+    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
+    "client_id": "aembit:devbroadangle:d6b705:identity:aws_metadata:fe576526-0b85-4d7a-8e9a-80313da81d41",
+    
+    "server_host": "d6b705.api.devbroadangle.aembit-eng.com",
     "server_port": 443,
     "credential_type": "ApiKey",
     "resource_set": None,
@@ -35,7 +39,7 @@ EXAMPLE_CONFIG = {
 
 
 def resolve_client_workload_details() -> dict[str, dict[str, dict[str, str]]] | None:
-    """Construct optional client workload details for metadata mapping."""
+    """Construct client workload details for metadata mapping."""
     client_workload_id = os.environ.get("CLIENT_WORKLOAD_ID", "").strip()
     if not client_workload_id:
         return None
@@ -51,7 +55,7 @@ def resolve_client_workload_details() -> dict[str, dict[str, dict[str, str]]] | 
 
 def main() -> None:
     # Set up AWS Metadata Service (IMDS) Trust Provider
-    # Queries the EC2 Instance Metadata Service (IMDSv2) automatically
+    # Queries the EC2 Instance Metadata Service (IMDSv2)
     trust_provider = AwsMetadataServiceTrustProvider()
 
     client_workload_details = resolve_client_workload_details()
