@@ -13,6 +13,7 @@ Current runnable examples:
 - [`oidc_vercel_function/`](./oidc_vercel_function/) - Vercel Serverless Function using Vercel OIDC tokens via the Aembit OIDC Trust Provider
 - [`kubernetes_service_account/`](./kubernetes_service_account/) - Using the built-in Kubernetes Service Account Trust Provider within Kubernetes Pods
 - [`oidc_symmetric/`](./oidc_symmetric/) - Using the OIDC Trust Provider with symmetrically signed HS256 keys locally or offline
+- [`terraform_cloud/`](./terraform_cloud/) - Using the built-in Terraform Cloud Trust Provider
 
 Examples must use placeholder values only and should remain small, runnable, and aligned with recommended SDK usage patterns.
 
@@ -70,4 +71,10 @@ uv run examples/kubernetes_service_account/main.py
 
 ```bash
 uv run examples/oidc_symmetric/main.py
+```
+
+#### Run Terraform Cloud Example
+
+```bash
+uv run examples/terraform_cloud/main.py
 ```
