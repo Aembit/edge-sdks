@@ -1,70 +1,130 @@
-# Kubernetes Service Account Trust Provider Example
+# Kubernetes Service Account Example (Python)
 
-This runnable example demonstrates how to configure and use the Aembit Edge Python SDK with the built-in **Kubernetes Service Account Trust Provider** in a containerized Pod.
+Runnable Kubernetes Service Account example for the Python SDK.
 
-## How it Works
+This example demonstrates how to configure and run the Python SDK using a mounted Kubernetes Service Account token in a containerized Pod:
 
-In a standard Kubernetes cluster, when a Pod runs with an assigned Service Account, the `kubelet` automatically mounts a signed JSON Web Token (JWT) on the Pod's local file system at `/var/run/secrets/kubernetes.io/serviceaccount/token`.
+- edit a small config block in [`./main.py`](./main.py)
+- run the example using `uv`
 
-The `KubernetesServiceAccountTrustProvider` automatically:
-1. Locates and dynamically reads the service account token from disk whenever `collect_identity()` is invoked.
-2. Trims any leading/trailing whitespace.
-3. Automatically adapts to projected token lifetimes and rotation, which is managed dynamically by Kubernetes (the token is rewritten on disk roughly every hour). Reading directly from disk on each identity collection guarantees that expired cached tokens are never sent to the Aembit Edge API.
+## Prerequisites
 
-## 1. Aembit Console Configuration
+- A running Kubernetes cluster with a Pod configured with an assigned Service Account
+- Python `>=3.9` installed on the container
+- An Aembit Access Policy configured for this SDK flow
 
-To use this example, configure your Aembit tenant to trust your Kubernetes Service Account:
+## Aembit Setup
 
-### A. Create a Kubernetes Trust Provider
-1. Log in to your Aembit Console (e.g. `https://<tenant-id>.aembit.io`).
-2. Navigate to **Trust Providers** > **New** > **Kubernetes**.
-3. Configure the following properties:
-   - **Name:** e.g., `K8s Service Account TP`
-   - **Match Rules:** Add at least one Match Rule (at least one is required). Select from the dropdown:
-     - **`subject`**: e.g., `system:serviceaccount:default:my-workload-sa` (matches the Kubernetes Service Account Subject).
-4. Save the configuration.
+Before running this example, configure an Aembit Access Policy that includes:
 
-### B. Create a Client Workload
-1. Navigate to **Client Workloads** > **New**.
-2. Under the **Client Identification** configuration, select **Service Account Token Subject** from the dropdown and paste your Kubernetes Service Account Subject (e.g., `system:serviceaccount:default:my-workload-sa`).
-3. Save the Client Workload.
+- a Client Workload matching your Service Account Token Subject (e.g., `system:serviceaccount:default:my-workload-sa`)
+- a Server Workload with a Service Endpoint (`host`, `port`) that this example will request
+- a Kubernetes Service Account Trust Provider with an Edge SDK Client ID
+- a Credential Provider that returns the requested credential type
 
-### C. Create an Access Policy
-1. Navigate to **Access Policies** > **New**.
-2. Attach your **Client Workload**, your target **Server Workload**, your **Trust Provider**, and your desired **Credential Provider**.
-3. **Important:** Once everything is in place, ensure the Access Policy is set to **Active**.
+References:
 
----
+- Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
+- Kubernetes Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/kubernetes-trust-provider/>
+- Kubernetes auth setup: <https://docs.aembit.io/api-guide/edge/auth/kubernetes-service-account>
+- Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
-## 2. Configuration
+Example Server Workload configuration for this README:
 
-Update the `EXAMPLE_CONFIG` parameters in `main.py` with your Aembit coordinates:
+- Name: `Test SDK Server`
+- Host: `test.example.com`
+- Transport Protocol: `TCP`
+- Port: `443`
 
-```python
-EXAMPLE_CONFIG = {
-    "base_url": "https://<tenant-id>.ec.aembit.io",
-    "client_id": "aembit:aembit:<tenant-id>:identity:kubernetes_service_account:<provider-external-id>",
-    "server_host": "target.example.com",
-    "server_port": 443,
-    "credential_type": "ApiKey",
-    "resource_set": None,
-    "print_credential_json": False,
-}
+## Edit The Example
+
+Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
+
+- `base_url`: your tenant's regional Aembit Edge URL
+- `client_id`: your Edge SDK Client ID from the Kubernetes Trust Provider
+- `server_host` and `server_port`: the Service Endpoint from your Server Workload
+- `credential_type`: the credential type returned by your Credential Provider
+- `resource_set`: optional, only when your tenant flow requires it
+- `print_credential_json`: set to `True` only when you explicitly want the full credential printed
+
+`server_host` and `server_port` must exactly match the Service Endpoint values configured in your Server Workload.
+
+## Run The Example
+
+### In a Kubernetes Pod
+When running inside a Kubernetes cluster, the script automatically reads the mounted Service Account Token from disk at `/var/run/secrets/kubernetes.io/serviceaccount/token`. Run using `uv`:
+
+```bash
+uv run examples/kubernetes_service_account/main.py
 ```
 
-## Running Locally
-
-Because the example reads from a default file path, running it on a local non-Kubernetes machine will raise a `TrustProviderError` unless you mock the file or provide a local token override.
-
-To run locally with a test token, modify the `main()` instantiation in `main.py`:
+### Locally (For Development / Mock Testing)
+Because the example reads from a default file path, running it on a local non-Kubernetes machine will raise a `TrustProviderError`. To run locally with a test token, modify the `main()` instantiation in `main.py`:
 
 ```python
 # Pass a static test token for local development and testing
 trust_provider = KubernetesServiceAccountTrustProvider(token="your-test-token-here")
 ```
 
-Then run the example using `uv`:
+Then run using `uv`:
 
 ```bash
 uv run examples/kubernetes_service_account/main.py
 ```
+
+## Output
+
+The script first prints a safe authenticated session summary, then prints credential metadata.
+
+By default, the credential output includes:
+
+- `credential_type`
+- `expires_at`
+- `data_keys`
+
+If `EXAMPLE_CONFIG.print_credential_json` is `True`, the script prints the full credential payload instead.
+
+Example successful output:
+
+```json
+{
+  "authenticated": true,
+  "expiresAt": "2026-03-10T20:18:09.108Z",
+  "trustProviderId": "kubernetes-service-account"
+}
+{
+  "credentialType": "ApiKey",
+  "expiresAt": "2026-03-10T19:19:09.2559713Z",
+  "dataKeys": [
+    "apiKey"
+  ]
+}
+```
+
+## Troubleshooting
+
+### `401` on `/credentials` after successful auth
+
+If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+
+Example:
+
+- `https://<tenant>.ec.<stack>.aembit.io`
+
+Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
+
+### `200` with `credentialType: "Unknown"` and empty `dataKeys`
+
+This means the request reached Edge but did not match the expected access policy or service request shape.
+
+Verify:
+
+- `server_host` and `server_port`
+- `credential_type`
+- Service Account Subject matching in your Client Workload (e.g. `system:serviceaccount:<namespace>:<sa-name>`)
+- `resource_set`, if your tenant flow requires it
+
+## Security Note
+
+Do not use real secrets in shared logs or screenshots.
+Enable `print_credential_json` only for controlled testing.

@@ -1,68 +1,57 @@
-# AWS Role Trust Provider Example
+# AWS Role Trust Provider Example (Python)
 
-This runnable example demonstrates how to configure and use the Aembit Edge Python SDK with the built-in **AWS Role Trust Provider** in AWS execution environments (such as AWS Lambda, ECS, EKS, or EC2).
+Runnable AWS IAM Role example for the Python SDK.
 
----
+This example demonstrates how to configure and run the Python SDK using an AWS IAM Execution Role in AWS environments (such as AWS Lambda, ECS, EKS, or EC2):
 
-## How it Works
+- edit a small config block in [`./main.py`](./main.py)
+- run the example using `uv`
 
-In AWS execution environments (e.g. Lambda, ECS Fargate), your code runs with an assigned IAM Role. The AWS environment automatically exposes temporary, rotating IAM execution credentials on the local environment.
+## Prerequisites
 
-The `AwsRoleTrustProvider` automatically:
-1. Reuses your local IAM execution credentials (automatically loaded from the standard AWS SDK environment, such as instance metadata or task metadata endpoints).
-2. Uses these credentials to dynamically sign a secure AWS Security Token Service (STS) `GetCallerIdentity` API request.
-3. Packages this signed request as a secure, cryptographic proof of identity to submit to the Aembit Edge API. Aembit then validates this STS request with AWS to safely verify your workload's active IAM Role.
+- An active AWS execution environment (Lambda, ECS Task, EC2, etc.) running with an assigned IAM Role
+- Python `>=3.9` installed on the instance/container
+- An Aembit Access Policy configured for this SDK flow
 
----
+## Aembit Setup
 
-## 1. Aembit Console Configuration
+Before running this example, configure an Aembit Access Policy that includes:
 
-To use this example, configure your Aembit tenant to trust your AWS IAM Role:
+- a Client Workload matching your AWS Account ID or specific IAM Role
+- a Server Workload with a Service Endpoint (`host`, `port`) that this example will request
+- an AWS Role Trust Provider with an Edge SDK Client ID
+- a Credential Provider that returns the requested credential type
 
-### A. Create an AWS Role Trust Provider
-1. Log in to your Aembit Console (e.g. `https://<tenant-id>.aembit.io`).
-2. Navigate to **Trust Providers** > **New** > **AWS Role**.
-3. Add at least one **Match Rule** (at least one is required). Select from the dropdown:
-   - **`roleArn`**: e.g., `arn:aws:iam::123456789012:role/my-workload-role` (matches the full AWS IAM Role ARN).
-   - **`accountId`**: e.g., `123456789012` (matches the AWS Account ID).
-   - **`assumedRole`**: e.g., `my-workload-role` (matches the IAM Role name).
-   - **`userId`**: Matches the AWS unique User ID of the role.
-4. Save the configuration.
+References:
 
-### B. Create a Client Workload
-1. Navigate to **Client Workloads** > **New**.
-2. Under the **Client Identification** configuration, select **AWS Account ID** (or **AWS Role**) from the dropdown and paste your AWS Account ID (e.g., `123456789012`).
-3. Save the Client Workload.
+- Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
+- AWS Role Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/aws-role-trust-provider/>
+- AWS Role auth setup: <https://docs.aembit.io/api-guide/edge/auth/aws-role>
+- Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
-### C. Create an Access Policy
-1. Navigate to **Access Policies** > **New**.
-2. Attach your **Client Workload**, your target **Server Workload**, your **Trust Provider**, and your desired **Credential Provider**.
-3. **Important:** Once everything is in place, ensure the Access Policy is set to **Active**.
+Example Server Workload configuration for this README:
 
----
+- Name: `Test SDK Server`
+- Host: `test.example.com`
+- Transport Protocol: `TCP`
+- Port: `443`
 
-## 3. Running the Example
+## Edit The Example
 
-Update the `EXAMPLE_CONFIG` parameters in `main.py` with your custom coordinates:
+Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 
-```python
-EXAMPLE_CONFIG = {
-    # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
-    "base_url": "https://<tenant-id>.ec.aembit.io",
-    
-    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
-    "client_id": "aembit:aembit:<tenant-id>:identity:aws_role:<provider-external-id>",
-    
-    # Target Server Workload coordinates that your Client Workload has access to via your Active Policy
-    "server_host": "target.example.com",
-    "server_port": 443,
-    "credential_type": "ApiKey",
-    "resource_set": None,
-    "print_credential_json": False,
-}
-```
+- `base_url`: your tenant's regional Aembit Edge URL
+- `client_id`: your Edge SDK Client ID from the AWS Role Trust Provider
+- `server_host` and `server_port`: the Service Endpoint from your Server Workload
+- `credential_type`: the credential type returned by your Credential Provider
+- `resource_set`: optional, only when your tenant flow requires it
+- `print_credential_json`: set to `True` only when you explicitly want the full credential printed
 
-Ensure your terminal has active AWS credentials / region configured:
+`server_host` and `server_port` must exactly match the Service Endpoint values configured in your Server Workload.
+
+## Run The Example
+
+Ensure your environment has active AWS credentials and region configured:
 
 ```bash
 # On Linux/macOS
@@ -72,8 +61,65 @@ export AWS_REGION=us-east-1
 $env:AWS_REGION="us-east-1"
 ```
 
-Run the example using `uv`:
+Then run the example using `uv`:
 
 ```bash
 uv run examples/aws_role/main.py
 ```
+
+## Output
+
+The script first prints a safe authenticated session summary, then prints credential metadata.
+
+By default, the credential output includes:
+
+- `credential_type`
+- `expires_at`
+- `data_keys`
+
+If `EXAMPLE_CONFIG.print_credential_json` is `True`, the script prints the full credential payload instead.
+
+Example successful output:
+
+```json
+{
+  "authenticated": true,
+  "expiresAt": "2026-03-10T20:18:09.108Z",
+  "trustProviderId": "aws-role"
+}
+{
+  "credentialType": "ApiKey",
+  "expiresAt": "2026-03-10T19:19:09.2559713Z",
+  "dataKeys": [
+    "apiKey"
+  ]
+}
+```
+
+## Troubleshooting
+
+### `401` on `/credentials` after successful auth
+
+If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+
+Example:
+
+- `https://<tenant>.ec.<stack>.aembit.io`
+
+Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
+
+### `200` with `credentialType: "Unknown"` and empty `dataKeys`
+
+This means the request reached Edge but did not match the expected access policy or service request shape.
+
+Verify:
+
+- `server_host` and `server_port`
+- `credential_type`
+- IAM Role matching in your Client Workload (e.g. AWS Account ID, Role ARN)
+- `resource_set`, if your tenant flow requires it
+
+## Security Note
+
+Do not use real secrets in shared logs or screenshots.
+Enable `print_credential_json` only for controlled testing.
