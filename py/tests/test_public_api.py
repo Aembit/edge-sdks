@@ -173,6 +173,7 @@ def test_trust_providers_subpackage_exports() -> None:
         "GcpIdentityTokenTrustProvider",
         "GitHubTrustProvider",
         "GitLabTrustProvider",
+        "KubernetesServiceAccountTrustProvider",
         "OidcIdTokenTrustProvider",
         "TerraformTrustProvider",
         "TrustProvider",

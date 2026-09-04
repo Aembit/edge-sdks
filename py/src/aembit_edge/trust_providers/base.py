@@ -16,6 +16,7 @@ TrustProviderKind: TypeAlias = Literal[
     "github",
     "terraform",
     "gitlab",
+    "kubernetes_service_account",
 ]
 ClientWorkloadDetails: TypeAlias = JsonObject
 
