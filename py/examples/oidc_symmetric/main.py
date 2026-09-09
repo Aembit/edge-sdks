@@ -76,9 +76,7 @@ def generate_hs256_jwt(secret: str, issuer: str, audience: str, subject: str) ->
     try:
         key_bytes = base64.b64decode(secret)
     except Exception as e:
-        raise ValueError(
-            f"Symmetric secret must be a valid base64-encoded string: {e}"
-        ) from e
+        raise ValueError(f"Symmetric secret must be a valid base64-encoded string: {e}") from e
 
     # Generate HMAC-SHA256 signature
     signature = hmac.new(key_bytes, signing_input, hashlib.sha256).digest()
