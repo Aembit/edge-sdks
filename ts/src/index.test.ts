@@ -9,7 +9,10 @@ import {
   createAzureMetadataServiceTrustProvider,
   createGcpIdentityTokenTrustProvider,
   createGitHubIdentityTokenTrustProvider,
+  createGitLabIdentityTokenTrustProvider,
+  createK8sServiceAccountTrustProvider,
   createOidcIdTokenTrustProvider,
+  createTerraformCloudIdentityTokenTrustProvider,
   trustProviders,
   type AembitLogger,
   type AuthSession,
@@ -51,13 +54,19 @@ describe("public type exports", () => {
     expect(typeof trustProviders.azureMetadataService).toBe("function");
     expect(typeof trustProviders.gcpIdentityToken).toBe("function");
     expect(typeof trustProviders.githubIdentityToken).toBe("function");
+    expect(typeof trustProviders.gitlabIdentityToken).toBe("function");
+    expect(typeof trustProviders.k8sServiceAccount).toBe("function");
     expect(typeof trustProviders.oidcIdToken).toBe("function");
+    expect(typeof trustProviders.terraformCloudIdentityToken).toBe("function");
     expect(typeof createAwsMetadataServiceTrustProvider).toBe("function");
     expect(typeof createAwsRoleTrustProvider).toBe("function");
     expect(typeof createAzureMetadataServiceTrustProvider).toBe("function");
     expect(typeof createGcpIdentityTokenTrustProvider).toBe("function");
     expect(typeof createGitHubIdentityTokenTrustProvider).toBe("function");
+    expect(typeof createGitLabIdentityTokenTrustProvider).toBe("function");
+    expect(typeof createK8sServiceAccountTrustProvider).toBe("function");
     expect(typeof createOidcIdTokenTrustProvider).toBe("function");
+    expect(typeof createTerraformCloudIdentityTokenTrustProvider).toBe("function");
   });
 
   it("exports SDK error classes", async () => {

@@ -14,7 +14,7 @@ const DEFAULT_PROVIDER_ID = "oidc-id-token"
  */
 export interface OidcIdTokenTrustProviderOptions {
   /**
-   * Stable provider id reported in auth session metadata.
+   * Optional custom identifier for this Trust Provider instance used in structured logging and session metadata.
    * Defaults to `"oidc-id-token"`.
    */
   id?: string

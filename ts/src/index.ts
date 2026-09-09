@@ -16,7 +16,10 @@ export {
   createAzureMetadataServiceTrustProvider,
   createGcpIdentityTokenTrustProvider,
   createGitHubIdentityTokenTrustProvider,
+  createGitLabIdentityTokenTrustProvider,
+  createK8sServiceAccountTrustProvider,
   createOidcIdTokenTrustProvider,
+  createTerraformCloudIdentityTokenTrustProvider,
 } from "./trust-providers/index.js";
 export type {
   AwsMetadataServiceTrustProviderOptions,
@@ -24,7 +27,10 @@ export type {
   AzureMetadataServiceTrustProviderOptions,
   GcpIdentityTokenTrustProviderOptions,
   GitHubIdentityTokenTrustProviderOptions,
+  GitLabIdentityTokenTrustProviderOptions,
+  K8sServiceAccountTrustProviderOptions,
   OidcIdTokenTrustProviderOptions,
+  TerraformCloudIdentityTokenTrustProviderOptions,
 } from "./trust-providers/index.js";
 
 export type { AuthSession } from "./types/auth.js";

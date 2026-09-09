@@ -26,7 +26,7 @@ const IMDS_SIGNATURE_PATH = "/latest/dynamic/instance-identity/signature"
  */
 export interface AwsMetadataServiceTrustProviderOptions {
   /**
-   * Stable provider id reported in auth session metadata.
+   * Optional custom identifier for this Trust Provider instance used in structured logging and session metadata.
    * Defaults to `"aws-metadata-service"`.
    */
   id?: string
