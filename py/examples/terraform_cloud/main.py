@@ -25,10 +25,15 @@ from aembit_edge.trust_providers import TerraformTrustProvider
 EXAMPLE_CONFIG = {
     # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
     "base_url": "https://<tenant-id>.ec.aembit.io",
+<<<<<<< HEAD
     
     # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
     "client_id": "aembit:aembit:<tenant-id>:identity:terraform_idtoken:<provider-external-id>",
     
+=======
+    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
+    "client_id": "aembit:aembit:<tenant-id>:identity:terraform_idtoken:<provider-external-id>",
+>>>>>>> 389a71a556619b82f9268afb89709522d890b5b0
     # Target Server Workload coordinates that your Client Workload has access to via your Active Policy
     "server_host": "target.example.com",
     "server_port": 443,

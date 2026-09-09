@@ -52,6 +52,7 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 ## Run The Example
 
 ### In a Kubernetes Pod
+
 When running inside a Kubernetes cluster, the script automatically reads the mounted Service Account Token from disk at `/var/run/secrets/kubernetes.io/serviceaccount/token`. Run using `uv`:
 
 ```bash
@@ -59,6 +60,7 @@ uv run examples/kubernetes_service_account/main.py
 ```
 
 ### Locally (For Development / Mock Testing)
+
 Because the example reads from a default file path, running it on a local non-Kubernetes machine will raise a `TrustProviderError`. To run locally with a test token, modify the `main()` instantiation in `main.py`:
 
 ```python

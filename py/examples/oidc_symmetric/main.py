@@ -30,6 +30,7 @@ from aembit_edge.trust_providers import OidcIdTokenTrustProvider
 EXAMPLE_CONFIG = {
     # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
     "base_url": "https://<tenant-id>.ec.aembit.io",
+<<<<<<< HEAD
     
     # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
     "client_id": "aembit:aembit:<tenant-id>:identity:oidc_id_token:<provider-external-id>",
@@ -41,6 +42,15 @@ EXAMPLE_CONFIG = {
     # The symmetric key entered in the Aembit Console (must be base64-encoded as required by Aembit)
     "symmetric_secret": "your-base64-encoded-symmetric-secret-here",
     
+=======
+    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
+    "client_id": "aembit:aembit:<tenant-id>:identity:oidc_id_token:<provider-external-id>",
+    "issuer": "https://mock-issuer.com",
+    "audience": "https://aembit.io",
+    "subject": "test-workload-123",
+    # The symmetric key entered in the Aembit Console (must be base64-encoded as required by Aembit)
+    "symmetric_secret": "your-base64-encoded-symmetric-secret-here",
+>>>>>>> 389a71a556619b82f9268afb89709522d890b5b0
     # Target Server Workload coordinates that the Client Workload has access to via your Access Policy
     "server_host": "target.example.com",
     "server_port": 443,
