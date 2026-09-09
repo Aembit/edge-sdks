@@ -25,17 +25,10 @@ from aembit_edge.trust_providers import AwsMetadataServiceTrustProvider
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
     # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
-    "base_url": "https://d6b705.ec.devbroadangle.aembit-eng.com",
-<<<<<<< HEAD
-    
+    "base_url": "https://<tenant-id>.ec.<stack>.aembit.io",
     # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
-    "client_id": "aembit:devbroadangle:d6b705:identity:aws_metadata:fe576526-0b85-4d7a-8e9a-80313da81d41",
-    
-=======
-    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
-    "client_id": "aembit:devbroadangle:d6b705:identity:aws_metadata:fe576526-0b85-4d7a-8e9a-80313da81d41",
->>>>>>> 389a71a556619b82f9268afb89709522d890b5b0
-    "server_host": "d6b705.api.devbroadangle.aembit-eng.com",
+    "client_id": "aembit:aembit:<tenant-id>:identity:aws_metadata:<provider-external-id>",
+    "server_host": "target.example.com",
     "server_port": 443,
     "credential_type": "ApiKey",
     "resource_set": None,

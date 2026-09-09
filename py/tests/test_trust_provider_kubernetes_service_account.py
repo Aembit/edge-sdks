@@ -74,16 +74,10 @@ def test_collect_identity_from_file_success() -> None:
 
     mock_token_content = "  jwt-token-from-file-content\n"
 
-<<<<<<< HEAD
-    with patch("os.path.exists", return_value=True), patch(
-        "builtins.open", mock_open(read_data=mock_token_content)
-    ) as mock_file:
-=======
     with (
         patch("os.path.exists", return_value=True),
         patch("builtins.open", mock_open(read_data=mock_token_content)) as mock_file,
     ):
->>>>>>> 389a71a556619b82f9268afb89709522d890b5b0
         identity = provider.collect_identity()
         mock_file.assert_called_once_with("/mock/token/path", encoding="utf-8")
         assert identity.client == {"k8s": {"serviceAccountToken": "jwt-token-from-file-content"}}
@@ -103,14 +97,9 @@ def test_collect_identity_from_file_read_failure_raises_error() -> None:
     """The provider should raise TrustProviderError when reading the token file fails."""
     provider = KubernetesServiceAccountTrustProvider(token_path="/mock/unreadable/token")
 
-<<<<<<< HEAD
-    with patch("os.path.exists", return_value=True), patch(
-        "builtins.open", side_effect=PermissionError("Permission denied")
-=======
     with (
         patch("os.path.exists", return_value=True),
         patch("builtins.open", side_effect=PermissionError("Permission denied")),
->>>>>>> 389a71a556619b82f9268afb89709522d890b5b0
     ):
         with pytest.raises(TrustProviderError, match="failed to read token file") as exc:
             provider.collect_identity()
@@ -128,14 +117,9 @@ def test_empty_token_raises_error() -> None:
 
     # Test empty file read
     provider2 = KubernetesServiceAccountTrustProvider(token_path="/mock/empty/token")
-<<<<<<< HEAD
-    with patch("os.path.exists", return_value=True), patch(
-        "builtins.open", mock_open(read_data="   \n")
-=======
     with (
         patch("os.path.exists", return_value=True),
         patch("builtins.open", mock_open(read_data="   \n")),
->>>>>>> 389a71a556619b82f9268afb89709522d890b5b0
     ):
         with pytest.raises(TrustProviderError, match=err_msg) as exc:
             provider2.collect_identity()
