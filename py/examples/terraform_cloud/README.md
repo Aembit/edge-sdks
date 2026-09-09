@@ -10,7 +10,7 @@ This example demonstrates how to configure and run the Python SDK using a Terraf
 ## Prerequisites
 
 - Terraform Cloud or Terraform Enterprise running an active workspace
-- Python `>=3.9` installed on your execution machine or in the TFC runner environment
+- Python `>=3.10` installed on your execution machine or in the TFC runner environment
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup
@@ -71,31 +71,30 @@ uv run examples/terraform_cloud/main.py
 
 ## Output
 
-The script first prints a safe authenticated session summary, then prints credential metadata.
-
-By default, the credential output includes:
-
-- `credential_type`
-- `expires_at`
-- `data_keys`
-
-If `EXAMPLE_CONFIG.print_credential_json` is `True`, the script prints the full credential payload instead.
+The script prints the progress and a safe authenticated session summary.
 
 Example successful output:
 
-```json
-{
-  "authenticated": true,
-  "expiresAt": "2026-03-10T20:18:09.108Z",
-  "trustProviderId": "terraform-cloud"
-}
-{
-  "credentialType": "ApiKey",
-  "expiresAt": "2026-03-10T19:19:09.2559713Z",
-  "dataKeys": [
-    "apiKey"
-  ]
-}
+```text
+Retrieving credentials for target.example.com:443 using Terraform Cloud Trust Provider...
+Credential retrieved successfully!
+
+--- Summary (Secure Mode) ---
+Authenticated: True
+Payload Keys: ['apiKey']
+Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials.
+```
+
+If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
+
+```text
+Retrieving credentials for target.example.com:443 using Terraform Cloud Trust Provider...
+Credential retrieved successfully!
+
+--- Credential Details ---
+Type: ApiKey
+Expires At: 2026-03-10T19:19:09.2559713Z
+API Key: <api_key_value>
 ```
 
 ## Troubleshooting

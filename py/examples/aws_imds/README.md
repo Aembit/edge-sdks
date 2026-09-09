@@ -11,7 +11,7 @@ This example demonstrates how to configure and run the Python SDK on an AWS EC2 
 ## Prerequisites
 
 - EC2 instance with IMDSv2 enabled and reachable at `169.254.169.254`
-- Python `>=3.9` installed on the instance
+- Python `>=3.10` installed on the instance
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup

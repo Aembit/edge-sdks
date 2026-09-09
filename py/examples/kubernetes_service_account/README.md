@@ -10,7 +10,7 @@ This example demonstrates how to configure and run the Python SDK using a mounte
 ## Prerequisites
 
 - A running Kubernetes cluster with a Pod configured with an assigned Service Account
-- Python `>=3.9` installed on the container
+- Python `>=3.10` installed on the container
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup

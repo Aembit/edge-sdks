@@ -87,7 +87,7 @@ class AwsMetadataServiceTrustProvider:
         token_req = urllib.request.Request(
             token_url,
             method="PUT",
-            headers={"x-aws-ec2-metadata-token-ttl-seconds": str(self.token_ttl_seconds)},
+            headers={"X-aws-ec2-metadata-token-ttl-seconds": str(self.token_ttl_seconds)},
         )
         try:
             with urllib.request.urlopen(token_req, timeout=timeout_sec) as response:
@@ -98,7 +98,7 @@ class AwsMetadataServiceTrustProvider:
         if not token:
             raise TrustProviderError("IMDSv2 token response was empty", retryable=True)
 
-        auth_headers = {"x-aws-ec2-metadata-token": token}
+        auth_headers = {"X-aws-ec2-metadata-token": token}
 
         # Fetch Instance Identity Document (GET request)
         doc_url = f"{self.base_url}/latest/dynamic/instance-identity/document"

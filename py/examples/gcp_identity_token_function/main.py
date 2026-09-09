@@ -30,6 +30,7 @@ GCP_METADATA_IDENTITY_URL = (
 
 # Initialize EdgeClient lazily or on module load.
 # We'll import lazily inside the handler if needed, or import at top-level.
+import_error = None
 try:
     from aembit_edge import (
         ApiKeyData,
@@ -54,13 +55,18 @@ try:
             resource_set=EXAMPLE_CONFIG["resource_set"],
         )
     )
-except ImportError:
-    # Allow file to load for lint/type checking even if aembit_edge is not installed
-    pass
+except ImportError as e:
+    import_error = e
 
 
 def aembitGcpIdentityToken(request: Any) -> Any:
     """HTTP trigger entry point for GCP Cloud Functions."""
+    if import_error is not None:
+        raise ImportError(
+            "aembit_edge must be installed to run this example. "
+            "Install the SDK package dependencies before deploying/running this function."
+        ) from import_error
+
     # Handle CORS or request filtering if needed, similar to TS
     if request.method != "GET":
         return (

@@ -11,7 +11,7 @@ This example demonstrates how to configure and run the Python SDK on an Azure Vi
 ## Prerequisites
 
 - An Azure Virtual Machine (VM) running in your Azure subscription
-- Python `>=3.9` installed on the VM
+- Python `>=3.10` installed on the VM
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup
