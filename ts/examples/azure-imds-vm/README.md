@@ -2,28 +2,6 @@
 
 Azure VM reference example for the TypeScript SDK using Azure Instance Metadata Service attested data.
 
-## Current Support Status
-
-This example is intentionally kept in the repository, but it is not currently runnable end-to-end against the current Aembit Edge API.
-
-Current known gaps outside the SDK:
-
-- the Aembit Admin UI does not currently expose an Edge SDK Client ID in the Azure IMDS Trust Provider view
-- the Aembit Edge API/backend does not currently extract the nonce from the Azure IMDS PKCS#7 signature blob even though backend logic expects the nonce
-
-So:
-
-- keep this example as a reference implementation
-- use it for SDK development and future validation
-- do not treat it as a currently supported production flow until the Edge API and UI catch up
-
-This example follows the same pattern as the EC2 example:
-
-- edit a small config block in [`./index.ts`](./index.ts)
-- bundle the example into a single `index.mjs`
-- copy that built file to an Azure VM
-- run `node index.mjs`
-
 ## Prerequisites
 
 - Azure VM with Instance Metadata Service reachable at `169.254.169.254`

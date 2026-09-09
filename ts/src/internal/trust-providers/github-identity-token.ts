@@ -14,7 +14,7 @@ const DEFAULT_PROVIDER_ID = "github-identity-token"
  */
 export interface GitHubIdentityTokenTrustProviderOptions {
   /**
-   * Stable provider id reported in auth session metadata.
+   * Optional custom identifier for this Trust Provider instance used in structured logging and session metadata.
    * Defaults to `"github-identity-token"`.
    */
   id?: string
