@@ -80,7 +80,8 @@ def aembitGcpIdentityToken(request: Any) -> Any:
             server=CredentialServerRef(
                 host=EXAMPLE_CONFIG["server_host"],
                 port=EXAMPLE_CONFIG["server_port"],
-            )
+            ),
+            credential_type=EXAMPLE_CONFIG["credential_type"],
         )
         options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
 
