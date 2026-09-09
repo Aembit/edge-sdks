@@ -27,7 +27,10 @@ from aembit_edge.trust_providers import KubernetesServiceAccountTrustProvider
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
     "base_url": "https://<tenant-id>.ec.aembit.io",
-    "client_id": "aembit:aembit:<tenant-id>:identity:kubernetes_service_account:<provider-external-id>",
+    "client_id": (
+        "aembit:aembit:<tenant-id>:identity:"
+        "kubernetes_service_account:<provider-external-id>"
+    ),
     "server_host": "target.example.com",
     "server_port": 443,
     "credential_type": "ApiKey",

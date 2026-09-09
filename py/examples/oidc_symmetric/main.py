@@ -37,7 +37,8 @@ EXAMPLE_CONFIG = {
     "subject": "test-workload-123",
     # The symmetric key entered in the Aembit Console (must be base64-encoded as required by Aembit)
     "symmetric_secret": "your-base64-encoded-symmetric-secret-here",
-    # Target Server Workload coordinates that the Client Workload has access to via your Access Policy
+    # Target Server Workload coordinates that the Client Workload has access to
+    # via your Access Policy
     "server_host": "target.example.com",
     "server_port": 443,
     "credential_type": "ApiKey",
@@ -70,11 +71,14 @@ def generate_hs256_jwt(secret: str, issuer: str, audience: str, subject: str) ->
 
     signing_input = f"{header_b64}.{payload_b64}".encode()
 
-    # Base64-decode the secret to raw bytes (Aembit console only accepts base64-encoded symmetric keys)
+    # Base64-decode the secret to raw bytes
+    # (Aembit console only accepts base64-encoded symmetric keys)
     try:
         key_bytes = base64.b64decode(secret)
     except Exception as e:
-        raise ValueError(f"Symmetric secret must be a valid base64-encoded string: {e}")
+        raise ValueError(
+            f"Symmetric secret must be a valid base64-encoded string: {e}"
+        ) from e
 
     # Generate HMAC-SHA256 signature
     signature = hmac.new(key_bytes, signing_input, hashlib.sha256).digest()
