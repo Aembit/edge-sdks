@@ -26,10 +26,8 @@ from aembit_edge.trust_providers import AwsRoleTrustProvider
 EXAMPLE_CONFIG = {
     # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
     "base_url": "https://<tenant-id>.ec.aembit.io",
-    
     # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
     "client_id": "aembit:aembit:<tenant-id>:identity:aws_role:<provider-external-id>",
-    
     # Target Server Workload coordinates that your Client Workload has access to via your Active Policy
     "server_host": "target.example.com",
     "server_port": 443,
