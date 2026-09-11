@@ -30,7 +30,14 @@ from .trust_providers import (
     TrustProvider,
     TrustProviderKind,
 )
-from .types import JsonObject, JsonPrimitive, JsonValue
+from .types import (
+    ApiKeyData,
+    AwsStsData,
+    JsonObject,
+    JsonPrimitive,
+    JsonValue,
+    UsernamePasswordData,
+)
 
 # Ensure named logger has a NullHandler to avoid "No handler found" warnings
 # when host application has not configured logging.
@@ -39,10 +46,12 @@ if not _logger.handlers:
     _logger.addHandler(logging.NullHandler())
 
 __all__ = [
+    "ApiKeyData",
     "ApiError",
     "AsyncTrustProvider",
     "AuthError",
     "AuthSession",
+    "AwsStsData",
     "ConnectionMetadata",
     "CredentialError",
     "CredentialResult",
@@ -62,4 +71,5 @@ __all__ = [
     "TrustProvider",
     "TrustProviderError",
     "TrustProviderKind",
+    "UsernamePasswordData",
 ]

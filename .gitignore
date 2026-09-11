@@ -11,6 +11,7 @@ __pycache__/
 reports/
 mutants/
 .mutmut-cache/
+.coverage
 
 ## Environment files
 .env
