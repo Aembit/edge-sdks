@@ -39,9 +39,7 @@ from aembit_edge import (
 from aembit_edge.errors import TrustProviderError
 from aembit_edge.trust_providers import GcpIdentityTokenTrustProvider
 
-trust_provider = GcpIdentityTokenTrustProvider(
-    identity_token=lambda: resolve_gcp_identity_token()
-)
+trust_provider = GcpIdentityTokenTrustProvider(identity_token=lambda: resolve_gcp_identity_token())
 
 client = EdgeClient(
     EdgeClientConfig(
