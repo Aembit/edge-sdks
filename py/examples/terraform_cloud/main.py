@@ -18,15 +18,14 @@ from aembit_edge import (
     GetCredentialInput,
     GetCredentialOptions,
 )
+from aembit_edge.errors import EdgeSdkError, TrustProviderError
 from aembit_edge.trust_providers import TerraformTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
-    # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
-    "base_url": "https://<tenant-id>.ec.aembit.io",
-    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
-    "client_id": "aembit:aembit:<tenant-id>:identity:terraform_idtoken:<provider-external-id>",
+    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
+    "client_id": "your-edge-sdk-client-id",
     # Target Server Workload coordinates that your Client Workload has access to
     # via your Active Policy
     "server_host": "target.example.com",
@@ -37,14 +36,28 @@ EXAMPLE_CONFIG = {
 }
 
 
-def main() -> None:
-    # In Terraform Cloud or Enterprise runs, an identity token is injected
-    # into the environment when the step is configured with workload identity.
-    # For local testing, we fall back to a mock token or prompt.
-    token = os.environ.get("TFC_WORKLOAD_IDENTITY_TOKEN", "mock-tfc-token-for-local-test")
+def resolve_terraform_cloud_identity_token() -> str:
+    """Resolve the Terraform Cloud identity token from the environment."""
+    token = (
+        os.environ.get("AEMBIT_TERRAFORM_OIDC_TOKEN", "").strip()
+        or os.environ.get("TFC_WORKLOAD_IDENTITY_TOKEN", "").strip()
+    )
+    if token:
+        return token
 
+    raise TrustProviderError(
+        "Missing Terraform Cloud identity token. Ensure Dynamic Provider Credentials / "
+        "Workload Identity is configured in your Terraform workspace or set "
+        "AEMBIT_TERRAFORM_OIDC_TOKEN for local testing.",
+        retryable=False,
+    )
+
+
+def main() -> None:
     # Initialize the Terraform Cloud Trust Provider
-    trust_provider = TerraformTrustProvider(identity_token=token)
+    trust_provider = TerraformTrustProvider(
+        identity_token=lambda: resolve_terraform_cloud_identity_token()
+    )
 
     # Initialize the EdgeClient
     client = EdgeClient(
@@ -72,6 +85,16 @@ def main() -> None:
 
     try:
         result = client.get_credential(credential_input, options)
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        if e.status_code is not None:
+            print(f"  Status Code: {e.status_code}", file=sys.stderr)
+        if e.api_code is not None:
+            print(f"  API Code: {e.api_code}", file=sys.stderr)
+        if e.request_id is not None:
+            print(f"  Request ID: {e.request_id}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error getting credential from Aembit: {e}", file=sys.stderr)
         sys.exit(1)

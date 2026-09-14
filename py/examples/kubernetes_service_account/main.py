@@ -21,15 +21,14 @@ from aembit_edge import (
     GetCredentialInput,
     GetCredentialOptions,
 )
+from aembit_edge.errors import EdgeSdkError
 from aembit_edge.trust_providers import KubernetesServiceAccountTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
-    "base_url": "https://<tenant-id>.ec.aembit.io",
-    "client_id": (
-        "aembit:aembit:<tenant-id>:identity:kubernetes_service_account:<provider-external-id>"
-    ),
+    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
+    "client_id": "your-edge-sdk-client-id",
     "server_host": "target.example.com",
     "server_port": 443,
     "credential_type": "ApiKey",
@@ -53,16 +52,29 @@ def resolve_client_workload_details() -> dict[str, dict[str, dict[str, str]]] | 
     }
 
 
+def resolve_k8s_token() -> str | None:
+    """Resolve static Kubernetes service account token from the environment."""
+    return (
+        os.environ.get("AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN", "").strip()
+        or os.environ.get("K8S_SERVICE_ACCOUNT_TOKEN", "").strip()
+        or None
+    )
+
+
+def resolve_k8s_token_path() -> str | None:
+    """Resolve custom token file path from the environment."""
+    return os.environ.get("K8S_TOKEN_PATH", "").strip() or None
+
+
 def main() -> None:
     # Set up Kubernetes Service Account Trust Provider
-    #
-    # By default, this queries '/var/run/secrets/kubernetes.io/serviceaccount/token'
-    # dynamically. For local testing/non-pod environments, you can override this
-    # by passing a static token string or a token-producing callable.
-    #
-    # Example:
-    # trust_provider = KubernetesServiceAccountTrustProvider(token="mock-token")
-    trust_provider = KubernetesServiceAccountTrustProvider()
+    token = resolve_k8s_token()
+    token_path = resolve_k8s_token_path()
+
+    trust_provider = KubernetesServiceAccountTrustProvider(
+        token=token,
+        token_path=token_path,
+    )
 
     client_workload_details = resolve_client_workload_details()
 
@@ -93,6 +105,16 @@ def main() -> None:
 
     try:
         result = client.get_credential(credential_input, options)
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        if e.status_code is not None:
+            print(f"  Status Code: {e.status_code}", file=sys.stderr)
+        if e.api_code is not None:
+            print(f"  API Code: {e.api_code}", file=sys.stderr)
+        if e.request_id is not None:
+            print(f"  Request ID: {e.request_id}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error getting credential from Aembit: {e}", file=sys.stderr)
         sys.exit(1)
