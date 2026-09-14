@@ -101,7 +101,7 @@ API Key: <api_key_value>
 
 ### `401` on `/credentials` after successful auth
 
-If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+If authentication succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
 
 Example:
 

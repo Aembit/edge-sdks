@@ -23,15 +23,14 @@ from aembit_edge import (
     GetCredentialInput,
     GetCredentialOptions,
 )
+from aembit_edge.errors import EdgeSdkError
 from aembit_edge.trust_providers import OidcIdTokenTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit and OIDC configurations.
 EXAMPLE_CONFIG = {
-    # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
-    "base_url": "https://<tenant-id>.ec.aembit.io",
-    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
-    "client_id": "aembit:aembit:<tenant-id>:identity:oidc_id_token:<provider-external-id>",
+    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
+    "client_id": "your-edge-sdk-client-id",
     "issuer": "https://mock-issuer.com",
     "audience": "https://aembit.io",
     "subject": "test-workload-123",
@@ -127,6 +126,16 @@ def main() -> None:
 
     try:
         result = client.get_credential(credential_input, options)
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        if e.status_code is not None:
+            print(f"  Status Code: {e.status_code}", file=sys.stderr)
+        if e.api_code is not None:
+            print(f"  API Code: {e.api_code}", file=sys.stderr)
+        if e.request_id is not None:
+            print(f"  Request ID: {e.request_id}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error getting credential from Aembit: {e}", file=sys.stderr)
         sys.exit(1)

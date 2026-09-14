@@ -19,15 +19,14 @@ from aembit_edge import (
     GetCredentialInput,
     GetCredentialOptions,
 )
+from aembit_edge.errors import EdgeSdkError
 from aembit_edge.trust_providers import AwsRoleTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
-    # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
-    "base_url": "https://<tenant-id>.ec.aembit.io",
-    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
-    "client_id": "aembit:aembit:<tenant-id>:identity:aws_role:<provider-external-id>",
+    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
+    "client_id": "your-edge-sdk-client-id",
     # Target Server Workload coordinates that your Client Workload has access to
     # via your Active Policy
     "server_host": "target.example.com",
@@ -36,6 +35,21 @@ EXAMPLE_CONFIG = {
     "resource_set": None,
     "print_credential_json": False,
 }
+
+
+def resolve_client_workload_details() -> dict[str, dict[str, dict[str, str]]] | None:
+    """Construct client workload details for metadata mapping."""
+    client_workload_id = os.environ.get("CLIENT_WORKLOAD_ID", "").strip()
+    if not client_workload_id:
+        return None
+
+    return {
+        "os": {
+            "environment": {
+                "CLIENT_WORKLOAD_ID": client_workload_id,
+            }
+        }
+    }
 
 
 def resolve_aws_region() -> str:
@@ -57,12 +71,15 @@ def main() -> None:
     # proof of identity to the Aembit Edge Controller.
     trust_provider = AwsRoleTrustProvider(region=region)
 
+    client_workload_details = resolve_client_workload_details()
+
     # Initialize the EdgeClient
     client = EdgeClient(
         EdgeClientConfig(
             base_url=EXAMPLE_CONFIG["base_url"],
             client_id=EXAMPLE_CONFIG["client_id"],
             trust_provider=trust_provider,
+            client_workload_details=client_workload_details,
             resource_set=EXAMPLE_CONFIG["resource_set"],
         )
     )
@@ -83,6 +100,16 @@ def main() -> None:
 
     try:
         result = client.get_credential(credential_input, options)
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        if e.status_code is not None:
+            print(f"  Status Code: {e.status_code}", file=sys.stderr)
+        if e.api_code is not None:
+            print(f"  API Code: {e.api_code}", file=sys.stderr)
+        if e.request_id is not None:
+            print(f"  Request ID: {e.request_id}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error getting credential from Aembit: {e}", file=sys.stderr)
         sys.exit(1)

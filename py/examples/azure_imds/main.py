@@ -18,6 +18,7 @@ from aembit_edge import (
     GetCredentialInput,
     GetCredentialOptions,
 )
+from aembit_edge.errors import EdgeSdkError
 from aembit_edge.trust_providers import AzureMetadataServiceTrustProvider
 
 # Configuration
@@ -64,6 +65,16 @@ def main() -> None:
 
     try:
         result = client.get_credential(credential_input, options)
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        if e.status_code is not None:
+            print(f"  Status Code: {e.status_code}", file=sys.stderr)
+        if e.api_code is not None:
+            print(f"  API Code: {e.api_code}", file=sys.stderr)
+        if e.request_id is not None:
+            print(f"  Request ID: {e.request_id}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error getting credential from Aembit: {e}", file=sys.stderr)
         sys.exit(1)
