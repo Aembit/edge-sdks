@@ -12,11 +12,13 @@ This example demonstrates how to configure and run the Python SDK inside a GitHu
 
 - A GitHub repository hosting your workflows
 - A workflow file configured with the required OIDC permissions:
+
   ```yaml
   permissions:
     id-token: write
     contents: read
   ```
+
 - Python `>=3.10`
 - An Aembit Access Policy configured for this SDK flow
 
@@ -60,6 +62,7 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 ## Deploy and Run the Example
 
 ### 1. In a GitHub Actions Workflow
+
 Ensure your workflow contains the `id-token: write` permission block. The Python SDK will dynamically talk to GitHub's runtime metadata server to fetch the OIDC token on the fly!
 
 Create or update a workflow file (e.g. `.github/workflows/aembit-sdk-test.yml`):
@@ -94,6 +97,7 @@ jobs:
 ```
 
 ### 2. Locally (For Development / Mock Testing)
+
 To test the script locally without running it on a GitHub Actions runner, fetch or construct a test JWT token, export it to your shell, and run:
 
 ```bash

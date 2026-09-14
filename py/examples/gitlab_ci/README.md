@@ -12,11 +12,13 @@ This example demonstrates how to configure and run the Python SDK inside a GitLa
 
 - A GitLab repository hosting your pipelines
 - A `.gitlab-ci.yml` pipeline file configured with the required `id_tokens` block:
+
   ```yaml
   id_tokens:
     GITLAB_OIDC_TOKEN:
       aud: https://<tenant-id>.id.aembit.io
   ```
+
 - Python `>=3.10`
 - An Aembit Access Policy configured for this SDK flow
 
@@ -60,6 +62,7 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 ## Deploy and Run the Example
 
 ### 1. In a GitLab CI/CD Pipeline
+
 Ensure your job contains the `id_tokens` configuration block. The GitLab runner will dynamically fetch and inject the JWT as an environment variable (`GITLAB_OIDC_TOKEN`), which the SDK automatically reads from the environment.
 
 Create or update your `.gitlab-ci.yml` file:
@@ -87,6 +90,7 @@ run-aembit-sdk:
 ```
 
 ### 2. Locally (For Development / Mock Testing)
+
 To test the script locally without running a live GitLab runner, fetch or construct a test JWT token, export it to your shell, and run:
 
 ```bash

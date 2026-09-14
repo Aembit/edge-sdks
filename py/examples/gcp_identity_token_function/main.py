@@ -11,6 +11,17 @@ import os
 import urllib.request
 from typing import Any, cast
 
+from aembit_edge import (
+    ApiKeyData,
+    CredentialServerRef,
+    EdgeClient,
+    EdgeClientConfig,
+    GetCredentialInput,
+    GetCredentialOptions,
+)
+from aembit_edge.errors import TrustProviderError
+from aembit_edge.trust_providers import GcpIdentityTokenTrustProvider
+
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
@@ -27,17 +38,6 @@ EXAMPLE_CONFIG = {
 GCP_METADATA_IDENTITY_URL = (
     "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
 )
-
-from aembit_edge import (
-    ApiKeyData,
-    CredentialServerRef,
-    EdgeClient,
-    EdgeClientConfig,
-    GetCredentialInput,
-    GetCredentialOptions,
-)
-from aembit_edge.errors import TrustProviderError
-from aembit_edge.trust_providers import GcpIdentityTokenTrustProvider
 
 trust_provider = GcpIdentityTokenTrustProvider(identity_token=lambda: resolve_gcp_identity_token())
 
