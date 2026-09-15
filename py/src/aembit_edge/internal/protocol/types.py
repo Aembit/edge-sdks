@@ -45,7 +45,17 @@ class EdgeServerWorkloadDetails(TypedDict, total=False):
 
 
 class ConnectionMetadata(TypedDict, total=False):
-    """Filter values for multi-credential provider access policy credential requests."""
+    """Filter values for multi-credential provider access policy credential requests.
+
+    Field names match the Aembit Edge wire protocol (camelCase):
+    - accountName: Snowflake username selector to filter on.
+    - accessKeyId: AWS access key ID selector used to disambiguate among multiple
+      AWS STS credential providers configured for the target server workload.
+    - headerName: HTTP header name to filter on.
+    - headerValue: HTTP header value to filter on.
+    - httpBodyFieldPath: HTTP request body field JSON path to filter on.
+    - httpBodyFieldValue: HTTP request body field value to filter on.
+    """
 
     accountName: str | None
     accessKeyId: str | None

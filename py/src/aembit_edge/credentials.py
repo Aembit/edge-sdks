@@ -27,7 +27,18 @@ class CredentialServerRef:
 
 @dataclass(slots=True, kw_only=True)
 class GetCredentialInput:
-    """Input contract for credential retrieval."""
+    """Input contract for credential retrieval.
+
+    Attributes:
+        server: Target server/service descriptor.
+        credential_type: Optional credential type hint requested from Edge
+            (e.g. ``"AwsStsFederation"``).
+        connection_metadata: Optional filter metadata for access policies with multiple
+            credential providers (e.g. ``{"accessKeyId": "AKIADUMMY..."}`` to select
+            an AWS STS provider).
+        cert_signing_request: Optional Certificate Signing Request (CSR) for
+            X.509 SVID credential flows.
+    """
 
     server: CredentialServerRef
     credential_type: str | None = None

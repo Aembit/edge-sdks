@@ -41,6 +41,9 @@ export interface GetCredentialInput {
 
   /**
    * Optional filter metadata for access policies with multiple credential providers.
+   *
+   * For example, pass `{ accessKeyId: "AKIADUMMY..." }` to select among multiple
+   * AWS STS credential providers for the target server workload.
    */
   connectionMetadata?: ConnectionMetadata;
 
