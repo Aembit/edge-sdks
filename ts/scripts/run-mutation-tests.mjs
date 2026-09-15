@@ -50,7 +50,15 @@ function getChangedTsFiles(since) {
     .map((f) => f.trim())
     .filter(Boolean)
     .map((f) => (f.startsWith('ts/') ? f.slice(3) : f))
-    .filter((f) => f.startsWith('src/') && f.endsWith('.ts') && !f.endsWith('.test.ts') && !f.endsWith('.d.ts'))
+    .filter(
+      (f) =>
+        f.startsWith('src/') &&
+        f.endsWith('.ts') &&
+        !f.endsWith('.test.ts') &&
+        !f.endsWith('.d.ts') &&
+        !f.startsWith('src/types/') &&
+        !f.endsWith('/types.ts'),
+    )
     .filter((f) => existsSync(resolve(tsRoot, f)));
 
   return [...new Set(files)];

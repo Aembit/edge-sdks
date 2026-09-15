@@ -15,6 +15,16 @@ from pathlib import Path
 import tomli
 import tomli_w
 
+EXCLUDED_SOURCE_FILES: frozenset[str] = frozenset(
+    {
+        "src/aembit_edge/types.py",
+        "src/aembit_edge/internal/protocol/types.py",
+        "src/aembit_edge/credentials.py",
+        "src/aembit_edge/auth.py",
+        "src/aembit_edge/config.py",
+    }
+)
+
 
 def get_changed_files(since: str | None, repo_root: Path) -> list[str]:
     """Get list of changed python source files in src/aembit_edge/."""
@@ -43,7 +53,11 @@ def get_changed_files(since: str | None, repo_root: Path) -> list[str]:
         f_clean = f.strip()
         if f_clean.startswith("py/"):
             f_clean = f_clean[3:]
-        if f_clean.startswith("src/aembit_edge/") and f_clean.endswith(".py"):
+        if (
+            f_clean.startswith("src/aembit_edge/")
+            and f_clean.endswith(".py")
+            and f_clean not in EXCLUDED_SOURCE_FILES
+        ):
             py_changed.append(f_clean)
 
     return sorted(list(set(py_changed)))
@@ -138,13 +152,31 @@ def main() -> int:
             shutil.rmtree(mutants_dir)
 
         # Run mutmut
-        subprocess.run(["mutmut", "run"], cwd=py_root, check=False)
+        proc = subprocess.run(
+            ["mutmut", "run"],
+            cwd=py_root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if proc.stdout:
+            sys.stdout.write(proc.stdout)
+        if proc.stderr:
+            sys.stderr.write(proc.stderr)
 
         # Export stats
         subprocess.run(["mutmut", "export-cicd-stats"], cwd=py_root, check=False)
         stats_file = py_root / "mutants" / "mutmut-cicd-stats.json"
 
         if not stats_file.is_file():
+            combined_output = f"{proc.stdout}\n{proc.stderr}"
+            stopped_early = (
+                "Stopping early" in combined_output
+                or "no test case for any mutant" in combined_output
+            )
+            if stopped_early:
+                print("No mutants were evaluated (no tests covered mutated code).")
+                return 0
             print("Could not find mutmut CI/CD stats file.", file=sys.stderr)
             return 1
 

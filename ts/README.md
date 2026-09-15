@@ -164,6 +164,7 @@ Runnable end-to-end examples are available in the GitHub repository:
 - [GitLab CI + OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/gitlab-ci-oidc)
 - [Google Cloud Functions + GCP Identity Token](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/gcp-identity-token-function)
 - [Kubernetes Service Account](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/k8s-service-account)
+- [Multi-Credential Provider AWS STS Federation](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/multi-credential-aws-sts)
 - [Terraform Cloud + OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/terraform-cloud-oidc)
 - [Vercel Functions + OIDC](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/oidc-vercel-function)
 - [Winston & Pino Logging Integration](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/logging_integration)

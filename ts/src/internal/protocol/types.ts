@@ -55,11 +55,35 @@ export interface EdgeServerWorkloadDetails {
  * Connection metadata for filtering multi-credential provider access policy requests.
  */
 export interface ConnectionMetadata {
+  /**
+   * Snowflake username selector to filter on.
+   */
   accountName?: string | null;
+
+  /**
+   * AWS access key ID selector used to disambiguate among multiple AWS STS
+   * Federation Credential Providers configured for the target server workload.
+   */
   accessKeyId?: string | null;
+
+  /**
+   * HTTP header name to filter on.
+   */
   headerName?: string | null;
+
+  /**
+   * HTTP header value to filter on.
+   */
   headerValue?: string | null;
+
+  /**
+   * HTTP request body field JSON path to filter on.
+   */
   httpBodyFieldPath?: string | null;
+
+  /**
+   * HTTP request body field value to filter on.
+   */
   httpBodyFieldValue?: string | null;
 }
 
