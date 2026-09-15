@@ -67,10 +67,10 @@ This creates:
 
 ### In Kubernetes
 
-Deploy the bundled script in a Pod that has a service account mounted:
+Execute the bundled script inside your container where the service account token is mounted:
 
 ```bash
-npm run example:multi-credential-aws-sts
+node ./examples/multi-credential-aws-sts/dist/index.mjs
 ```
 
 ### Local Testing

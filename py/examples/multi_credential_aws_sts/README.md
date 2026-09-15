@@ -29,7 +29,7 @@ result = client.get_credential(credential_input)
 
 Aembit uses the `accessKeyId` selector to identify the matching AWS STS Federation Credential Provider, assumes the associated IAM role, and returns temporary AWS credentials (`awsAccessKeyId`, `awsSecretAccessKey`, `awsSessionToken`).
 
-The returned dictionary can be type-cast to [`AwsStsData`](file:///Users/mgavrilov/src/edge-sdks/py/src/aembit_edge/types.py) for static type checking:
+The returned dictionary can be type-cast to `AwsStsData` for static type checking:
 
 ```python
 from typing import cast
