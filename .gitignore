@@ -8,6 +8,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .stryker/
+.stryker-tmp/
 reports/
 mutants/
 .mutmut-cache/
