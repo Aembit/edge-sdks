@@ -62,7 +62,7 @@ export interface ConnectionMetadata {
 
   /**
    * AWS access key ID selector used to disambiguate among multiple AWS STS
-   * Federation credential providers configured for the target server workload.
+   * Federation Credential Providers configured for the target server workload.
    */
   accessKeyId?: string | null;
 

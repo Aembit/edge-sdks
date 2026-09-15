@@ -14,6 +14,7 @@ Current runnable examples:
 - [`kubernetes_service_account/`](./kubernetes_service_account/) - Using the built-in Kubernetes Service Account Trust Provider within Kubernetes Pods
 - [`oidc_symmetric/`](./oidc_symmetric/) - Using the OIDC Trust Provider with symmetrically signed HS256 keys locally or offline
 - [`terraform_cloud/`](./terraform_cloud/) - Using the built-in Terraform Cloud Trust Provider
+- [`multi_credential_aws_sts/`](./multi_credential_aws_sts/) - Multi-Credential Provider Access Policy with AWS STS Federation selection
 
 Examples must use placeholder values only and should remain small, runnable, and aligned with recommended SDK usage patterns.
 
@@ -77,4 +78,10 @@ uv run examples/oidc_symmetric/main.py
 
 ```bash
 uv run examples/terraform_cloud/main.py
+```
+
+#### Run Multi-Credential AWS STS Federation Example
+
+```bash
+uv run examples/multi_credential_aws_sts/main.py
 ```

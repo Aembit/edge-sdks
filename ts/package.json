@@ -100,6 +100,8 @@
     "example:gitlab-ci-oidc": "npm run build:example:gitlab-ci-oidc && node ./examples/gitlab-ci-oidc/dist/index.mjs",
     "build:example:k8s-service-account": "npm run build && esbuild ./examples/k8s-service-account/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/k8s-service-account/dist/index.mjs",
     "example:k8s-service-account": "npm run build:example:k8s-service-account && node ./examples/k8s-service-account/dist/index.mjs",
+    "build:example:multi-credential-aws-sts": "npm run build && esbuild ./examples/multi-credential-aws-sts/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/multi-credential-aws-sts/dist/index.mjs",
+    "example:multi-credential-aws-sts": "npm run build:example:multi-credential-aws-sts && node ./examples/multi-credential-aws-sts/dist/index.mjs",
     "build:example:terraform-cloud-oidc": "npm run build && esbuild ./examples/terraform-cloud-oidc/index.ts --bundle --platform=node --target=node20 --format=esm --main-fields=module,main --outfile=./examples/terraform-cloud-oidc/dist/index.mjs",
     "example:terraform-cloud-oidc": "npm run build:example:terraform-cloud-oidc && node ./examples/terraform-cloud-oidc/dist/index.mjs"
   },

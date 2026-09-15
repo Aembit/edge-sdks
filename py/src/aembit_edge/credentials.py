@@ -35,7 +35,7 @@ class GetCredentialInput:
             (e.g. ``"AwsStsFederation"``).
         connection_metadata: Optional filter metadata for access policies with multiple
             credential providers (e.g. ``{"accessKeyId": "AKIADUMMY..."}`` to select
-            an AWS STS provider).
+            an AWS STS Federation Credential Provider).
         cert_signing_request: Optional Certificate Signing Request (CSR) for
             X.509 SVID credential flows.
     """
