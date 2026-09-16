@@ -151,3 +151,46 @@ def test_gitlab_provider_collect_identity_raises_for_empty_token() -> None:
         provider.collect_identity()
     assert exc_info.value.retryable is False
     assert "GitLab Trust Provider requires a non-empty identity token" in str(exc_info.value)
+
+
+def test_oidc_providers_with_callable() -> None:
+    """OIDC-based providers (GitHub, Terraform, GitLab) should support callable identity tokens."""
+    def get_token() -> str:
+        return "dynamic-token"
+
+    github = GitHubTrustProvider(identity_token=get_token)
+    assert github.get_identity_single_flight_key() is None
+    assert github.collect_identity().client == {"github": {"identityToken": "dynamic-token"}}
+
+    terraform = TerraformTrustProvider(identity_token=get_token)
+    assert terraform.get_identity_single_flight_key() is None
+    assert terraform.collect_identity().client == {"terraform": {"identityToken": "dynamic-token"}}
+
+    gitlab = GitLabTrustProvider(identity_token=get_token)
+    assert gitlab.get_identity_single_flight_key() is None
+    assert gitlab.collect_identity().client == {"gitlab": {"identityToken": "dynamic-token"}}
+
+
+def test_oidc_providers_with_callable_error() -> None:
+    """OIDC-based providers should raise TrustProviderError if callable raises or returns empty."""
+    def raising_callable() -> str:
+        raise ValueError("fetch failed")
+
+    def empty_callable() -> str:
+        return "   "
+
+    for provider_cls, _name in [
+        (GitHubTrustProvider, "GitHub"),
+        (TerraformTrustProvider, "Terraform"),
+        (GitLabTrustProvider, "GitLab"),
+    ]:
+        p_raising = provider_cls(identity_token=raising_callable)
+        with pytest.raises(TrustProviderError) as exc_info:
+            p_raising.collect_identity()
+        assert "failed to resolve token from source" in str(exc_info.value)
+
+        p_empty = provider_cls(identity_token=empty_callable)
+        with pytest.raises(TrustProviderError) as exc_info:
+            p_empty.collect_identity()
+        assert "requires a non-empty identity token" in str(exc_info.value)
+

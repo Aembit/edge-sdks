@@ -41,7 +41,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -73,9 +73,12 @@ Edit [`function_app.py`](./function_app.py) and replace the placeholder values i
 
 ## Local Development
 
-For local testing, set `AZURE_ENTRA_ACCESS_TOKEN` in your environment, and then run the Azure Functions Core Tools from this example directory:
+For local testing, install the dependencies, set `AZURE_ENTRA_ACCESS_TOKEN` in your environment, and then run the Azure Functions Core Tools from this example directory:
 
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
 # On Linux/macOS
 export AZURE_ENTRA_ACCESS_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 
@@ -86,7 +89,7 @@ $env:AZURE_ENTRA_ACCESS_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 func start
 ```
 
-Then invoke the function locally:
+Then invoke the function locally (local execution bypasses function key authorization):
 
 ```bash
 curl http://localhost:7071/api/aembitAzureEntraOidc
@@ -96,7 +99,11 @@ This example does not attempt to emulate managed identity locally.
 
 ## Observe The Output
 
-Invoke the function and inspect the returned JSON response.
+When deployed to Azure, the function uses function-level authorization (`func.AuthLevel.FUNCTION`), so callers must present a valid function key, such as with the `x-functions-key` header or a `code` query parameter:
+
+```bash
+curl -H "x-functions-key: <your-function-key>" https://<your-function-app>.azurewebsites.net/api/aembitAzureEntraOidc
+```
 
 By default, the handler returns safe metadata only:
 

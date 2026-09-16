@@ -4,22 +4,20 @@
 
 This runnable example demonstrates how to configure the Aembit Edge client
 with the built-in AWS Role Trust Provider, retrieve credentials for a target
-Server Workload, and secure your database or API requests.
+Server Workload, and print them.
 """
 
 import os
 import sys
-from typing import cast
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
     GetCredentialInput,
     GetCredentialOptions,
 )
-from aembit_edge.errors import EdgeSdkError
+from aembit_edge.errors import EdgeSdkError, TrustProviderError
 from aembit_edge.trust_providers import AwsRoleTrustProvider
 
 # Configuration
@@ -56,19 +54,25 @@ def resolve_aws_region() -> str:
     """Resolve active AWS region from local execution environment."""
     region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
     if not region:
-        # Default to us-east-1 if no region is exported in the environment
-        region = "us-east-1"
+        raise TrustProviderError(
+            "Missing AWS region. Set AWS_REGION or AWS_DEFAULT_REGION.",
+            retryable=False,
+        )
     return region.strip()
 
 
 def main() -> None:
-    region = resolve_aws_region()
+    try:
+        region = resolve_aws_region()
+    except Exception as e:
+        print(f"Error resolving AWS region: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Initialize the AWS Role Trust Provider
     #
     # Under the hood, this provider will automatically find your local AWS execution
     # credentials, sign a secure STS GetCallerIdentity request, and present it as
-    # proof of identity to the Aembit Edge Controller.
+    # proof of identity to the Aembit Edge API.
     trust_provider = AwsRoleTrustProvider(region=region)
 
     client_workload_details = resolve_client_workload_details()
@@ -93,7 +97,8 @@ def main() -> None:
         server=CredentialServerRef(
             host=host,
             port=port,
-        )
+        ),
+        credential_type=EXAMPLE_CONFIG["credential_type"],
     )
 
     options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
@@ -116,9 +121,6 @@ def main() -> None:
 
     print("Credential retrieved successfully!")
 
-    # Type-safe casting of the credential payload (for IDE completions/assistance)
-    api_key_payload = cast(ApiKeyData, result.data)
-
     base_response = {
         "authenticated": True,
         "trust_provider_id": trust_provider.id,
@@ -130,7 +132,7 @@ def main() -> None:
         print("\n--- Credential Details ---")
         print(f"Type: {result.credential_type}")
         print(f"Expires At: {result.expires_at}")
-        print(f"API Key: {api_key_payload.get('apiKey')}")
+        print(f"Token Data: {result.data}")
     else:
         print("\n--- Summary (Secure Mode) ---")
         print(f"Authenticated: {base_response['authenticated']}")

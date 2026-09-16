@@ -11,10 +11,8 @@ which safely handles token rotation by the Kubernetes control plane.
 
 import os
 import sys
-from typing import cast
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
@@ -71,10 +69,13 @@ def main() -> None:
     token = resolve_k8s_token()
     token_path = resolve_k8s_token_path()
 
-    trust_provider = KubernetesServiceAccountTrustProvider(
-        token=token,
-        token_path=token_path,
-    )
+    kwargs = {}
+    if token is not None:
+        kwargs["token"] = token
+    if token_path is not None:
+        kwargs["token_path"] = token_path
+
+    trust_provider = KubernetesServiceAccountTrustProvider(**kwargs)
 
     client_workload_details = resolve_client_workload_details()
 
@@ -98,7 +99,8 @@ def main() -> None:
         server=CredentialServerRef(
             host=EXAMPLE_CONFIG["server_host"],
             port=EXAMPLE_CONFIG["server_port"],
-        )
+        ),
+        credential_type=EXAMPLE_CONFIG["credential_type"],
     )
 
     options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
@@ -121,10 +123,6 @@ def main() -> None:
 
     print("Credential retrieved successfully!")
 
-    # Type-safe casting of the credential payload
-    # This provides full autocompletion and IDE support for ApiKeyData fields!
-    api_key_payload = cast(ApiKeyData, result.data)
-
     base_response = {
         "authenticated": True,
         "trust_provider_id": trust_provider.id,
@@ -136,8 +134,7 @@ def main() -> None:
         print("\n--- Credential Details ---")
         print(f"Type: {result.credential_type}")
         print(f"Expires At: {result.expires_at}")
-        # Securely access typed field with full IDE assistance
-        print(f"API Key: {api_key_payload.get('apiKey')}")
+        print(f"Token Data: {result.data}")
     else:
         print("\n--- Summary (Secure Mode) ---")
         print(f"Authenticated: {base_response['authenticated']}")

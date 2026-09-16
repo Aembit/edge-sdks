@@ -2,15 +2,15 @@
 
 Runnable AWS IAM Role example for the Python SDK.
 
-This example demonstrates how to configure and run the Python SDK using an AWS IAM Execution Role in AWS environments (such as AWS Lambda, ECS, EKS, or EC2):
+This example demonstrates how to configure and run the Python SDK using an AWS IAM Execution Role. The script resolves local AWS execution credentials and can run on any AWS compute instance (like EC2) or local environment with active AWS credentials:
 
 - edit a small config block in [`./main.py`](./main.py)
 - run the example using `uv`
 
 ## Prerequisites
 
-- An active AWS execution environment (Lambda, ECS Task, EC2, etc.) running with an assigned IAM Role
-- Python `>=3.10` installed on the instance/container
+- An active AWS execution environment (EC2, ECS Task, local CLI, etc.) with active AWS credentials or an assigned IAM Role
+- Python `>=3.10` installed on the system
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup
@@ -32,7 +32,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -64,6 +64,7 @@ $env:AWS_REGION="us-east-1"
 Then run the example using `uv`:
 
 ```bash
+cd py
 uv run examples/aws_role/main.py
 ```
 

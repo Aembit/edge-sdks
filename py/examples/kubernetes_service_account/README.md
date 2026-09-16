@@ -32,7 +32,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -56,6 +56,7 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 When running inside a Kubernetes cluster, the script automatically reads the mounted Service Account Token from disk at `/var/run/secrets/kubernetes.io/serviceaccount/token`. Run using `uv`:
 
 ```bash
+cd py
 uv run examples/kubernetes_service_account/main.py
 ```
 
@@ -76,6 +77,7 @@ $env:AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN="your-test-token-here"
 Then run using `uv`:
 
 ```bash
+cd py
 uv run examples/kubernetes_service_account/main.py
 ```
 

@@ -16,7 +16,7 @@ This example demonstrates how to configure and run the Python SDK inside a GitLa
   ```yaml
   id_tokens:
     GITLAB_OIDC_TOKEN:
-      aud: https://<tenant-id>.id.aembit.io
+      aud: https://<tenant>.ec.<stack>.aembit.io
   ```
 
 - Python `>=3.10`
@@ -41,7 +41,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -76,7 +76,7 @@ run-aembit-sdk:
   image: python:3.11-slim
   id_tokens:
     GITLAB_OIDC_TOKEN:
-      aud: https://<tenant>.id.<stack>.aembit.io  # Your tenant Identity URL
+      aud: https://<tenant>.ec.<stack>.aembit.io  # Your tenant Edge URL
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   cache:
@@ -86,7 +86,8 @@ run-aembit-sdk:
     # Install uv locally
     - pip install uv
   script:
-    - uv run py/examples/gitlab_ci/main.py
+    - cd py
+    - uv run examples/gitlab_ci/main.py
 ```
 
 ### 2. Locally (For Development / Mock Testing)
@@ -101,7 +102,8 @@ export GITLAB_OIDC_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 $env:GITLAB_OIDC_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 
 # Execute locally
-uv run py/examples/gitlab_ci/main.py
+cd py
+uv run examples/gitlab_ci/main.py
 ```
 
 ## Output

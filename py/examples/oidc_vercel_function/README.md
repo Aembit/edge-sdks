@@ -31,7 +31,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -85,19 +85,16 @@ Then invoke the function locally:
 curl http://localhost:3000/api
 ```
 
-## Production Deployment Status
+## Production Deployment
 
-This example currently documents local development only.
+This example is structured as a standard Vercel Python Serverless Function and depends on the published `aembit-edge-sdk` package configured in `requirements.txt`.
 
-Why:
+To deploy this function to production:
 
-- the example imports the unreleased local SDK source from local python path
-- that works in this repository checkout and with `vercel dev`
-- it is not yet a self-contained production deploy target for Vercel
-
-Production deployment guidance should be added once the Python SDK is
-published and this example can depend on the package as a normal installable
-dependency.
+```bash
+cd py/examples/oidc_vercel_function
+vercel --prod
+```
 
 ## Observe The Output
 

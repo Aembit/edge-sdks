@@ -26,7 +26,7 @@ from aembit_edge.trust_providers import GitLabTrustProvider
 # (AEMBIT_BASE_URL, CLIENT_ID, RESOURCE_SET_ID) if they are set
 # in your CI/CD environment, matching the TS SDK behavior.
 EXAMPLE_CONFIG = {
-    # The Aembit Edge Controller base URL (e.g., https://<tenant>.ec.<stack>.aembit.io)
+    # The Aembit Edge API Base URL (e.g., https://<tenant>.ec.<stack>.aembit.io)
     "base_url": os.environ.get("AEMBIT_BASE_URL") or "https://<tenant>.ec.<stack>.aembit.io",
     "client_id": os.environ.get("CLIENT_ID") or "your-edge-sdk-client-id",
     # Optional Resource Set ID if resources are isolated in a custom partition
@@ -66,6 +66,10 @@ def main() -> None:
     try:
         # Resolve GitLab CI/CD Job Identity Token
         token = resolve_gitlab_identity_token()
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error resolving identity: {e}", file=sys.stderr)
         sys.exit(1)
@@ -85,14 +89,15 @@ def main() -> None:
 
     host = EXAMPLE_CONFIG["server_host"]
     port = EXAMPLE_CONFIG["server_port"]
-    print(f"Retrieving credentials for {host}:{port}...")
+    print(f"Retrieving credentials for {host}:{port} using GitLab Trust Provider...")
 
     # Request credential from Aembit Edge
     credential_input = GetCredentialInput(
         server=CredentialServerRef(
             host=EXAMPLE_CONFIG["server_host"],
             port=EXAMPLE_CONFIG["server_port"],
-        )
+        ),
+        credential_type=EXAMPLE_CONFIG["credential_type"],
     )
 
     options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])

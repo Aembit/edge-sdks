@@ -32,7 +32,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -66,6 +66,7 @@ $env:TFC_WORKLOAD_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 Then run the example using `uv`:
 
 ```bash
+cd py
 uv run examples/terraform_cloud/main.py
 ```
 

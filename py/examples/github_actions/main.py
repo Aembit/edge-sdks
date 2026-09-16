@@ -11,10 +11,8 @@ import json
 import os
 import sys
 import urllib.request
-from typing import cast
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
@@ -94,6 +92,10 @@ def main() -> None:
     try:
         # Resolve GitHub Actions Identity Token
         token = resolve_github_identity_token()
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error resolving identity: {e}", file=sys.stderr)
         sys.exit(1)
@@ -113,14 +115,15 @@ def main() -> None:
 
     host = EXAMPLE_CONFIG["server_host"]
     port = EXAMPLE_CONFIG["server_port"]
-    print(f"Retrieving credentials for {host}:{port}...")
+    print(f"Retrieving credentials for {host}:{port} using GitHub Trust Provider...")
 
     # Request credential from Aembit Edge
     credential_input = GetCredentialInput(
         server=CredentialServerRef(
             host=EXAMPLE_CONFIG["server_host"],
             port=EXAMPLE_CONFIG["server_port"],
-        )
+        ),
+        credential_type=EXAMPLE_CONFIG["credential_type"],
     )
 
     options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
@@ -143,9 +146,6 @@ def main() -> None:
 
     print("Credential retrieved successfully!")
 
-    # Type-safe casting of the credential payload
-    api_key_payload = cast(ApiKeyData, result.data)
-
     base_response = {
         "authenticated": True,
         "trust_provider_id": trust_provider.id,
@@ -157,7 +157,7 @@ def main() -> None:
         print("\n--- Credential Details ---")
         print(f"Type: {result.credential_type}")
         print(f"Expires At: {result.expires_at}")
-        print(f"API Key: {api_key_payload.get('apiKey')}")
+        print(f"Token Data: {result.data}")
     else:
         print("\n--- Summary (Secure Mode) ---")
         print(f"Authenticated: {base_response['authenticated']}")

@@ -1,2 +1,2 @@
 functions-framework>=3.3.0
-./aembit_edge_sdk-0.1.0-py3-none-any.whl
+aembit-edge-sdk>=0.1.0

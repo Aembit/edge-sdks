@@ -37,7 +37,13 @@ $env:AWS_REGION="us-east-1"
 
 ### 2. Run the Examples
 
-You can run any of the examples directly using `uv run`:
+First, change your current directory to the `py` folder:
+
+```bash
+cd py
+```
+
+You can then run any of the examples directly using `uv run`:
 
 #### Run Logging Integration Example
 

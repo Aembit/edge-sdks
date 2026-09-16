@@ -41,7 +41,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -80,20 +80,21 @@ jobs:
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-on-environment: true
+          update-environment: true
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run Aembit Example
         run: |
-          uv run py/examples/github_actions/main.py
+          cd py
+          uv run examples/github_actions/main.py
 ```
 
 ### 2. Locally (For Development / Mock Testing)
@@ -108,7 +109,8 @@ export GITHUB_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 $env:GITHUB_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 
 # Execute locally
-uv run py/examples/github_actions/main.py
+cd py
+uv run examples/github_actions/main.py
 ```
 
 ## Output

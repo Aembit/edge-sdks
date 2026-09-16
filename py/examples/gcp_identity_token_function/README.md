@@ -34,7 +34,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -60,11 +60,15 @@ We've packaged this example with a standard GCP configuration. To deploy it:
 2. Initialize `gcloud` and log in to your account.
 3. Deploy the function using the `gcloud` CLI:
 
+> [!NOTE]
+> This command deploys the function with `--no-allow-unauthenticated` to ensure the endpoint is secure and authenticated by default. To allow unauthenticated access for testing or demonstration, you can change this flag to `--allow-unauthenticated`.
+
 ```bash
 gcloud functions deploy aembitGcpIdentityToken \
   --runtime python310 \
+  --entry-point aembit_gcp_identity_token \
   --trigger-http \
-  --allow-unauthenticated \
+  --no-allow-unauthenticated \
   --region us-central1
 ```
 

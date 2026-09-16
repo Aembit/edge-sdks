@@ -8,10 +8,8 @@ with the built-in Terraform Cloud Trust Provider.
 
 import os
 import sys
-from typing import cast
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
@@ -78,7 +76,8 @@ def main() -> None:
         server=CredentialServerRef(
             host=host,
             port=port,
-        )
+        ),
+        credential_type=EXAMPLE_CONFIG["credential_type"],
     )
 
     options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
@@ -101,9 +100,6 @@ def main() -> None:
 
     print("Credential retrieved successfully!")
 
-    # Type-safe casting of the credential payload (for IDE completions/assistance)
-    api_key_payload = cast(ApiKeyData, result.data)
-
     base_response = {
         "authenticated": True,
         "trust_provider_id": trust_provider.id,
@@ -115,7 +111,7 @@ def main() -> None:
         print("\n--- Credential Details ---")
         print(f"Type: {result.credential_type}")
         print(f"Expires At: {result.expires_at}")
-        print(f"API Key: {api_key_payload.get('apiKey')}")
+        print(f"Token Data: {result.data}")
     else:
         print("\n--- Summary (Secure Mode) ---")
         print(f"Authenticated: {base_response['authenticated']}")

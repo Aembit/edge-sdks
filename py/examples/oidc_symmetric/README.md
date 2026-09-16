@@ -33,7 +33,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -58,6 +58,7 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 Run the example locally using `uv`:
 
 ```bash
+cd py
 uv run examples/oidc_symmetric/main.py
 ```
 
@@ -68,7 +69,7 @@ The script prints the progress and a safe authenticated session summary.
 Example successful output:
 
 ```text
-Retrieving credentials for target.example.com:443 using OIDC Symmetric Trust Provider...
+Retrieving credentials for target.example.com:443 using Symmetric OIDC Trust Provider...
 Credential retrieved successfully!
 
 --- Summary (Secure Mode) ---
@@ -80,7 +81,7 @@ Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials
 If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
 
 ```text
-Retrieving credentials for target.example.com:443 using OIDC Symmetric Trust Provider...
+Retrieving credentials for target.example.com:443 using Symmetric OIDC Trust Provider...
 Credential retrieved successfully!
 
 --- Credential Details ---
