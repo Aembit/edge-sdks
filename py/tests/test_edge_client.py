@@ -415,6 +415,56 @@ def test_get_credential_forwards_connection_metadata_and_cert_signing_request() 
     }
 
 
+def test_get_credential_forwards_connection_metadata_access_key_id_for_aws_sts() -> None:
+    sender = SenderStub(
+        [
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps({"accessToken": "token-1", "expiresIn": 3600}),
+            ),
+            RawHttpResponse(
+                status=200,
+                headers={},
+                body=json.dumps(
+                    {
+                        "credentialType": "AwsStsFederation",
+                        "expiresAt": "2026-09-15T18:00:00Z",
+                        "data": {
+                            "awsAccessKeyId": "ASIAEXAMPLEKEYID123",
+                            "awsSecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                            "awsSessionToken": "AQoDYXdzEJr1...EXAMPLE",
+                        },
+                    }
+                ),
+            ),
+        ]
+    )
+    client = build_client(sender=sender)
+
+    result = client.get_credential(
+        GetCredentialInput(
+            server=CredentialServerRef(host="sts.amazonaws.com", port=443),
+            credential_type="AwsStsFederation",
+            connection_metadata={"accessKeyId": "AKIADUMMY12345EXAMPLE"},
+        )
+    )
+
+    assert result.credential_type == "AwsStsFederation"
+    assert result.expires_at == "2026-09-15T18:00:00Z"
+    assert result.data == {
+        "awsAccessKeyId": "ASIAEXAMPLEKEYID123",
+        "awsSecretAccessKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        "awsSessionToken": "AQoDYXdzEJr1...EXAMPLE",
+    }
+    assert sender.calls[1]["body"] == {
+        "client": {"aws": {"region": "us-east-1"}},
+        "server": {"host": "sts.amazonaws.com", "port": 443, "transportProtocol": "TCP"},
+        "credentialType": "AwsStsFederation",
+        "connectionMetadata": {"accessKeyId": "AKIADUMMY12345EXAMPLE"},
+    }
+
+
 def test_get_credential_reuses_cached_token() -> None:
     sender = SenderStub(
         [
