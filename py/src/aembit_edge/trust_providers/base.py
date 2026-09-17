@@ -34,7 +34,11 @@ class TrustProvider(Protocol):
     """Runtime-specific Trust Provider contract."""
 
     id: str
-    kind: TrustProviderKind | str
+
+    @property
+    def kind(self) -> TrustProviderKind | str:
+        """The kind of trust provider."""
+        ...
 
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect provider-specific client workload identity data."""
@@ -45,7 +49,11 @@ class AsyncTrustProvider(Protocol):
     """Async runtime-specific Trust Provider contract."""
 
     id: str
-    kind: TrustProviderKind | str
+
+    @property
+    def kind(self) -> TrustProviderKind | str:
+        """The kind of trust provider."""
+        ...
 
     async def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect provider-specific client workload identity data."""
