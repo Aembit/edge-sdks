@@ -155,6 +155,7 @@ def test_gitlab_provider_collect_identity_raises_for_empty_token() -> None:
 
 def test_oidc_providers_with_callable() -> None:
     """OIDC-based providers (GitHub, Terraform, GitLab) should support callable identity tokens."""
+
     def get_token() -> str:
         return "dynamic-token"
 
@@ -173,6 +174,7 @@ def test_oidc_providers_with_callable() -> None:
 
 def test_oidc_providers_with_callable_error() -> None:
     """OIDC-based providers should raise TrustProviderError if callable raises or returns empty."""
+
     def raising_callable() -> str:
         raise ValueError("fetch failed")
 
@@ -193,4 +195,3 @@ def test_oidc_providers_with_callable_error() -> None:
         with pytest.raises(TrustProviderError) as exc_info:
             p_empty.collect_identity()
         assert "requires a non-empty identity token" in str(exc_info.value)
-
