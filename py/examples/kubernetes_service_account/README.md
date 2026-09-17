@@ -74,6 +74,11 @@ export AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN="your-test-token-here"
 $env:AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN="your-test-token-here"
 ```
 
+### Additional Environment Variables (Optional)
+
+- `CLIENT_WORKLOAD_ID`: If your Aembit Access Policy matches on the Aembit Client Workload ID client workload identifier, you can export `CLIENT_WORKLOAD_ID` to your environment.
+- `K8S_TOKEN_PATH`: By default, the SDK reads the token from `/var/run/secrets/kubernetes.io/serviceaccount/token`. You can override this token file path by setting the `K8S_TOKEN_PATH` environment variable.
+
 Then run using `uv`:
 
 ```bash
@@ -88,7 +93,7 @@ The script prints the progress and a safe authenticated session summary.
 Example successful output:
 
 ```text
-Retrieving credentials for target.example.com:443 using Kubernetes Service Account Trust Provider...
+Retrieving credentials for target.example.com:443 using Kubernetes Service Account...
 Credential retrieved successfully!
 
 --- Summary (Secure Mode) ---
@@ -100,13 +105,13 @@ Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials
 If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
 
 ```text
-Retrieving credentials for target.example.com:443 using Kubernetes Service Account Trust Provider...
+Retrieving credentials for target.example.com:443 using Kubernetes Service Account...
 Credential retrieved successfully!
 
 --- Credential Details ---
 Type: ApiKey
 Expires At: 2026-03-10T19:19:09.2559713Z
-API Key: <api_key_value>
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting

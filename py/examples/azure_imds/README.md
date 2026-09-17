@@ -12,16 +12,18 @@ This example demonstrates how to configure and run the Python SDK on an Azure Vi
 
 - An Azure Virtual Machine (VM) running in your Azure subscription
 - Python `>=3.10` installed on the VM
-- An Aembit Access Policy configured for this SDK flow
+- A future Aembit Access Policy flow that supports Azure IMDS end-to-end
 
 ## Aembit Setup
 
-Before running this example, configure an Aembit Access Policy that includes:
+The intended Aembit setup for this flow is:
 
 - a Client Workload matching your Azure VM (e.g. matching Subscription ID, Resource Group, VM Name, or Tenant ID)
 - a Server Workload with a Service Endpoint (`host`, `port`) that this example will request
 - an Azure Metadata Service Trust Provider with an Edge SDK Client ID
 - a Credential Provider that returns the requested credential type
+
+At the moment, that setup cannot be completed end-to-end because of current Aembit UI and API gaps for Azure IMDS. This workflow is kept as a reference for when the backend feature gap is closed.
 
 References:
 
@@ -52,6 +54,8 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 
 ## Deploy and Run the Example
 
+This deploy workflow is kept as a reference for when the backend feature gap is closed.
+
 From the root of the SDK repo, copy `main.py` directly to your Azure VM:
 
 ```bash
@@ -75,7 +79,7 @@ The script prints the progress and a safe authenticated session summary.
 Example successful output:
 
 ```text
-Retrieving credentials for target.example.com:443 using Azure Metadata Service Trust Provider...
+Retrieving credentials for target.example.com:443 using Azure IMDS Trust Provider...
 Credential retrieved successfully!
 
 --- Summary (Secure Mode) ---
@@ -87,13 +91,13 @@ Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials
 If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
 
 ```text
-Retrieving credentials for target.example.com:443 using Azure Metadata Service Trust Provider...
+Retrieving credentials for target.example.com:443 using Azure IMDS Trust Provider...
 Credential retrieved successfully!
 
 --- Credential Details ---
 Type: ApiKey
 Expires At: 2026-03-10T19:19:09.2559713Z
-API Key: <api_key_value>
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting

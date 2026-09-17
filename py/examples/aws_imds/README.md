@@ -77,7 +77,7 @@ The script prints the progress and a safe authenticated session summary.
 Example successful output:
 
 ```text
-Retrieving credentials for target.example.com:443...
+Retrieving credentials for target.example.com:443 using AWS IMDS Trust Provider...
 Credential retrieved successfully!
 
 --- Summary (Secure Mode) ---
@@ -89,13 +89,13 @@ Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials
 If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
 
 ```text
-Retrieving credentials for target.example.com:443...
+Retrieving credentials for target.example.com:443 using AWS IMDS Trust Provider...
 Credential retrieved successfully!
 
 --- Credential Details ---
 Type: ApiKey
 Expires At: 2026-03-10T19:19:09.2559713Z
-API Key: <api_key_value>
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting

@@ -61,6 +61,16 @@ export AWS_REGION=us-east-1
 $env:AWS_REGION="us-east-1"
 ```
 
+If your Aembit Access Policy matches on the Aembit Client Workload ID client workload identifier, you can also optionally export `CLIENT_WORKLOAD_ID`:
+
+```bash
+# On Linux/macOS
+export CLIENT_WORKLOAD_ID="your-client-workload-id"
+
+# On Windows (PowerShell)
+$env:CLIENT_WORKLOAD_ID="your-client-workload-id"
+```
+
 Then run the example using `uv`:
 
 ```bash
@@ -93,7 +103,7 @@ Credential retrieved successfully!
 --- Credential Details ---
 Type: ApiKey
 Expires At: 2026-03-10T19:19:09.2559713Z
-API Key: <api_key_value>
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting

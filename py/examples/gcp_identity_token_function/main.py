@@ -9,10 +9,9 @@ and use the Aembit GCP Identity Token Trust Provider to retrieve credentials.
 
 import os
 import urllib.request
-from typing import Any, cast
+from typing import Any
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
@@ -87,7 +86,6 @@ def aembit_gcp_identity_token(request: Any) -> Any:
     }
 
     if EXAMPLE_CONFIG["print_credential_json"]:
-        api_key_payload = cast(ApiKeyData, credential.data)
         return (
             json_response(
                 {
@@ -95,7 +93,7 @@ def aembit_gcp_identity_token(request: Any) -> Any:
                     "credential": {
                         "credentialType": credential.credential_type,
                         "expiresAt": credential.expires_at,
-                        "data": api_key_payload,
+                        "data": credential.data,
                     },
                 }
             ),
