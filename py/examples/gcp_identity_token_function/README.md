@@ -78,15 +78,28 @@ Once deployment completes, the CLI will output your function's public HTTP trigg
 
 ## Run The Example
 
-Send an HTTP GET request to your deployed Cloud Function using `curl` or your browser:
+Send an HTTP GET request to your deployed Cloud Function using `curl` with a valid identity token:
 
 ```bash
-curl "https://us-central1-<project-id>.cloudfunctions.net/aembitGcpIdentityToken"
+curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+  "https://us-central1-<project-id>.cloudfunctions.net/aembitGcpIdentityToken"
+```
+
+### Local Testing / Development (Optional)
+
+To test the logic locally before deploying, you can set the `GCP_IDENTITY_TOKEN` environment variable to a mock or fetched GCP OIDC JWT token:
+
+```bash
+# On Linux/macOS
+export GCP_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
+
+# On Windows (PowerShell)
+$env:GCP_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 ```
 
 ## Output
 
-The function first prints a safe authenticated session summary, then prints credential metadata in a clean JSON response.
+The function returns credential metadata in a clean JSON response.
 
 By default, the credential output includes:
 

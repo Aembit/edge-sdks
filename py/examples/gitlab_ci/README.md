@@ -59,6 +59,20 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 
 `server_host` and `server_port` must exactly match the Service Endpoint values configured in your Server Workload.
 
+### Environment Variable Overrides (Optional)
+
+The script automatically prioritizes the following environment variables if set in your GitLab CI environment:
+
+- `AEMBIT_BASE_URL`: Overrides the `base_url` configuration value.
+- `CLIENT_ID`: Overrides the `client_id` configuration value.
+- `RESOURCE_SET_ID`: Overrides the `resource_set` configuration value.
+
+If your pipeline already exports these standard variables, they will take precedence over the hardcoded `EXAMPLE_CONFIG` edits in `main.py`.
+
+### Local Development Token Fallback
+
+For local testing, the script also supports the `DEV_OIDC_TOKEN` environment variable as a fallback token source.
+
 ## Deploy and Run the Example
 
 ### 1. In a GitLab CI/CD Pipeline
@@ -113,6 +127,7 @@ The script prints the progress and a safe authenticated session summary.
 Example successful output:
 
 ```text
+Using GitLab OIDC token from environment variable: GITLAB_OIDC_TOKEN
 Retrieving credentials for target.example.com:443 using GitLab Trust Provider...
 Credential retrieved successfully!
 
@@ -125,6 +140,7 @@ Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials
 If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
 
 ```text
+Using GitLab OIDC token from environment variable: GITLAB_OIDC_TOKEN
 Retrieving credentials for target.example.com:443 using GitLab Trust Provider...
 Credential retrieved successfully!
 

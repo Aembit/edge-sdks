@@ -99,7 +99,7 @@ jobs:
 
 ### 2. Locally (For Development / Mock Testing)
 
-To test the script locally without running it on a GitHub Actions runner, fetch or construct a test JWT token, export it to your shell, and run:
+To test the script locally without running it on a GitHub Actions runner, fetch or construct a test JWT token, export it to either `GITHUB_IDENTITY_TOKEN` or `DEV_OIDC_TOKEN` in your shell:
 
 ```bash
 # On Linux/macOS
@@ -107,8 +107,13 @@ export GITHUB_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 
 # On Windows (PowerShell)
 $env:GITHUB_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
+```
 
-# Execute locally
+*(Note: The script checks `GITHUB_IDENTITY_TOKEN` and `DEV_OIDC_TOKEN` sequentially for mock testing before querying GHA metadata endpoints.)*
+
+Execute locally:
+
+```bash
 cd py
 uv run examples/github_actions/main.py
 ```
@@ -120,6 +125,7 @@ The script prints the progress and a safe authenticated session summary.
 Example successful output:
 
 ```text
+Fetching dynamic OIDC identity token from GitHub Actions metadata server...
 Retrieving credentials for target.example.com:443 using GitHub Trust Provider...
 Credential retrieved successfully!
 
@@ -132,6 +138,7 @@ Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials
 If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
 
 ```text
+Fetching dynamic OIDC identity token from GitHub Actions metadata server...
 Retrieving credentials for target.example.com:443 using GitHub Trust Provider...
 Credential retrieved successfully!
 

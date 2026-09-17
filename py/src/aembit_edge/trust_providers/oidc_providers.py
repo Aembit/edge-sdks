@@ -44,6 +44,8 @@ class GitHubTrustProvider:
         if callable(self.identity_token):
             try:
                 token = self.identity_token()
+            except TrustProviderError:
+                raise
             except Exception as e:
                 raise TrustProviderError(
                     f"GitHub Trust Provider failed to resolve token from source: {e}",
@@ -90,6 +92,8 @@ class TerraformTrustProvider:
         if callable(self.identity_token):
             try:
                 token = self.identity_token()
+            except TrustProviderError:
+                raise
             except Exception as e:
                 raise TrustProviderError(
                     f"Terraform Trust Provider failed to resolve token from source: {e}",
@@ -136,6 +140,8 @@ class GitLabTrustProvider:
         if callable(self.identity_token):
             try:
                 token = self.identity_token()
+            except TrustProviderError:
+                raise
             except Exception as e:
                 raise TrustProviderError(
                     f"GitLab Trust Provider failed to resolve token from source: {e}",

@@ -66,6 +66,9 @@ On the EC2 instance, run using `uv`:
 # Install uv locally if not already installed
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# If your Aembit Access Policy matches on the Aembit Client Workload ID, optionally export CLIENT_WORKLOAD_ID:
+export CLIENT_WORKLOAD_ID="your-client-workload-id"
+
 # Execute the example
 uv run main.py
 ```

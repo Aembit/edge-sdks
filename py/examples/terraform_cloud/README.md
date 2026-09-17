@@ -53,14 +53,14 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 
 In your execution context (such as Terraform Cloud, where `TFC_WORKLOAD_IDENTITY_TOKEN` is automatically injected by the runner when OIDC is configured), the SDK reads the token automatically from the environment.
 
-For local testing, export the token manually:
+For local testing, export the token manually (using either `AEMBIT_TERRAFORM_OIDC_TOKEN` or `TFC_WORKLOAD_IDENTITY_TOKEN`):
 
 ```bash
 # On Linux/macOS
-export TFC_WORKLOAD_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
+export AEMBIT_TERRAFORM_OIDC_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 
 # On Windows (PowerShell)
-$env:TFC_WORKLOAD_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
+$env:AEMBIT_TERRAFORM_OIDC_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 ```
 
 Then run the example using `uv`:

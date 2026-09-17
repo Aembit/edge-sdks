@@ -69,6 +69,7 @@ The script prints the progress and a safe authenticated session summary.
 Example successful output:
 
 ```text
+Generating symmetrically signed OIDC ID Token (HS256)...
 Retrieving credentials for target.example.com:443 using Symmetric OIDC Trust Provider...
 Credential retrieved successfully!
 
@@ -81,6 +82,7 @@ Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials
 If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
 
 ```text
+Generating symmetrically signed OIDC ID Token (HS256)...
 Retrieving credentials for target.example.com:443 using Symmetric OIDC Trust Provider...
 Credential retrieved successfully!
 
