@@ -299,6 +299,81 @@ describe("EdgeClient", () => {
     })
   })
 
+  it("getCredential() forwards connectionMetadata and credentialType for AwsStsFederation", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: "token-sts",
+            tokenType: "Bearer",
+            expiresIn: 3600
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            credentialType: "AwsStsFederation",
+            expiresAt: "2026-09-15T18:00:00Z",
+            data: {
+              awsAccessKeyId: "ASIAEXAMPLEKEYID123",
+              awsSecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+              awsSessionToken: "AQoDYXdzEJr1...EXAMPLE"
+            }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    vi.stubGlobal("fetch", asFetchMock(fetchMock))
+
+    const client = new EdgeClient({
+      baseUrl: "https://tenant.aembit.io",
+      clientId: "client-id",
+      trustProvider: createTrustProvider(async () => ({
+        github: { identityToken: "gh-oidc-token" }
+      }))
+    })
+
+    const result = await client.getCredential({
+      server: {
+        host: "sts.amazonaws.com",
+        port: 443
+      },
+      credentialType: "AwsStsFederation",
+      connectionMetadata: {
+        accessKeyId: "AKIADUMMY12345EXAMPLE"
+      }
+    })
+
+    expect(result).toEqual({
+      credentialType: "AwsStsFederation",
+      expiresAt: "2026-09-15T18:00:00Z",
+      data: {
+        awsAccessKeyId: "ASIAEXAMPLEKEYID123",
+        awsSecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        awsSessionToken: "AQoDYXdzEJr1...EXAMPLE"
+      }
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(getRequestPath(fetchMock, 0)).toBe("/edge/v1/auth")
+    expect(getRequestPath(fetchMock, 1)).toBe("/edge/v1/credentials")
+    expect(parseRequestBody(fetchMock, 1)).toEqual({
+      client: { github: { identityToken: "gh-oidc-token" } },
+      server: {
+        host: "sts.amazonaws.com",
+        port: 443,
+        transportProtocol: "TCP"
+      },
+      credentialType: "AwsStsFederation",
+      connectionMetadata: {
+        accessKeyId: "AKIADUMMY12345EXAMPLE"
+      }
+    })
+  })
+
   it("getCredential() merges additional client workload details into auth and credentials payloads", async () => {
     const fetchMock = vi
       .fn()

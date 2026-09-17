@@ -4,7 +4,9 @@
   "testRunner": "vitest",
   "mutate": [
     "src/**/*.ts",
-    "!src/**/*.test.ts"
+    "!src/**/*.test.ts",
+    "!src/types/**/*.ts",
+    "!src/**/types.ts"
   ],
   "thresholds": {
     "high": 80,
