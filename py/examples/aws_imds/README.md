@@ -35,7 +35,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -66,44 +66,46 @@ On the EC2 instance, run using `uv`:
 # Install uv locally if not already installed
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# If your Aembit Access Policy matches on the Aembit Client Workload ID, optionally export CLIENT_WORKLOAD_ID:
+export CLIENT_WORKLOAD_ID="your-client-workload-id"
+
 # Execute the example
 uv run main.py
 ```
 
 ## Output
 
-The script first prints a safe authenticated session summary, then prints credential metadata.
-
-By default, the credential output includes:
-
-- `credential_type`
-- `expires_at`
-- `data_keys`
-
-If `EXAMPLE_CONFIG.print_credential_json` is `True`, the script prints the full credential payload instead.
+The script prints the progress and a safe authenticated session summary.
 
 Example successful output:
 
-```json
-{
-  "authenticated": true,
-  "expiresAt": "2026-03-10T20:18:09.108Z",
-  "trustProviderId": "aws-metadata-service"
-}
-{
-  "credentialType": "ApiKey",
-  "expiresAt": "2026-03-10T19:19:09.2559713Z",
-  "dataKeys": [
-    "apiKey"
-  ]
-}
+```text
+Retrieving credentials for target.example.com:443 using AWS IMDS Trust Provider...
+Credential retrieved successfully!
+
+--- Summary (Secure Mode) ---
+Authenticated: True
+Payload Keys: ['apiKey']
+Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials.
+```
+
+If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
+
+```text
+Retrieving credentials for target.example.com:443 using AWS IMDS Trust Provider...
+Credential retrieved successfully!
+
+--- Credential Details ---
+Type: ApiKey
+Expires At: 2026-03-10T19:19:09.2559713Z
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting
 
 ### `401` on `/credentials` after successful auth
 
-If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+If authentication succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
 
 Example:
 
@@ -111,7 +113,7 @@ Example:
 
 Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
 
-### `200` with `credentialType: "Unknown"` and empty `dataKeys`
+### Empty `Payload Keys` on Success
 
 This means the request reached Edge but did not match the expected access policy or service request shape.
 

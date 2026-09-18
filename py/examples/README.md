@@ -11,6 +11,8 @@ Current runnable examples:
 - [`azure_imds/`](./azure_imds/) - Using the built-in Azure Instance Metadata Service (IMDS) Trust Provider with Azure VMs
 - [`gcp_identity_token_function/`](./gcp_identity_token_function/) - GCP Cloud Function using GCP identity tokens via the Aembit GCP Trust Provider
 - [`oidc_vercel_function/`](./oidc_vercel_function/) - Vercel Serverless Function using Vercel OIDC tokens via the Aembit OIDC Trust Provider
+- [`github_actions/`](./github_actions/) - GitHub Actions workflows using GitHub OIDC tokens via the Aembit GitHub Trust Provider
+- [`gitlab_ci/`](./gitlab_ci/) - GitLab CI/CD pipelines using GitLab OIDC tokens via the Aembit GitLab Trust Provider
 - [`kubernetes_service_account/`](./kubernetes_service_account/) - Using the built-in Kubernetes Service Account Trust Provider within Kubernetes Pods
 - [`oidc_symmetric/`](./oidc_symmetric/) - Using the OIDC Trust Provider with symmetrically signed HS256 keys locally or offline
 - [`terraform_cloud/`](./terraform_cloud/) - Using the built-in Terraform Cloud Trust Provider
@@ -36,7 +38,13 @@ $env:AWS_REGION="us-east-1"
 
 ### 2. Run the Examples
 
-You can run any of the examples directly using `uv run`:
+First, change your current directory to the `py` folder:
+
+```bash
+cd py
+```
+
+You can then run any of the examples directly using `uv run`:
 
 #### Run Logging Integration Example
 

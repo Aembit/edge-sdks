@@ -32,7 +32,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -56,58 +56,69 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 When running inside a Kubernetes cluster, the script automatically reads the mounted Service Account Token from disk at `/var/run/secrets/kubernetes.io/serviceaccount/token`. Run using `uv`:
 
 ```bash
+cd py
 uv run examples/kubernetes_service_account/main.py
 ```
 
 ### Locally (For Development / Mock Testing)
 
-Because the example reads from a default file path, running it on a local non-Kubernetes machine will raise a `TrustProviderError`. To run locally with a test token, modify the `main()` instantiation in `main.py`:
+Because the example defaults to reading from a default Kubernetes file path, running it on a local non-Kubernetes machine will raise a `TrustProviderError` by default.
 
-```python
-# Pass a static test token for local development and testing
-trust_provider = KubernetesServiceAccountTrustProvider(token="your-test-token-here")
+To run locally with a test token without modifying the source code, export either `AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN` or `K8S_SERVICE_ACCOUNT_TOKEN` to your environment:
+
+```bash
+# On Linux/macOS
+export AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN="your-test-token-here"
+
+# On Windows (PowerShell)
+$env:AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN="your-test-token-here"
 ```
+
+### Additional Environment Variables (Optional)
+
+- `CLIENT_WORKLOAD_ID`: If your Aembit Access Policy matches on the Aembit Client Workload ID client workload identifier, you can export `CLIENT_WORKLOAD_ID` to your environment.
+- `K8S_TOKEN_PATH`: By default, the SDK reads the token from `/var/run/secrets/kubernetes.io/serviceaccount/token`. You can override this token file path by setting the `K8S_TOKEN_PATH` environment variable.
 
 Then run using `uv`:
 
 ```bash
+cd py
 uv run examples/kubernetes_service_account/main.py
 ```
 
 ## Output
 
-The script first prints a safe authenticated session summary, then prints credential metadata.
-
-By default, the credential output includes:
-
-- `credential_type`
-- `expires_at`
-- `data_keys`
-
-If `EXAMPLE_CONFIG.print_credential_json` is `True`, the script prints the full credential payload instead.
+The script prints the progress and a safe authenticated session summary.
 
 Example successful output:
 
-```json
-{
-  "authenticated": true,
-  "expiresAt": "2026-03-10T20:18:09.108Z",
-  "trustProviderId": "kubernetes-service-account"
-}
-{
-  "credentialType": "ApiKey",
-  "expiresAt": "2026-03-10T19:19:09.2559713Z",
-  "dataKeys": [
-    "apiKey"
-  ]
-}
+```text
+Retrieving credentials for target.example.com:443 using Kubernetes Service Account...
+Credential retrieved successfully!
+
+--- Summary (Secure Mode) ---
+Authenticated: True
+Payload Keys: ['apiKey']
+Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials.
+```
+
+If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
+
+```text
+Retrieving credentials for target.example.com:443 using Kubernetes Service Account...
+Credential retrieved successfully!
+
+--- Credential Details ---
+Type: ApiKey
+Expires At: 2026-03-10T19:19:09.2559713Z
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting
 
 ### `401` on `/credentials` after successful auth
 
-If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+If authentication succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
 
 Example:
 
@@ -115,7 +126,7 @@ Example:
 
 Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
 
-### `200` with `credentialType: "Unknown"` and empty `dataKeys`
+### Empty `Payload Keys` on Success
 
 This means the request reached Edge but did not match the expected access policy or service request shape.
 

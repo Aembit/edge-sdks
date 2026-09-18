@@ -10,10 +10,8 @@ and use the Aembit OIDC Trust Provider to retrieve credentials.
 import json
 import os
 from http.server import BaseHTTPRequestHandler
-from typing import cast
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
@@ -61,7 +59,8 @@ class handler(BaseHTTPRequestHandler):
                 server=CredentialServerRef(
                     host=EXAMPLE_CONFIG["server_host"],
                     port=EXAMPLE_CONFIG["server_port"],
-                )
+                ),
+                credential_type=EXAMPLE_CONFIG["credential_type"],
             )
             options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
 
@@ -78,14 +77,13 @@ class handler(BaseHTTPRequestHandler):
         }
 
         if EXAMPLE_CONFIG["print_credential_json"]:
-            api_key_payload = cast(ApiKeyData, credential.data)
             self.send_success_response(
                 {
                     **base_response,
                     "credential": {
                         "credentialType": credential.credential_type,
                         "expiresAt": credential.expires_at,
-                        "data": api_key_payload,
+                        "data": credential.data,
                     },
                 }
             )

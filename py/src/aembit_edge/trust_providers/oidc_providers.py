@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import ClassVar
 
@@ -22,7 +23,7 @@ class GitHubTrustProvider:
     for `/edge/v1/auth` requests.
     """
 
-    identity_token: str
+    identity_token: str | Callable[[], str]
     id: str = DEFAULT_GITHUB_ID
 
     kind: ClassVar[TrustProviderKind] = "github"
@@ -32,17 +33,34 @@ class GitHubTrustProvider:
         normalized_id = self.id.strip() if self.id else ""
         self.id = normalized_id or DEFAULT_GITHUB_ID
 
+    def get_identity_single_flight_key(self) -> str | None:
+        """Only static token strings are safe to de-duplicate."""
+        return f"{self.kind}:{self.id}" if isinstance(self.identity_token, str) else None
+
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the GitHub identity token for `/edge/v1/auth`."""
-        token = self.identity_token.strip() if self.identity_token else ""
-        if not token:
-            from ..errors import TrustProviderError
+        from ..errors import TrustProviderError
 
+        if callable(self.identity_token):
+            try:
+                token = self.identity_token()
+            except TrustProviderError:
+                raise
+            except Exception as e:
+                raise TrustProviderError(
+                    f"GitHub Trust Provider failed to resolve token from source: {e}",
+                    retryable=False,
+                ) from e
+        else:
+            token = self.identity_token
+
+        token_clean = token.strip() if token else ""
+        if not token_clean:
             raise TrustProviderError(
                 "GitHub Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
-        return CollectedTrustProviderIdentity(client={"github": {"identityToken": token}})
+        return CollectedTrustProviderIdentity(client={"github": {"identityToken": token_clean}})
 
 
 @dataclass(slots=True)
@@ -53,7 +71,7 @@ class TerraformTrustProvider:
     for `/edge/v1/auth` requests.
     """
 
-    identity_token: str
+    identity_token: str | Callable[[], str]
     id: str = DEFAULT_TERRAFORM_ID
 
     kind: ClassVar[TrustProviderKind] = "terraform"
@@ -63,17 +81,34 @@ class TerraformTrustProvider:
         normalized_id = self.id.strip() if self.id else ""
         self.id = normalized_id or DEFAULT_TERRAFORM_ID
 
+    def get_identity_single_flight_key(self) -> str | None:
+        """Only static token strings are safe to de-duplicate."""
+        return f"{self.kind}:{self.id}" if isinstance(self.identity_token, str) else None
+
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the Terraform identity token for `/edge/v1/auth`."""
-        token = self.identity_token.strip() if self.identity_token else ""
-        if not token:
-            from ..errors import TrustProviderError
+        from ..errors import TrustProviderError
 
+        if callable(self.identity_token):
+            try:
+                token = self.identity_token()
+            except TrustProviderError:
+                raise
+            except Exception as e:
+                raise TrustProviderError(
+                    f"Terraform Trust Provider failed to resolve token from source: {e}",
+                    retryable=False,
+                ) from e
+        else:
+            token = self.identity_token
+
+        token_clean = token.strip() if token else ""
+        if not token_clean:
             raise TrustProviderError(
                 "Terraform Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
-        return CollectedTrustProviderIdentity(client={"terraform": {"identityToken": token}})
+        return CollectedTrustProviderIdentity(client={"terraform": {"identityToken": token_clean}})
 
 
 @dataclass(slots=True)
@@ -84,7 +119,7 @@ class GitLabTrustProvider:
     for `/edge/v1/auth` requests.
     """
 
-    identity_token: str
+    identity_token: str | Callable[[], str]
     id: str = DEFAULT_GITLAB_ID
 
     kind: ClassVar[TrustProviderKind] = "gitlab"
@@ -94,14 +129,31 @@ class GitLabTrustProvider:
         normalized_id = self.id.strip() if self.id else ""
         self.id = normalized_id or DEFAULT_GITLAB_ID
 
+    def get_identity_single_flight_key(self) -> str | None:
+        """Only static token strings are safe to de-duplicate."""
+        return f"{self.kind}:{self.id}" if isinstance(self.identity_token, str) else None
+
     def collect_identity(self) -> CollectedTrustProviderIdentity:
         """Collect the GitLab identity token for `/edge/v1/auth`."""
-        token = self.identity_token.strip() if self.identity_token else ""
-        if not token:
-            from ..errors import TrustProviderError
+        from ..errors import TrustProviderError
 
+        if callable(self.identity_token):
+            try:
+                token = self.identity_token()
+            except TrustProviderError:
+                raise
+            except Exception as e:
+                raise TrustProviderError(
+                    f"GitLab Trust Provider failed to resolve token from source: {e}",
+                    retryable=False,
+                ) from e
+        else:
+            token = self.identity_token
+
+        token_clean = token.strip() if token else ""
+        if not token_clean:
             raise TrustProviderError(
                 "GitLab Trust Provider requires a non-empty identity token",
                 retryable=False,
             )
-        return CollectedTrustProviderIdentity(client={"gitlab": {"identityToken": token}})
+        return CollectedTrustProviderIdentity(client={"gitlab": {"identityToken": token_clean}})

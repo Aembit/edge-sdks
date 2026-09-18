@@ -1,12 +1,10 @@
 # Copyright 2024-present Aembit, Inc.
 # SPDX-License-Identifier: Apache-2.0
-"""Example: Using Kubernetes Service Account Trust Provider in Pods.
+"""Example: Using GitLab Job ID Token Trust Provider in GitLab CI/CD.
 
 This runnable example demonstrates how to configure the Aembit Edge client
-with the built-in Kubernetes Service Account Trust Provider. In a real Pod,
-the provider automatically reads the service account token from the default
-location (/var/run/secrets/kubernetes.io/serviceaccount/token) dynamically,
-which safely handles token rotation by the Kubernetes control plane.
+with the built-in GitLab Trust Provider, retrieve a GitLab Job OIDC token
+from the environment inside a CI/CD job, and retrieve target credentials.
 """
 
 import os
@@ -19,65 +17,65 @@ from aembit_edge import (
     GetCredentialInput,
     GetCredentialOptions,
 )
-from aembit_edge.errors import EdgeSdkError
-from aembit_edge.trust_providers import KubernetesServiceAccountTrustProvider
+from aembit_edge.errors import EdgeSdkError, TrustProviderError
+from aembit_edge.trust_providers import GitLabTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
+# The SDK automatically defaults to environment variables
+# (AEMBIT_BASE_URL, CLIENT_ID, RESOURCE_SET_ID) if they are set
+# in your CI/CD environment, matching the TS SDK behavior.
 EXAMPLE_CONFIG = {
-    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
-    "client_id": "your-edge-sdk-client-id",
+    # The Aembit Edge API Base URL (e.g., https://<tenant>.ec.<stack>.aembit.io)
+    "base_url": os.environ.get("AEMBIT_BASE_URL") or "https://<tenant>.ec.<stack>.aembit.io",
+    "client_id": os.environ.get("CLIENT_ID") or "your-edge-sdk-client-id",
+    # Optional Resource Set ID if resources are isolated in a custom partition
+    "resource_set": os.environ.get("RESOURCE_SET_ID") or None,
+    # The name of the environment variable containing your GitLab CI/CD ID Token
+    "gitlab_token_env_var": "GITLAB_OIDC_TOKEN",
+    # Target Server Workload coordinates that your Client Workload has access to
+    # via your Active Policy
     "server_host": "target.example.com",
     "server_port": 443,
     "credential_type": "ApiKey",
-    "resource_set": None,
     "print_credential_json": False,
 }
 
 
-def resolve_client_workload_details() -> dict[str, dict[str, dict[str, str]]] | None:
-    """Construct optional client workload details for metadata mapping."""
-    client_workload_id = os.environ.get("CLIENT_WORKLOAD_ID", "").strip()
-    if not client_workload_id:
-        return None
+def resolve_gitlab_identity_token() -> str:
+    """Fetch GitLab OIDC token from the configured environment variables."""
+    # Check both the configured env var and the standard DEV_OIDC_TOKEN for fallback
+    for env_var in [EXAMPLE_CONFIG["gitlab_token_env_var"], "DEV_OIDC_TOKEN"]:
+        token = os.environ.get(env_var, "").strip()
+        if token:
+            print(f"Using GitLab OIDC token from environment variable: {env_var}")
+            return token
 
-    return {
-        "os": {
-            "environment": {
-                "CLIENT_WORKLOAD_ID": client_workload_id,
-            }
-        }
-    }
-
-
-def resolve_k8s_token() -> str | None:
-    """Resolve static Kubernetes service account token from the environment."""
-    return (
-        os.environ.get("AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN", "").strip()
-        or os.environ.get("K8S_SERVICE_ACCOUNT_TOKEN", "").strip()
-        or None
+    env_var = EXAMPLE_CONFIG["gitlab_token_env_var"]
+    raise TrustProviderError(
+        "GitLab OIDC token could not be resolved from environment variable: "
+        f"{env_var} or DEV_OIDC_TOKEN.\n"
+        "If running locally, set the environment variable manually.\n"
+        "If running in GitLab CI/CD, ensure you have declared the 'id_tokens' block "
+        "in your .gitlab-ci.yml.",
+        retryable=False,
     )
 
 
-def resolve_k8s_token_path() -> str | None:
-    """Resolve custom token file path from the environment."""
-    return os.environ.get("K8S_TOKEN_PATH", "").strip() or None
-
-
 def main() -> None:
-    # Set up Kubernetes Service Account Trust Provider
-    token = resolve_k8s_token()
-    token_path = resolve_k8s_token_path()
+    try:
+        # Resolve GitLab CI/CD Job Identity Token
+        token = resolve_gitlab_identity_token()
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error resolving identity: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    kwargs = {}
-    if token is not None:
-        kwargs["token"] = token
-    if token_path is not None:
-        kwargs["token_path"] = token_path
-
-    trust_provider = KubernetesServiceAccountTrustProvider(**kwargs)
-
-    client_workload_details = resolve_client_workload_details()
+    # Set up GitLab Trust Provider
+    trust_provider = GitLabTrustProvider(identity_token=token)
 
     # Create EdgeClient instance
     client = EdgeClient(
@@ -85,14 +83,13 @@ def main() -> None:
             base_url=EXAMPLE_CONFIG["base_url"],
             client_id=EXAMPLE_CONFIG["client_id"],
             trust_provider=trust_provider,
-            client_workload_details=client_workload_details,
             resource_set=EXAMPLE_CONFIG["resource_set"],
         )
     )
 
     host = EXAMPLE_CONFIG["server_host"]
     port = EXAMPLE_CONFIG["server_port"]
-    print(f"Retrieving credentials for {host}:{port} using Kubernetes Service Account...")
+    print(f"Retrieving credentials for {host}:{port} using GitLab Trust Provider...")
 
     # Request credential from Aembit Edge
     credential_input = GetCredentialInput(

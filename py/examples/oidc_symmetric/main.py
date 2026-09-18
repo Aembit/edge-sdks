@@ -4,7 +4,7 @@
 
 This runnable example demonstrates how to sign a JSON Web Token (JWT) locally
 using a symmetric key (HS256) and use it with the built-in OidcIdTokenTrustProvider
-to authenticate and retrieve credentials against the Aembit Edge Controller.
+to authenticate and retrieve credentials against the Aembit Edge API.
 """
 
 import base64
@@ -13,27 +13,24 @@ import hmac
 import json
 import sys
 import time
-from typing import cast
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
     GetCredentialInput,
     GetCredentialOptions,
 )
+from aembit_edge.errors import EdgeSdkError
 from aembit_edge.trust_providers import OidcIdTokenTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit and OIDC configurations.
 EXAMPLE_CONFIG = {
-    # The Aembit Edge Controller base URL (e.g., https://<tenant-id>.ec.aembit.io)
-    "base_url": "https://<tenant-id>.ec.aembit.io",
-    # Copied in full from the 'Edge SDK Client ID' field of your Trust Provider in the Console
-    "client_id": "aembit:aembit:<tenant-id>:identity:oidc_id_token:<provider-external-id>",
-    "issuer": "https://mock-issuer.com",
-    "audience": "https://aembit.io",
+    "base_url": "https://<tenant>.ec.<stack>.aembit.io",
+    "client_id": "your-edge-sdk-client-id",
+    "issuer": "https://<tenant>.id.<stack>.aembit.io",
+    "audience": "https://<tenant>.id.<stack>.aembit.io",
     "subject": "test-workload-123",
     # The symmetric key entered in the Aembit Console (must be base64-encoded as required by Aembit)
     "symmetric_secret": "your-base64-encoded-symmetric-secret-here",
@@ -120,21 +117,29 @@ def main() -> None:
         server=CredentialServerRef(
             host=host,
             port=port,
-        )
+        ),
+        credential_type=EXAMPLE_CONFIG["credential_type"],
     )
 
     options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
 
     try:
         result = client.get_credential(credential_input, options)
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        if e.status_code is not None:
+            print(f"  Status Code: {e.status_code}", file=sys.stderr)
+        if e.api_code is not None:
+            print(f"  API Code: {e.api_code}", file=sys.stderr)
+        if e.request_id is not None:
+            print(f"  Request ID: {e.request_id}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Error getting credential from Aembit: {e}", file=sys.stderr)
         sys.exit(1)
 
     print("Credential retrieved successfully!")
-
-    # Type-safe casting of the credential payload (for IDE completions/assistance)
-    api_key_payload = cast(ApiKeyData, result.data)
 
     base_response = {
         "authenticated": True,
@@ -147,7 +152,7 @@ def main() -> None:
         print("\n--- Credential Details ---")
         print(f"Type: {result.credential_type}")
         print(f"Expires At: {result.expires_at}")
-        print(f"API Key: {api_key_payload.get('apiKey')}")
+        print(f"Token Data: {result.data}")
     else:
         print("\n--- Summary (Secure Mode) ---")
         print(f"Authenticated: {base_response['authenticated']}")

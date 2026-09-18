@@ -2,15 +2,15 @@
 
 Runnable AWS IAM Role example for the Python SDK.
 
-This example demonstrates how to configure and run the Python SDK using an AWS IAM Execution Role in AWS environments (such as AWS Lambda, ECS, EKS, or EC2):
+This example demonstrates how to configure and run the Python SDK using an AWS IAM Execution Role. The script resolves local AWS execution credentials and can run on any AWS compute instance (like EC2) or local environment with active AWS credentials:
 
 - edit a small config block in [`./main.py`](./main.py)
 - run the example using `uv`
 
 ## Prerequisites
 
-- An active AWS execution environment (Lambda, ECS Task, EC2, etc.) running with an assigned IAM Role
-- Python `>=3.10` installed on the instance/container
+- An active AWS execution environment (EC2, ECS Task, local CLI, etc.) with active AWS credentials or an assigned IAM Role
+- Python `>=3.10` installed on the system
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup
@@ -32,7 +32,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -61,46 +61,56 @@ export AWS_REGION=us-east-1
 $env:AWS_REGION="us-east-1"
 ```
 
+If your Aembit Access Policy matches on the Aembit Client Workload ID client workload identifier, you can also optionally export `CLIENT_WORKLOAD_ID`:
+
+```bash
+# On Linux/macOS
+export CLIENT_WORKLOAD_ID="your-client-workload-id"
+
+# On Windows (PowerShell)
+$env:CLIENT_WORKLOAD_ID="your-client-workload-id"
+```
+
 Then run the example using `uv`:
 
 ```bash
+cd py
 uv run examples/aws_role/main.py
 ```
 
 ## Output
 
-The script first prints a safe authenticated session summary, then prints credential metadata.
-
-By default, the credential output includes:
-
-- `credential_type`
-- `expires_at`
-- `data_keys`
-
-If `EXAMPLE_CONFIG.print_credential_json` is `True`, the script prints the full credential payload instead.
+The script prints the progress and a safe authenticated session summary.
 
 Example successful output:
 
-```json
-{
-  "authenticated": true,
-  "expiresAt": "2026-03-10T20:18:09.108Z",
-  "trustProviderId": "aws-role"
-}
-{
-  "credentialType": "ApiKey",
-  "expiresAt": "2026-03-10T19:19:09.2559713Z",
-  "dataKeys": [
-    "apiKey"
-  ]
-}
+```text
+Retrieving credentials for target.example.com:443 using AWS Role Trust Provider...
+Credential retrieved successfully!
+
+--- Summary (Secure Mode) ---
+Authenticated: True
+Payload Keys: ['apiKey']
+Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials.
+```
+
+If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
+
+```text
+Retrieving credentials for target.example.com:443 using AWS Role Trust Provider...
+Credential retrieved successfully!
+
+--- Credential Details ---
+Type: ApiKey
+Expires At: 2026-03-10T19:19:09.2559713Z
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting
 
 ### `401` on `/credentials` after successful auth
 
-If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+If authentication succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
 
 Example:
 
@@ -108,7 +118,7 @@ Example:
 
 Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
 
-### `200` with `credentialType: "Unknown"` and empty `dataKeys`
+### Empty `Payload Keys` on Success
 
 This means the request reached Edge but did not match the expected access policy or service request shape.
 

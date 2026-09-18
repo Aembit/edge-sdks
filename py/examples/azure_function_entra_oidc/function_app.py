@@ -9,12 +9,11 @@ and use the Aembit OIDC Trust Provider to retrieve credentials.
 
 import logging
 import os
-from typing import Any, cast
+from typing import Any
 
 import azure.functions as func
 
 from aembit_edge import (
-    ApiKeyData,
     CredentialServerRef,
     EdgeClient,
     EdgeClientConfig,
@@ -62,7 +61,8 @@ def aembit_azure_entra_oidc(req: func.HttpRequest) -> func.HttpResponse:
             server=CredentialServerRef(
                 host=EXAMPLE_CONFIG["server_host"],
                 port=EXAMPLE_CONFIG["server_port"],
-            )
+            ),
+            credential_type=EXAMPLE_CONFIG["credential_type"],
         )
         options = GetCredentialOptions(resource_set=EXAMPLE_CONFIG["resource_set"])
 
@@ -84,7 +84,6 @@ def aembit_azure_entra_oidc(req: func.HttpRequest) -> func.HttpResponse:
     }
 
     if EXAMPLE_CONFIG["print_credential_json"]:
-        api_key_payload = cast(ApiKeyData, credential.data)
         return func.HttpResponse(
             body=json_response(
                 {
@@ -92,7 +91,7 @@ def aembit_azure_entra_oidc(req: func.HttpRequest) -> func.HttpResponse:
                     "credential": {
                         "credentialType": credential.credential_type,
                         "expiresAt": credential.expires_at,
-                        "data": api_key_payload,
+                        "data": credential.data,
                     },
                 }
             ),
