@@ -195,3 +195,25 @@ def test_oidc_providers_with_callable_error() -> None:
         with pytest.raises(TrustProviderError) as exc_info:
             p_empty.collect_identity()
         assert "requires a non-empty identity token" in str(exc_info.value)
+
+
+def test_oidc_providers_with_callable_trust_provider_error() -> None:
+    """OIDC-based providers should bubble TrustProviderError unwrapped when raised by a callable."""
+    custom_message = "A highly specific custom TrustProviderError message"
+
+    def raising_callable() -> str:
+        raise TrustProviderError(custom_message, retryable=False)
+
+    for provider_cls in [
+        GitHubTrustProvider,
+        TerraformTrustProvider,
+        GitLabTrustProvider,
+    ]:
+        provider = provider_cls(identity_token=raising_callable)
+        with pytest.raises(TrustProviderError) as exc_info:
+            provider.collect_identity()
+
+        # Verify that the original error bubbles up unwrapped with its exact message intact
+        assert str(exc_info.value) == custom_message
+        assert exc_info.value.retryable is False
+
