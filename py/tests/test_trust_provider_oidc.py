@@ -216,4 +216,3 @@ def test_oidc_providers_with_callable_trust_provider_error() -> None:
         # Verify that the original error bubbles up unwrapped with its exact message intact
         assert str(exc_info.value) == custom_message
         assert exc_info.value.retryable is False
-
