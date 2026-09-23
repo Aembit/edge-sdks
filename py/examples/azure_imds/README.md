@@ -12,16 +12,18 @@ This example demonstrates how to configure and run the Python SDK on an Azure Vi
 
 - An Azure Virtual Machine (VM) running in your Azure subscription
 - Python `>=3.10` installed on the VM
-- An Aembit Access Policy configured for this SDK flow
+- A future Aembit Access Policy flow that supports Azure IMDS end-to-end
 
 ## Aembit Setup
 
-Before running this example, configure an Aembit Access Policy that includes:
+The intended Aembit setup for this flow is:
 
 - a Client Workload matching your Azure VM (e.g. matching Subscription ID, Resource Group, VM Name, or Tenant ID)
 - a Server Workload with a Service Endpoint (`host`, `port`) that this example will request
 - an Azure Metadata Service Trust Provider with an Edge SDK Client ID
 - a Credential Provider that returns the requested credential type
+
+At the moment, that setup cannot be completed end-to-end because of current Aembit UI and API gaps for Azure IMDS. This workflow is kept as a reference for when the backend feature gap is closed.
 
 References:
 
@@ -33,7 +35,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -51,6 +53,8 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 `server_host` and `server_port` must exactly match the Service Endpoint values configured in your Server Workload.
 
 ## Deploy and Run the Example
+
+This deploy workflow is kept as a reference for when the backend feature gap is closed.
 
 From the root of the SDK repo, copy `main.py` directly to your Azure VM:
 
@@ -70,38 +74,37 @@ uv run main.py
 
 ## Output
 
-The script first prints a safe authenticated session summary, then prints credential metadata.
-
-By default, the credential output includes:
-
-- `credential_type`
-- `expires_at`
-- `data_keys`
-
-If `EXAMPLE_CONFIG.print_credential_json` is `True`, the script prints the full credential payload instead.
+The script prints the progress and a safe authenticated session summary.
 
 Example successful output:
 
-```json
-{
-  "authenticated": true,
-  "expiresAt": "2026-03-10T20:18:09.108Z",
-  "trustProviderId": "azure-metadata-service"
-}
-{
-  "credentialType": "ApiKey",
-  "expiresAt": "2026-03-10T19:19:09.2559713Z",
-  "dataKeys": [
-    "apiKey"
-  ]
-}
+```text
+Retrieving credentials for target.example.com:443 using Azure IMDS Trust Provider...
+Credential retrieved successfully!
+
+--- Summary (Secure Mode) ---
+Authenticated: True
+Payload Keys: ['apiKey']
+Set EXAMPLE_CONFIG['print_credential_json'] = True to inspect actual credentials.
+```
+
+If `EXAMPLE_CONFIG["print_credential_json"]` is set to `True`, the script will print the actual credentials in the following format:
+
+```text
+Retrieving credentials for target.example.com:443 using Azure IMDS Trust Provider...
+Credential retrieved successfully!
+
+--- Credential Details ---
+Type: ApiKey
+Expires At: 2026-03-10T19:19:09.2559713Z
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting
 
 ### `401` on `/credentials` after successful auth
 
-If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+If authentication succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
 
 Example:
 
@@ -109,7 +112,7 @@ Example:
 
 Redirecting hosts can cause `Authorization` to be dropped on redirect, which results in `401` for `/credentials`.
 
-### `200` with `credentialType: "Unknown"` and empty `dataKeys`
+### Empty `Payload Keys` on Success
 
 This means the request reached Edge but did not match the expected access policy or service request shape.
 

@@ -9,7 +9,17 @@ and use the Aembit GCP Identity Token Trust Provider to retrieve credentials.
 
 import os
 import urllib.request
-from typing import Any, cast
+from typing import Any
+
+from aembit_edge import (
+    CredentialServerRef,
+    EdgeClient,
+    EdgeClientConfig,
+    GetCredentialInput,
+    GetCredentialOptions,
+)
+from aembit_edge.errors import TrustProviderError
+from aembit_edge.trust_providers import GcpIdentityTokenTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
@@ -28,45 +38,20 @@ GCP_METADATA_IDENTITY_URL = (
     "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
 )
 
-# Initialize EdgeClient lazily or on module load.
-# We'll import lazily inside the handler if needed, or import at top-level.
-import_error = None
-try:
-    from aembit_edge import (
-        ApiKeyData,
-        CredentialServerRef,
-        EdgeClient,
-        EdgeClientConfig,
-        GetCredentialInput,
-        GetCredentialOptions,
+trust_provider = GcpIdentityTokenTrustProvider(identity_token=lambda: resolve_gcp_identity_token())
+
+client = EdgeClient(
+    EdgeClientConfig(
+        base_url=EXAMPLE_CONFIG["base_url"],
+        client_id=EXAMPLE_CONFIG["client_id"],
+        trust_provider=trust_provider,
+        resource_set=EXAMPLE_CONFIG["resource_set"],
     )
-    from aembit_edge.errors import TrustProviderError
-    from aembit_edge.trust_providers import GcpIdentityTokenTrustProvider
-
-    trust_provider = GcpIdentityTokenTrustProvider(
-        identity_token=lambda: resolve_gcp_identity_token()
-    )
-
-    client = EdgeClient(
-        EdgeClientConfig(
-            base_url=EXAMPLE_CONFIG["base_url"],
-            client_id=EXAMPLE_CONFIG["client_id"],
-            trust_provider=trust_provider,
-            resource_set=EXAMPLE_CONFIG["resource_set"],
-        )
-    )
-except ImportError as e:
-    import_error = e
+)
 
 
-def aembitGcpIdentityToken(request: Any) -> Any:
+def aembit_gcp_identity_token(request: Any) -> Any:
     """HTTP trigger entry point for GCP Cloud Functions."""
-    if import_error is not None:
-        raise ImportError(
-            "aembit_edge must be installed to run this example. "
-            "Install the SDK package dependencies before deploying/running this function."
-        ) from import_error
-
     # Handle CORS or request filtering if needed, similar to TS
     if request.method != "GET":
         return (
@@ -101,7 +86,6 @@ def aembitGcpIdentityToken(request: Any) -> Any:
     }
 
     if EXAMPLE_CONFIG["print_credential_json"]:
-        api_key_payload = cast(ApiKeyData, credential.data)
         return (
             json_response(
                 {
@@ -109,7 +93,7 @@ def aembitGcpIdentityToken(request: Any) -> Any:
                     "credential": {
                         "credentialType": credential.credential_type,
                         "expiresAt": credential.expires_at,
-                        "data": api_key_payload,
+                        "data": credential.data,
                     },
                 }
             ),
@@ -170,6 +154,6 @@ def json_response(data: dict[str, Any]) -> str:
 try:
     import functions_framework
 
-    functions_framework.http(aembitGcpIdentityToken)
+    functions_framework.http(aembit_gcp_identity_token)
 except ImportError:
     pass

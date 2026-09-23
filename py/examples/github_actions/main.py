@@ -1,14 +1,16 @@
 # Copyright 2024-present Aembit, Inc.
 # SPDX-License-Identifier: Apache-2.0
-"""Example: Using AWS Role Trust Provider with AWS Lambda or ECS.
+"""Example: Using GitHub Action Trust Provider in GitHub Workflows.
 
 This runnable example demonstrates how to configure the Aembit Edge client
-with the built-in AWS Role Trust Provider, retrieve credentials for a target
-Server Workload, and print them.
+with the built-in GitHub Action Trust Provider, fetch an OIDC token dynamically
+from GitHub's metadata server inside a runner, and retrieve target credentials.
 """
 
+import json
 import os
 import sys
+import urllib.request
 
 from aembit_edge import (
     CredentialServerRef,
@@ -18,13 +20,14 @@ from aembit_edge import (
     GetCredentialOptions,
 )
 from aembit_edge.errors import EdgeSdkError, TrustProviderError
-from aembit_edge.trust_providers import AwsRoleTrustProvider
+from aembit_edge.trust_providers import GitHubTrustProvider
 
 # Configuration
 # Edit these placeholder values to match your specific Aembit configuration.
 EXAMPLE_CONFIG = {
     "base_url": "https://<tenant>.ec.<stack>.aembit.io",
     "client_id": "your-edge-sdk-client-id",
+    "aembit_identity_audience": "https://<tenant>.id.<stack>.aembit.io",
     # Target Server Workload coordinates that your Client Workload has access to
     # via your Active Policy
     "server_host": "target.example.com",
@@ -35,68 +38,90 @@ EXAMPLE_CONFIG = {
 }
 
 
-def resolve_client_workload_details() -> dict[str, dict[str, dict[str, str]]] | None:
-    """Construct client workload details for metadata mapping."""
-    client_workload_id = os.environ.get("CLIENT_WORKLOAD_ID", "").strip()
-    if not client_workload_id:
-        return None
+def resolve_github_identity_token() -> str:
+    """Fetch GitHub OIDC token from environment or dynamically from GitHub metadata server."""
+    # 1. Check if token is pre-provided in the environment (common for testing)
+    for env_var in ["GITHUB_IDENTITY_TOKEN", "DEV_OIDC_TOKEN"]:
+        token = os.environ.get(env_var, "").strip()
+        if token:
+            print(f"Using pre-configured token from environment variable: {env_var}")
+            return token
 
-    return {
-        "os": {
-            "environment": {
-                "CLIENT_WORKLOAD_ID": client_workload_id,
-            }
-        }
-    }
+    # 2. Check if running inside GitHub Actions with OIDC permission enabled
+    request_token = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+    request_url = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL")
 
-
-def resolve_aws_region() -> str:
-    """Resolve active AWS region from local execution environment."""
-    region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
-    if not region:
+    if not request_token or not request_url:
         raise TrustProviderError(
-            "Missing AWS region. Set AWS_REGION or AWS_DEFAULT_REGION.",
+            "GitHub OIDC token could not be resolved.\n"
+            "If running locally, set GITHUB_IDENTITY_TOKEN.\n"
+            "If running in GitHub Actions, ensure you have set:\n"
+            "permissions:\n  id-token: write",
             retryable=False,
         )
-    return region.strip()
+
+    # 3. Fetch OIDC token dynamically from GitHub Actions' Runtime metadata endpoint
+    audience = EXAMPLE_CONFIG["aembit_identity_audience"]
+    url = f"{request_url}&audience={audience}"
+    req = urllib.request.Request(
+        url,
+        headers={"Authorization": f"bearer {request_token}"},
+    )
+
+    print("Fetching dynamic OIDC identity token from GitHub Actions metadata server...")
+    try:
+        with urllib.request.urlopen(req, timeout=5.0) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            identity_token = res_data.get("value", "").strip()
+    except Exception as e:
+        raise TrustProviderError(
+            f"GitHub Actions metadata request for identity token failed: {e}",
+            retryable=True,
+        ) from e
+
+    if not identity_token:
+        raise TrustProviderError(
+            "GitHub Actions metadata server returned an empty identity token response",
+            retryable=False,
+        )
+
+    return identity_token
 
 
 def main() -> None:
     try:
-        region = resolve_aws_region()
+        # Resolve GitHub Actions Identity Token
+        token = resolve_github_identity_token()
+    except EdgeSdkError as e:
+        print(f"Aembit Edge SDK Error: {e}", file=sys.stderr)
+        print(f"  Kind: {e.kind}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
-        print(f"Error resolving AWS region: {e}", file=sys.stderr)
+        print(f"Error resolving identity: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # Initialize the AWS Role Trust Provider
-    #
-    # Under the hood, this provider will automatically find your local AWS execution
-    # credentials, sign a secure STS GetCallerIdentity request, and present it as
-    # proof of identity to the Aembit Edge API.
-    trust_provider = AwsRoleTrustProvider(region=region)
+    # Set up GitHub Action Trust Provider
+    trust_provider = GitHubTrustProvider(identity_token=token)
 
-    client_workload_details = resolve_client_workload_details()
-
-    # Initialize the EdgeClient
+    # Create EdgeClient instance
     client = EdgeClient(
         EdgeClientConfig(
             base_url=EXAMPLE_CONFIG["base_url"],
             client_id=EXAMPLE_CONFIG["client_id"],
             trust_provider=trust_provider,
-            client_workload_details=client_workload_details,
             resource_set=EXAMPLE_CONFIG["resource_set"],
         )
     )
 
     host = EXAMPLE_CONFIG["server_host"]
     port = EXAMPLE_CONFIG["server_port"]
-    print(f"Retrieving credentials for {host}:{port} using AWS Role Trust Provider...")
+    print(f"Retrieving credentials for {host}:{port} using GitHub Trust Provider...")
 
-    # Formulate request input for target credentials
+    # Request credential from Aembit Edge
     credential_input = GetCredentialInput(
         server=CredentialServerRef(
-            host=host,
-            port=port,
+            host=EXAMPLE_CONFIG["server_host"],
+            port=EXAMPLE_CONFIG["server_port"],
         ),
         credential_type=EXAMPLE_CONFIG["credential_type"],
     )

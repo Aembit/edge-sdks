@@ -32,7 +32,7 @@ References:
 Example Server Workload configuration for this README:
 
 - Name: `Test SDK Server`
-- Host: `test.example.com`
+- Host: `target.example.com`
 - Transport Protocol: `TCP`
 - Port: `443`
 
@@ -53,19 +53,20 @@ Open [`./main.py`](./main.py) and update `EXAMPLE_CONFIG`:
 
 In your execution context (such as Terraform Cloud, where `TFC_WORKLOAD_IDENTITY_TOKEN` is automatically injected by the runner when OIDC is configured), the SDK reads the token automatically from the environment.
 
-For local testing, export the token manually:
+For local testing, export the token manually (using either `AEMBIT_TERRAFORM_OIDC_TOKEN` or `TFC_WORKLOAD_IDENTITY_TOKEN`):
 
 ```bash
 # On Linux/macOS
-export TFC_WORKLOAD_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
+export AEMBIT_TERRAFORM_OIDC_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 
 # On Windows (PowerShell)
-$env:TFC_WORKLOAD_IDENTITY_TOKEN="eyJhbGciOiJSUzI1NiIs..."
+$env:AEMBIT_TERRAFORM_OIDC_TOKEN="eyJhbGciOiJSUzI1NiIs..."
 ```
 
 Then run the example using `uv`:
 
 ```bash
+cd py
 uv run examples/terraform_cloud/main.py
 ```
 
@@ -94,14 +95,14 @@ Credential retrieved successfully!
 --- Credential Details ---
 Type: ApiKey
 Expires At: 2026-03-10T19:19:09.2559713Z
-API Key: <api_key_value>
+Token Data: {'apiKey': '<api_key_value>'}
 ```
 
 ## Troubleshooting
 
 ### `401` on `/credentials` after successful auth
 
-If `authenticate()` succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
+If authentication succeeds but credential retrieval returns `401`, verify that `base_url` is the final regional Edge host and does not redirect.
 
 Example:
 
