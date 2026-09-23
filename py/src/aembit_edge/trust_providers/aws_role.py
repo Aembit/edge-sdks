@@ -26,7 +26,7 @@ from ..internal.trust_providers import (
     build_aws_sts_get_caller_identity_signed_data,
 )
 from ..retry import RetryPolicy
-from .base import CollectedTrustProviderIdentity
+from .base import CollectedTrustProviderIdentity, TrustProviderKind
 
 DEFAULT_PROVIDER_ID = "aws-role"
 
@@ -63,7 +63,7 @@ class AwsRoleTrustProvider:
     signer: AwsRoleSigner = build_aws_sts_get_caller_identity_signed_data
     sleep: SleepFn = time.sleep
 
-    kind = "aws_role"
+    kind: TrustProviderKind = "aws_role"
 
     def __post_init__(self) -> None:
         """Normalize the public provider id after dataclass construction."""

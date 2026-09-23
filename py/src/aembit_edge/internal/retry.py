@@ -140,7 +140,7 @@ def calculate_backoff_delay_ms(
     if not policy.jitter:
         return capped_delay
 
-    jitter_factor = random() if random is not None else float(random_module.random())
+    jitter_factor = random() if random is not None else float(random_module.random())  # nosec B311
     return int(jitter_factor * capped_delay)
 
 
