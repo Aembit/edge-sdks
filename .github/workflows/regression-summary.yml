@@ -82,9 +82,9 @@ jobs:
               .check_runs[] |
               (.output.summary // "") as $s |
               {
-                passed: ($s | capture("(?<n>[0-9]+) passed")?.n // "0" | tonumber),
-                failed: (($s | capture("(?<n>[0-9]+) failed")?.n // "0" | tonumber) + ($s | capture("(?<n>[0-9]+) errors?")?.n // "0" | tonumber)),
-                skipped: ($s | capture("(?<n>[0-9]+) skipped")?.n // "0" | tonumber)
+                passed: ((try ($s | capture("(?<n>[0-9]+) passed").n) catch "0") | tonumber),
+                failed: (((try ($s | capture("(?<n>[0-9]+) failed").n) catch "0") | tonumber) + ((try ($s | capture("(?<n>[0-9]+) errors?").n) catch "0") | tonumber)),
+                skipped: ((try ($s | capture("(?<n>[0-9]+) skipped").n) catch "0") | tonumber)
               }
             ] as $counts |
             {
