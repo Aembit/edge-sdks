@@ -3,6 +3,12 @@ name: Edge SDK Regression Summary
 on:
   check_suite:
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      check_suite_id:
+        description: 'Check Suite ID to test (e.g. 97223494379)'
+        required: false
+        default: '97223494379'
 
 jobs:
   generate-report:
@@ -12,8 +18,8 @@ jobs:
       contents: read
       checks: read
       id-token: write # Required for Aembit/get-credentials@v1
-    # Run only if the suite belongs to Aembit Edge SDK Test Reporter (App ID 4984587)
-    if: github.event.check_suite.app.id == 4984587 || github.event.check_suite.app.slug == 'aembit-edge-sdk-test-reporter'
+    # Run only if triggered manually or if suite belongs to Aembit Edge SDK Test Reporter (App ID 4984587)
+    if: github.event_name == 'workflow_dispatch' || github.event.check_suite.app.id == 4984587 || github.event.check_suite.app.slug == 'aembit-edge-sdk-test-reporter'
     steps:
       - name: Fetch Slack Token
         id: slack-token
@@ -29,13 +35,35 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
-          GITHUB_SHA: ${{ github.event.check_suite.head_sha }}
-          GITHUB_BRANCH: ${{ github.event.check_suite.head_branch }}
-          SUITE_CONCLUSION: ${{ github.event.check_suite.conclusion }}
-          CHECK_RUNS_URL: ${{ github.event.check_suite.check_runs_url }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_SUITE_ID: ${{ inputs.check_suite_id }}
+          EVENT_SUITE_URL: ${{ github.event.check_suite.check_runs_url }}
+          EVENT_SHA: ${{ github.event.check_suite.head_sha }}
+          EVENT_BRANCH: ${{ github.event.check_suite.head_branch }}
+          EVENT_CONCLUSION: ${{ github.event.check_suite.conclusion }}
           CHANNEL: ${{ secrets.SLACK_DEVQA_CHANNEL_ID || 'C0A9RML07MF' }}
         run: |
           set -euo pipefail
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            SUITE_ID="$INPUT_SUITE_ID"
+            echo "Running workflow_dispatch test with Check Suite ID: $SUITE_ID"
+
+            SUITE_JSON=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                              -H "Accept: application/vnd.github+json" \
+                              "https://api.github.com/repos/${GITHUB_REPO}/check-suites/${SUITE_ID}")
+
+            CHECK_RUNS_URL=$(echo "$SUITE_JSON" | jq -r '.check_runs_url')
+            GITHUB_SHA=$(echo "$SUITE_JSON" | jq -r '.head_sha // "'"${GITHUB_SHA:-}"'"')
+            GITHUB_BRANCH=$(echo "$SUITE_JSON" | jq -r '.head_branch // "main"')
+            SUITE_CONCLUSION=$(echo "$SUITE_JSON" | jq -r '.conclusion // "success"')
+          else
+            CHECK_RUNS_URL="$EVENT_SUITE_URL"
+            GITHUB_SHA="$EVENT_SHA"
+            GITHUB_BRANCH="$EVENT_BRANCH"
+            SUITE_CONCLUSION="$EVENT_CONCLUSION"
+          fi
+
           echo "Fetching Check Runs from: $CHECK_RUNS_URL"
 
           # 1. Get all check runs associated with this check suite
