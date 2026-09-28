@@ -1,0 +1,201 @@
+name: Edge SDK Regression Summary
+
+on:
+  check_suite:
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      check_suite_id:
+        description: 'Check Suite ID to test (e.g. 97223494379)'
+        required: false
+        default: '97223494379'
+
+jobs:
+  generate-report:
+    name: Regression Summary & Slack Notification
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
+      id-token: write # Required for Aembit/get-credentials@v1
+    # Run only if triggered manually or if suite belongs to Aembit Edge SDK Test Reporter (App ID 4984587)
+    if: github.event_name == 'workflow_dispatch' || github.event.check_suite.app.id == 4984587 || github.event.check_suite.app.slug == 'aembit-edge-sdk-test-reporter'
+    steps:
+      - name: Fetch Slack Token
+        id: slack-token
+        uses: Aembit/get-credentials@0b519d6b50789a1a7f6f82d5c18badd17c62415b # v1.2.0
+        with:
+          resource-set-id: 619557b9-1496-46b9-be9e-5712ef175a16
+          client-id: aembit:devbroadangle:d6b705:identity:github_idtoken:aa8cb464-50d3-4bc5-8a34-c914833f49a6
+          domain: 'devbroadangle.aembit-eng.com'
+          credential-type: 'ApiKey'
+          server-host: 'slack.com'
+        continue-on-error: true
+
+      - name: 📊 Build Dashboard & Slack Payload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_SUITE_ID: ${{ inputs.check_suite_id }}
+          EVENT_SUITE_URL: ${{ github.event.check_suite.check_runs_url }}
+          EVENT_SHA: ${{ github.event.check_suite.head_sha }}
+          EVENT_BRANCH: ${{ github.event.check_suite.head_branch }}
+          EVENT_CONCLUSION: ${{ github.event.check_suite.conclusion }}
+          CHANNEL: ${{ secrets.SLACK_DEVQA_CHANNEL_ID || 'C0A9RML07MF' }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            SUITE_ID="$INPUT_SUITE_ID"
+            echo "Running workflow_dispatch test with Check Suite ID: $SUITE_ID"
+
+            SUITE_JSON=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                              -H "Accept: application/vnd.github+json" \
+                              "https://api.github.com/repos/${GITHUB_REPO}/check-suites/${SUITE_ID}")
+
+            CHECK_RUNS_URL=$(echo "$SUITE_JSON" | jq -r '.check_runs_url')
+            GITHUB_SHA=$(echo "$SUITE_JSON" | jq -r '.head_sha // "'"${GITHUB_SHA:-}"'"')
+            GITHUB_BRANCH=$(echo "$SUITE_JSON" | jq -r '.head_branch // "main"')
+            SUITE_CONCLUSION=$(echo "$SUITE_JSON" | jq -r '.conclusion // "success"')
+          else
+            CHECK_RUNS_URL="$EVENT_SUITE_URL"
+            GITHUB_SHA="$EVENT_SHA"
+            GITHUB_BRANCH="$EVENT_BRANCH"
+            SUITE_CONCLUSION="$EVENT_CONCLUSION"
+          fi
+
+          echo "Fetching Check Runs from: $CHECK_RUNS_URL"
+
+          # 1. Get all check runs associated with this check suite
+          RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                          -H "Accept: application/vnd.github+json" \
+                          "${CHECK_RUNS_URL}?per_page=100")
+
+          # 2. Parse Metrics and Metadata
+          TOTAL_SHARDS=$(echo "$RESPONSE" | jq '.total_count // (.check_runs | length)')
+          PASSED_SHARDS=$(echo "$RESPONSE" | jq '[.check_runs[] | select(.conclusion=="success")] | length')
+          FAILED_SHARDS=$(echo "$RESPONSE" | jq '[.check_runs[] | select(.conclusion=="failure" or .conclusion=="timed_out")] | length')
+
+          # Parse Test Execution Metrics from Check Run Output Summaries
+          TEST_METRICS=$(echo "$RESPONSE" | jq -r '
+            [
+              .check_runs[] |
+              (.output.summary // "") as $s |
+              {
+                passed: ((try ($s | capture("(?<n>[0-9]+) passed").n) catch "0") | tonumber),
+                failed: (((try ($s | capture("(?<n>[0-9]+) failed").n) catch "0") | tonumber) + ((try ($s | capture("(?<n>[0-9]+) errors?").n) catch "0") | tonumber)),
+                skipped: ((try ($s | capture("(?<n>[0-9]+) skipped").n) catch "0") | tonumber)
+              }
+            ] as $counts |
+            {
+              passed: ($counts | map(.passed) | add // 0),
+              failed: ($counts | map(.failed) | add // 0),
+              skipped: ($counts | map(.skipped) | add // 0),
+              total: ($counts | map(.passed + .failed + .skipped) | add // 0)
+            } |
+            "\(.total) \(.passed) \(.failed) \(.skipped)"
+          ')
+
+          read -r TOTAL_TESTS PASSED_TESTS FAILED_TESTS SKIPPED_TESTS <<< "$TEST_METRICS"
+
+          # 3. Generate Markdown Table for Individual Runners
+          TABLE_ROWS=$(echo "$RESPONSE" | jq -r '.check_runs[] | "| \(.name) | \(.conclusion // .status) | \(.output.summary // "N/A") | [View Details](\(.html_url)) |"')
+
+          # 4. Write to GitHub Step Summary
+          cat <<EOF >> $GITHUB_STEP_SUMMARY
+          # 🚀 Edge SDK Multiplatform Regression Report
+
+          **Global Status:** ${SUITE_CONCLUSION^^}
+          **Target Commit:** \`$GITHUB_SHA\`
+          **Branch:** \`${GITHUB_BRANCH:-main}\`
+
+          ### 📊 Test Results
+          | Total Tests | 🟢 Passed | 🔴 Failed | 🟡 Skipped |
+          | :---: | :---: | :---: | :---: |
+          | **$TOTAL_TESTS** | **$PASSED_TESTS** | **$FAILED_TESTS** | **$SKIPPED_TESTS** |
+
+          ### 📦 Platform Shards Overview
+          | Total Shards | 🟢 Passed | 🔴 Failed |
+          | :---: | :---: | :---: |
+          | **$TOTAL_SHARDS** | **$PASSED_SHARDS** | **$FAILED_SHARDS** |
+
+          ### 🔎 Shard Details
+          | Platform Runner | Status | Test Summary | Direct Link |
+          | :--- | :--- | :--- | :--- |
+          $TABLE_ROWS
+
+          ---
+          *Report generated by Edge SDK Regression Summary Workflow*
+          EOF
+
+          # 5. Generate Slack Payload
+          cat <<'JQ_EOF' > slack_filter.jq
+          {
+            "channel": $channel,
+            "text": ("Edge SDK Regression Results: (" + $sha + ") - Tests: " + $total_tests + " (Passed: " + $passed_tests + ", Failed: " + $failed_tests + ", Skipped: " + $skipped_tests + ")"),
+            "blocks": (
+              [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*<https://github.com/" + $repo + "/actions/runs/" + $run_id + "|Edge SDK Regression Results>*\nTests: *" + $total_tests + "* (🟢 *" + $passed_tests + "* | 🔴 *" + $failed_tests + "* | 🟡 *" + $skipped_tests + "*)")
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Commit:* <https://github.com/" + $repo + "/commit/" + $full_sha + "|" + $sha + ">\n*Branch:* " + $branch)
+                    }
+                  ]
+                }
+              ]
+              +
+              [.check_runs[] | {
+                "type": "rich_text",
+                "elements": [
+                  {
+                    "type": "rich_text_section",
+                    "elements": [
+                      {
+                        "type": "emoji",
+                        "name": (if .conclusion == "success" then "white_check_mark" else "x" end)
+                      },
+                      {
+                        "type": "text",
+                        "text": (" " + .name + ": "),
+                        "style": { "bold": true }
+                      },
+                      {
+                        "type": "text",
+                        "text": (" " + (.conclusion // "pending") + (if .output.summary and .output.summary != "" then " (" + .output.summary + ")" else "" end) + " ")
+                      }
+                    ]
+                  }
+                ]
+              }]
+            )
+          }
+          JQ_EOF
+
+          echo "$RESPONSE" | jq \
+            --arg repo "$GITHUB_REPO" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg sha "${GITHUB_SHA:0:7}" \
+            --arg full_sha "$GITHUB_SHA" \
+            --arg branch "${GITHUB_BRANCH:-main}" \
+            --arg total_tests "$TOTAL_TESTS" \
+            --arg passed_tests "$PASSED_TESTS" \
+            --arg failed_tests "$FAILED_TESTS" \
+            --arg skipped_tests "$SKIPPED_TESTS" \
+            --arg channel "$CHANNEL" \
+            -f slack_filter.jq > slack_payload.json
+
+      - name: Send Slack Notification
+        if: always() && steps.slack-token.outputs.api-key != ''
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ steps.slack-token.outputs.api-key }}
+          payload-file-path: slack_payload.json
+        continue-on-error: true
