@@ -199,4 +199,4 @@ jobs:
           token: ${{ steps.slack-token.outputs.api-key }}
           payload-file-path: slack_payload.json
           errors: true
-        continue-on-error: true
+        continue-on-error: false
