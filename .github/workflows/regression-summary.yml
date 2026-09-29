@@ -198,4 +198,5 @@ jobs:
           method: chat.postMessage
           token: ${{ steps.slack-token.outputs.api-key }}
           payload-file-path: slack_payload.json
+          errors: true
         continue-on-error: true
