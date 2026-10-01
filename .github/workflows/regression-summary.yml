@@ -42,7 +42,7 @@ jobs:
           EVENT_SHA: ${{ github.event.check_suite.head_sha }}
           EVENT_BRANCH: ${{ github.event.check_suite.head_branch }}
           EVENT_CONCLUSION: ${{ github.event.check_suite.conclusion }}
-          CHANNEL: ${{ secrets.SLACK_DEVQA_CHANNEL_ID || 'C0A9RML07MF' }}
+          CHANNEL: ${{ secrets.SLACK_DEVQA_CHANNEL_ID || 'C047C1D7J3T' }}
         run: |
           set -euo pipefail
 
