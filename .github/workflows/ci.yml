@@ -185,7 +185,7 @@ jobs:
         run: npm ci
 
       - name: Dependency audit
-        run: npm audit --audit-level=critical
+        run: npm audit
 
       - name: Lint Markdown
         run: npm run lint:md
