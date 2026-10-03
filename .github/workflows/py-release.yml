@@ -118,16 +118,16 @@ jobs:
           fi
 
       - name: Lint
-        run: uv run ruff check .
+        run: uv run --no-sync ruff check .
 
       - name: Format check
-        run: uv run ruff format --check .
+        run: uv run --no-sync ruff format --check .
 
       - name: Typecheck
-        run: uv run pyright
+        run: uv run --no-sync pyright
 
       - name: Test with Coverage
-        run: uv run pytest --cov=src
+        run: uv run --no-sync pytest --cov=src
 
       - name: Build package
         run: uv build --wheel --sdist
