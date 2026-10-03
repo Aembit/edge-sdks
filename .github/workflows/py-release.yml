@@ -1,0 +1,229 @@
+name: Python SDK Release Deployment
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  get-version:
+    name: Get Version from Tag
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      pep440_version: ${{ steps.get-version.outputs.pep440_version }}
+      is_rc: ${{ steps.get-version.outputs.is_rc }}
+      environment: ${{ steps.get-version.outputs.environment }}
+    steps:
+      - id: get-version
+        name: Get Version and Tag Mode
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          TAG="$REF_NAME"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "::error::Release tag '$TAG' does not match valid SemVer tag format (e.g. v1.34.0 or v1.34.0-rc.1)"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+
+          if [[ "$TAG" == *"-rc"* ]]; then
+            if [ "$IS_PRERELEASE" != "true" ]; then
+              echo "::error::Tag '$TAG' is an RC tag but release was not marked as a pre-release!"
+              exit 1
+            fi
+            IS_RC="true"
+          else
+            if [ "$IS_PRERELEASE" = "true" ]; then
+              echo "::error::Tag '$TAG' is a GA release tag but release was marked as a pre-release!"
+              exit 1
+            fi
+            IS_RC="false"
+          fi
+
+          PEP440_VERSION=$(echo "$VERSION" | sed -E 's/-rc\.([0-9]+)$/rc\1/')
+          ENVIRONMENT="pypi"
+
+          printf "version=%s\n" "$VERSION" >> "$GITHUB_OUTPUT"
+          printf "pep440_version=%s\n" "$PEP440_VERSION" >> "$GITHUB_OUTPUT"
+          printf "is_rc=%s\n" "$IS_RC" >> "$GITHUB_OUTPUT"
+          printf "environment=%s\n" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy Package to PyPI
+    needs: [get-version]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: ${{ needs.get-version.outputs.environment }}
+      url: https://pypi.org/project/aembit-edge-sdk/${{ needs.get-version.outputs.pep440_version }}/
+    defaults:
+      run:
+        working-directory: py
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install dependencies
+        run: uv sync --extra dev --locked
+
+      - name: Sync package version from release tag
+        env:
+          TAG_VERSION: ${{ needs.get-version.outputs.pep440_version }}
+        run: |
+          echo "Synchronizing package manifest version to release tag: $TAG_VERSION"
+          python3 -c "
+          import re, sys
+          tag_version = sys.argv[1]
+          with open('pyproject.toml', 'r', encoding='utf-8') as f:
+              content = f.read()
+          updated, count = re.subn(
+              r'^(version\s*=\s*\")[^\"]+(\")',
+              rf'\g<1>{tag_version}\g<2>',
+              content,
+              count=1,
+              flags=re.MULTILINE
+          )
+          if count != 1:
+              sys.exit(f'Failed to update version in pyproject.toml: matched {count} times')
+          with open('pyproject.toml', 'w', encoding='utf-8') as f:
+              f.write(updated)
+          " "${{ needs.get-version.outputs.pep440_version }}"
+          PKG_VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "Updated pyproject.toml Version: $PKG_VERSION"
+          if [ "${{ needs.get-version.outputs.pep440_version }}" != "$PKG_VERSION" ]; then
+            echo "::error::Updated pyproject.toml version ($PKG_VERSION) does not match expected ($TAG_VERSION)!"
+            exit 1
+          fi
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Typecheck
+        run: uv run pyright
+
+      - name: Test with Coverage
+        run: uv run pytest --cov=src
+
+      - name: Build package
+        run: uv build --wheel --sdist
+
+      - name: Verify license in built artifacts
+        run: |
+          unzip -l dist/*.whl | grep -E "dist-info/licenses/LICENSE|dist-info/LICENSE"
+          tar -ztvf dist/*.tar.gz | grep -E "aembit_edge_sdk-[0-9a-zA-Z.]+/LICENSE"
+
+      - name: Install built wheel
+        run: |
+          python -m venv .pkg-venv
+          .pkg-venv/bin/pip install dist/*.whl
+
+      - name: Smoke test built package
+        run: |
+          .pkg-venv/bin/python -c "from importlib import resources; from aembit_edge import EdgeClient, EdgeClientConfig; marker = resources.files('aembit_edge').joinpath('py.typed'); assert marker.is_file(); print(EdgeClient.__name__, EdgeClientConfig.__name__)"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: py/dist
+
+      - name: Fetch Slack OAuth Token
+        if: always()
+        id: slack-token
+        uses: Aembit/get-credentials@0b519d6b50789a1a7f6f82d5c18badd17c62415b # v1.2.0
+        with:
+          client-id: '${{ secrets.AEMBIT_GITHUB_CLIENT_ID }}'
+          credential-type: 'OAuthToken'
+          server-host: 'slack.com'
+        continue-on-error: true
+
+      - name: Build Slack Notification
+        if: always()
+        env:
+          VERSION: ${{ needs.get-version.outputs.pep440_version }}
+          IS_RC: ${{ needs.get-version.outputs.is_rc }}
+          STATUS: ${{ job.status }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          CHANNEL: "C0BACLES4DB"
+        run: |
+          if [ "$STATUS" = "success" ]; then
+            ICON="white_check_mark"
+          else
+            ICON="x"
+          fi
+
+          if [ "$IS_RC" = "true" ]; then
+            TITLE="Python SDK Release Candidate Deployment"
+            PKG_DESC="aembit-edge-sdk (RC)"
+          else
+            TITLE="Python SDK Release Deployment"
+            PKG_DESC="aembit-edge-sdk (latest)"
+          fi
+
+          jq -n \
+            --arg channel "$CHANNEL" \
+            --arg repo "$REPO" \
+            --arg run_id "$RUN_ID" \
+            --arg version "$VERSION" \
+            --arg icon "$ICON" \
+            --arg title "$TITLE" \
+            --arg pkg "$PKG_DESC" \
+            '{
+              "channel": $channel,
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": (":" + $icon + ": *" + $title + "*")
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Package:*\n" + $pkg + "\n*Version:*\n" + $version)
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Details:*\n<https://github.com/" + $repo + "/actions/runs/" + $run_id + "|View GitHub Job>")
+                    }
+                  ]
+                }
+              ]
+            }' > slack_payload.json
+
+      - name: Send Notification
+        if: always() && steps.slack-token.outputs.token != ''
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ steps.slack-token.outputs.token }}
+          payload-file-path: py/slack_payload.json
+        continue-on-error: true
