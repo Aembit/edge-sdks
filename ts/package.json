@@ -125,7 +125,9 @@
     "vitest": "^5.0.0"
   },
   "overrides": {
-    "qs": "^6.16.0"
+    "typed-rest-client": {
+      "qs": "^6.16.0"
+    }
   }
 }
 
