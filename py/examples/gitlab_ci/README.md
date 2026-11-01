@@ -19,7 +19,7 @@ This example demonstrates how to configure and run the Python SDK inside a GitLa
       aud: https://<tenant>.ec.<stack>.aembit.io
   ```
 
-- Python `>=3.10`
+- Python `>=3.12`
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup
@@ -87,7 +87,7 @@ stages:
 
 run-aembit-sdk:
   stage: test
-  image: python:3.11-slim
+  image: python:3.12-slim
   id_tokens:
     GITLAB_OIDC_TOKEN:
       aud: https://<tenant>.ec.<stack>.aembit.io  # Your tenant Edge URL

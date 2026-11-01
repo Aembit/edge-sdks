@@ -44,7 +44,7 @@ aws_access_key = sts_data["awsAccessKeyId"]
 ## Prerequisites
 
 - A Kubernetes cluster with a mounted Service Account token, or an environment variable `AEMBIT_K8S_SERVICE_ACCOUNT_TOKEN` for local testing
-- Python `>=3.10` installed on your execution machine
+- Python `>=3.12` installed on your execution machine
 - An Aembit Access Policy with multiple AWS STS Federation Credential Providers configured
 
 ## Edit The Example

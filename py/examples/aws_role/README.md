@@ -10,7 +10,7 @@ This example demonstrates how to configure and run the Python SDK using an AWS I
 ## Prerequisites
 
 - An active AWS execution environment (EC2, ECS Task, local CLI, etc.) with active AWS credentials or an assigned IAM Role
-- Python `>=3.10` installed on the system
+- Python `>=3.12` installed on the system
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup

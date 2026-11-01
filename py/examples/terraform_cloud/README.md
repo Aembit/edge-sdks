@@ -10,7 +10,7 @@ This example demonstrates how to configure and run the Python SDK using a Terraf
 ## Prerequisites
 
 - Terraform Cloud or Terraform Enterprise running an active workspace
-- Python `>=3.10` installed on your execution machine or in the TFC runner environment
+- Python `>=3.12` installed on your execution machine or in the TFC runner environment
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup

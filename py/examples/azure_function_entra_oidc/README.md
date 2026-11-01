@@ -15,7 +15,7 @@ This directory includes:
 - An Azure Function App running the Python v2 programming model
 - Managed identity enabled for the function app
 - An Entra app registration whose Application ID URI represents the Aembit audience for this flow
-- Python `>=3.10`
+- Python `>=3.12`
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Access Policy (Required)
