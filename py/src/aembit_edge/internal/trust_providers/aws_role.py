@@ -4,7 +4,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Protocol, cast
 from unittest.mock import patch
 
@@ -145,7 +145,7 @@ def _normalize_signing_time(value: datetime | None) -> datetime | None:
         return None
     if value.tzinfo is None:
         return value
-    return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value.astimezone(UTC).replace(tzinfo=None)
 
 
 def _normalize_headers(items: list[tuple[str, str]]) -> dict[str, str]:

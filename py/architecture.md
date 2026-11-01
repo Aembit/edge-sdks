@@ -8,7 +8,7 @@ This is the initial architecture for Python SDK v1 work.
 
 Initial baseline:
 
-- runtime target: Python `>=3.10`
+- runtime target: Python `>=3.12`
 - package distribution name: `aembit-edge-sdk`
 - import package: `aembit_edge`
 - target API contract: Aembit Edge API v1 (`spec/openapi/edge-sdk-v1.yaml`)
