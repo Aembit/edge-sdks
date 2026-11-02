@@ -11,7 +11,7 @@ By generating a symmetrically signed HS256 JWT locally, you can authenticate a w
 
 ## Prerequisites
 
-- Python `>=3.10` installed
+- Python `>=3.12` installed
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup

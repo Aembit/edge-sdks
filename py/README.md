@@ -13,7 +13,7 @@ The Aembit Edge SDK allows Python backend services, serverless functions, web ap
 - 🔐 **Zero Hardcoded Secrets**: Authenticate via workload identity (AWS STS Role, GitHub Actions OIDC, GitLab CI/CD OIDC, Terraform Cloud OIDC).
 - 🔄 **Automatic Token Lifecycle**: Built-in in-memory bearer token caching and proactive background refresh.
 - 🪵 **Standard Library Logging**: Configured via the standard `logging` library under the `aembit_edge` namespace.
-- 📦 **Modern Python**: Strictly typed, supporting Python `>=3.10`.
+- 📦 **Modern Python**: Strictly typed, supporting Python `>=3.12`.
 
 ## Installation
 

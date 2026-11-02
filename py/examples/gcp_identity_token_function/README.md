@@ -12,7 +12,7 @@ This example demonstrates how to configure and run the Python SDK inside an HTTP
 
 - A Google Cloud Platform (GCP) account and active project
 - The Google Cloud CLI (`gcloud` CLI) installed locally
-- Python `>=3.10`
+- Python `>=3.12`
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup

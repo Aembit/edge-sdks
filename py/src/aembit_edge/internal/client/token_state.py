@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ...retry import RetryPolicy
 from ..protocol.retry import (
@@ -67,7 +67,7 @@ def format_expires_at(expires_at_ms: int | None) -> str | None:
         return None
 
     return (
-        datetime.fromtimestamp(expires_at_ms / 1000, tz=timezone.utc)
+        datetime.fromtimestamp(expires_at_ms / 1000, tz=UTC)
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z")
     )

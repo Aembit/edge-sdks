@@ -13,7 +13,7 @@ Changes in `py/` should prioritize:
 - clear and ergonomic developer APIs
 - predictable authentication and token lifecycle behavior
 - portability of concepts from the TypeScript reference implementation
-- compatibility with Python `>=3.10`
+- compatibility with Python `>=3.12`
 
 ## Scope
 
@@ -58,7 +58,7 @@ Planned public entry points:
 
 ## Python Standards
 
-- Support Python `>=3.10`.
+- Support Python `>=3.12`.
 - Use full type hints in public and internal code.
 - Prefer `Protocol`, `TypedDict`, `dataclass`, and small focused classes where they improve clarity.
 - Keep public types intentionally minimal and stable.
@@ -130,7 +130,7 @@ Examples are part of product quality, not optional extras.
 - Avoid adding dependencies unless they materially improve reliability, maintainability, or developer experience.
 - Prefer small, well-maintained libraries over broad frameworks.
 - Do not add dependencies for trivial utilities that can be implemented clearly in SDK code.
-- When adding dependencies, consider Python `>=3.10` compatibility and static typing support.
+- When adding dependencies, consider Python `>=3.12` compatibility and static typing support.
 
 ## Review Checklist For Agents
 

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import cast
 
 import pytest
@@ -23,7 +23,7 @@ def test_builds_signed_sts_headers_for_get_caller_identity() -> None:
             secret_access_key="wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
             session_token="session-token-1",
         ),
-        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=timezone.utc),
+        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=UTC),
     )
 
     assert result.region == "us-east-1"
@@ -45,7 +45,7 @@ def test_uses_partition_aware_sts_host_for_aws_china_regions() -> None:
             access_key_id="AKIDEXAMPLE",
             secret_access_key="secret",
         ),
-        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=timezone.utc),
+        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=UTC),
     )
 
     assert result.headers["host"] == "sts.cn-north-1.amazonaws.com.cn"
@@ -62,7 +62,7 @@ def test_keeps_standard_sts_host_format_for_govcloud_regions() -> None:
             access_key_id="AKIDEXAMPLE",
             secret_access_key="secret",
         ),
-        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=timezone.utc),
+        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=UTC),
     )
 
     assert result.headers["host"] == "sts.us-gov-west-1.amazonaws.com"
@@ -79,7 +79,7 @@ def test_omits_security_token_when_session_token_is_not_present() -> None:
             access_key_id="AKIDEXAMPLE",
             secret_access_key="secret",
         ),
-        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=timezone.utc),
+        now=lambda: datetime(2026, 3, 12, 10, 15, 30, tzinfo=UTC),
     )
 
     assert "x-amz-security-token" not in result.headers

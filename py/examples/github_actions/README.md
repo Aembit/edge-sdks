@@ -19,7 +19,7 @@ This example demonstrates how to configure and run the Python SDK inside a GitHu
     contents: read
   ```
 
-- Python `>=3.10`
+- Python `>=3.12`
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Setup
@@ -86,7 +86,7 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           update-environment: true
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1

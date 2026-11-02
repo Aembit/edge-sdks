@@ -10,7 +10,7 @@ This directory includes:
 
 - A Vercel project with OIDC federation enabled
 - A Vercel Function running on the Python runtime
-- Python `>=3.10`
+- Python `>=3.12`
 - An Aembit Access Policy configured for this SDK flow
 
 ## Aembit Access Policy (Required)
