@@ -74,7 +74,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "24.x"
           cache: npm
@@ -121,7 +121,7 @@ jobs:
       - name: Fetch Slack OAuth Token
         if: always()
         id: slack-token
-        uses: Aembit/get-credentials@0b519d6b50789a1a7f6f82d5c18badd17c62415b # v1.2.0
+        uses: Aembit/get-credentials@5ab6e72f81fd85e1bd2bbd2045146372c6b4b085 # v1.3.0
         with:
           client-id: '${{ secrets.AEMBIT_GITHUB_CLIENT_ID }}'
           credential-type: 'OAuthToken'
