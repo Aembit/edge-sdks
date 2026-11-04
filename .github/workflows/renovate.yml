@@ -47,5 +47,4 @@ jobs:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_PLATFORM: github
           RENOVATE_ONBOARDING: 'false'
-          RENOVATE_ALLOWED_POST_UPGRADE_COMMANDS: '["^sh -c ''cd ts && npx --no-install eslint \"src/\\*\\*/\\*\\.ts\" --fix''$"]'
           LOG_LEVEL: debug
