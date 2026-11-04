@@ -37,11 +37,8 @@
     {
       "matchManagers": ["npm"],
       "groupName": "NPM dependencies (all versions)",
-      "postUpgradeTasks": {
-        "commands": ["sh -c 'cd ts && npx --no-install eslint \"src/**/*.ts\" --fix'"],
-        "fileFilters": ["ts/src/**/*.ts"],
-        "executionMode": "branch"
-      }
+      "separateMajorMinor": false,
+      "groupSingleUpdates": true
     },
     {
       "matchPackageNames": [
