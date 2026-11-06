@@ -1,6 +1,6 @@
 # Aembit Edge SDKs
 
-Official multi-language SDKs and examples for integrating applications, serverless functions, AI agents, and services with the [Aembit Edge API](https://docs.aembit.io/api-guide/edge/).
+Official multi-language SDKs and examples for integrating applications, serverless functions, AI agents, and services with the [Aembit Edge API](https://docs.aembit.io/dev-guide/api/edge/).
 
 The Aembit Edge SDKs make it easy for developers to authenticate workloads and retrieve credentials dynamically through Aembit without managing static secrets or interacting directly with low-level HTTP protocols.
 
@@ -30,7 +30,7 @@ This repository is organized as a multi-language SDK monorepo:
 
 ## Documentation & Resources
 
-- [Official Aembit Edge API Guide](https://docs.aembit.io/api-guide/edge/)
+- [Official Aembit Edge API Guide](https://docs.aembit.io/dev-guide/api/edge/)
 - [Aembit Documentation](https://docs.aembit.io/)
 - [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
 - [Contributing Guidelines](./CONTRIBUTING.md)

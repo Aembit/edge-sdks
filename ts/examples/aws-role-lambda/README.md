@@ -28,7 +28,7 @@ References:
 
 - Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
 - AWS Role Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/aws-role-trust-provider>
-- AWS IAM Role auth setup: <https://docs.aembit.io/api-guide/edge/auth/aws-iam-role/>
+- AWS IAM Role auth setup: <https://docs.aembit.io/dev-guide/api/edge/auth/aws-lambda/>
 - Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
 Example Server Workload configuration (for this README examples):
