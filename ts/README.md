@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Aembit/edge-sdks/blob/main/LICENSE)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
 
-Official TypeScript / JavaScript SDK for interacting with the [Aembit Edge API](https://docs.aembit.io/api-guide/edge/).
+Official TypeScript / JavaScript SDK for interacting with the [Aembit Edge API](https://docs.aembit.io/dev-guide/api/edge/).
 
 The Aembit Edge SDK enables workloads, serverless functions, AI agents, and MCP servers to authenticate and retrieve credentials dynamically without managing static secrets.
 
@@ -171,7 +171,7 @@ Runnable end-to-end examples are available in the GitHub repository:
 
 ## Documentation & Resources
 
-- [Official Aembit Edge API Guide](https://docs.aembit.io/api-guide/edge/)
+- [Official Aembit Edge API Guide](https://docs.aembit.io/dev-guide/api/edge/)
 - [Aembit Documentation](https://docs.aembit.io/)
 - [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
 - [Contributing Guide](https://github.com/Aembit/edge-sdks/blob/main/CONTRIBUTING.md)

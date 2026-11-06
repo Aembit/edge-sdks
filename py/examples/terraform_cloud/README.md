@@ -26,7 +26,7 @@ References:
 
 - Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
 - Terraform Cloud Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/terraform-cloud-trust-provider/>
-- Terraform Cloud auth setup: <https://docs.aembit.io/api-guide/edge/auth/terraform-cloud>
+- Terraform Cloud auth setup: <https://docs.aembit.io/dev-guide/api/edge/endpoints/auth/#terraform-cloud-attestation>
 - Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
 Example Server Workload configuration for this README:

@@ -11,7 +11,7 @@ v1 baseline:
 - runtime target: Node.js `>=20`
 - package output: ESM-only
 - target API contract: Aembit Edge API v1 (`spec/openapi/edge-sdk-v1.yaml`)
-- canonical API docs: `https://docs.aembit.io/api-guide/edge/`
+- canonical API docs: `https://docs.aembit.io/dev-guide/api/edge/`
 - OpenAPI snapshot timestamp: `2026-08-10T22:39:19-07:00`
 - built-in Trust Provider coverage: AWS Metadata Service (IMDSv2), AWS Role, OIDC ID Token, and GCP Identity Token
 - test framework: Vitest with colocated tests (`*.test.ts`)

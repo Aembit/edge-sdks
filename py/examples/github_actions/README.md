@@ -35,7 +35,7 @@ References:
 
 - Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
 - GitHub Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/github-trust-provider/>
-- GitHub OIDC auth setup: <https://docs.aembit.io/api-guide/edge/auth/github-id-token>
+- GitHub OIDC auth setup: <https://docs.aembit.io/dev-guide/api/edge/endpoints/auth/#github-actions-attestation>
 - Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
 Example Server Workload configuration for this README:

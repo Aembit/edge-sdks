@@ -24,7 +24,7 @@ Terminology:
 
 - Use `Trust Provider` as the canonical term in SDK docs and APIs.
 - OpenAPI schema descriptions may still use `attestation` wording.
-- Use official Aembit wording from `https://docs.aembit.io/api-guide/edge/`; do not introduce alternate platform terms unless explicitly requested.
+- Use official Aembit wording from `https://docs.aembit.io/dev-guide/api/edge/`; do not introduce alternate platform terms unless explicitly requested.
 
 Planned SDKs include:
 

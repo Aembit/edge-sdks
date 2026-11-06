@@ -28,7 +28,7 @@ References:
 
 - Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
 - GCP Identity Token Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/gcp-identity-token-trust-provider/>
-- GCP Identity Token auth setup: <https://docs.aembit.io/api-guide/edge/auth/gcp-identity-token>
+- GCP Identity Token auth setup: <https://docs.aembit.io/dev-guide/api/edge/auth/gcp-identity-token>
 - Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
 Example Server Workload configuration for this README:
