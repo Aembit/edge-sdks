@@ -20,7 +20,7 @@ It is language-agnostic. Language-specific implementation details belong in each
 ## Sources of Truth
 
 - Protocol contract: pinned OpenAPI snapshots in `spec/openapi/`.
-- API semantics and terminology: official Aembit Edge API docs (`https://docs.aembit.io/api-guide/edge/`).
+- API semantics and terminology: official Aembit Edge API docs (`https://docs.aembit.io/dev-guide/api/edge/`).
 - Architectural contract: this document.
 - Language realization: language-specific architecture documents.
 

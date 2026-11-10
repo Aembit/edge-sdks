@@ -27,7 +27,7 @@ References:
 
 - Server Workload guide: <https://docs.aembit.io/user-guide/access-policies/server-workloads/>
 - OIDC Trust Provider guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/oidc-trust-provider/>
-- OIDC auth setup: <https://docs.aembit.io/api-guide/edge/auth/oidc-id-token>
+- OIDC auth setup: <https://docs.aembit.io/dev-guide/api/edge/auth/oidc-id-token>
 - Get Edge SDK Client ID guide: <https://docs.aembit.io/user-guide/access-policies/trust-providers/get-edge-sdk-client-id/>
 
 Example Server Workload configuration for this README:

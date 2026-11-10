@@ -47,7 +47,7 @@ Python should expose a high-level client-first interface.
 - Public methods should map to developer tasks such as `authenticate()` and `get_credential()`.
 - Public APIs should use Python naming conventions such as `snake_case`.
 - Public configuration should use `Trust Provider` terminology.
-- Use official Aembit Edge API terminology from `https://docs.aembit.io/api-guide/edge/`; avoid alternate API names in docs/comments.
+- Use official Aembit Edge API terminology from `https://docs.aembit.io/dev-guide/api/edge/`; avoid alternate API names in docs/comments.
 - Keep advanced options optional and well-scoped.
 - Preserve credential response data without forcing a rigid credential schema.
 
