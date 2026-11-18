@@ -48,10 +48,16 @@ function main() {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  assert.ok(
-    entries.includes("package/LICENSE"),
-    `Tarball ${tarballs[0]} is missing required entry package/LICENSE`,
-  );
+  for (const requiredEntry of [
+    "package/LICENSE",
+    "package/README.md",
+    "package/dist/index.d.ts",
+  ]) {
+    assert.ok(
+      entries.includes(requiredEntry),
+      `Tarball ${tarballs[0]} is missing required entry ${requiredEntry}`,
+    );
+  }
 
   const packageJsonRaw = execFileSync(
     "tar",

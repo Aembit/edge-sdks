@@ -109,9 +109,7 @@ jobs:
         run: |
           npm run build
           npm pack
-          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/LICENSE"
-          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/README.md"
-          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/dist/index.d.ts"
+          node ./scripts/verify-package-artifact.mjs
 
       - name: Publish to npm
         env:

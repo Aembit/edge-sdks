@@ -300,6 +300,8 @@ function buildSyntheticTarball(
   dir: string,
   options: {
     includeLicense?: boolean
+    includeReadme?: boolean
+    includeIndexDts?: boolean
     packageOverrides?: Record<string, unknown>
     skipTarball?: boolean
   } = {}
@@ -313,6 +315,14 @@ function buildSyntheticTarball(
 
   if (options.includeLicense !== false) {
     fs.writeFileSync(path.join(pkgDir, "LICENSE"), "Apache-2.0\n", "utf8")
+  }
+  if (options.includeReadme !== false) {
+    fs.writeFileSync(path.join(pkgDir, "README.md"), "# @aembit/edge-sdk\n", "utf8")
+  }
+  if (options.includeIndexDts !== false) {
+    const distDir = path.join(pkgDir, "dist")
+    fs.mkdirSync(distDir, { recursive: true })
+    fs.writeFileSync(path.join(distDir, "index.d.ts"), "export {};\n", "utf8")
   }
 
   const basePkg = JSON.parse(fs.readFileSync(PACKAGE_JSON_PATH, "utf8")) as Record<string, unknown>
@@ -358,6 +368,16 @@ describe("verify-package-artifact.mjs", () => {
       "missing package/LICENSE",
       { includeLicense: false },
       "missing required entry package/LICENSE"
+    ],
+    [
+      "missing package/README.md",
+      { includeReadme: false },
+      "missing required entry package/README.md"
+    ],
+    [
+      "missing package/dist/index.d.ts",
+      { includeIndexDts: false },
+      "missing required entry package/dist/index.d.ts"
     ],
     [
       "version drift",
