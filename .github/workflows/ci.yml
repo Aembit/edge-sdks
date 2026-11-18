@@ -80,7 +80,7 @@ jobs:
         run: |
           npm run build
           npm pack
-          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/LICENSE"
+          node ./scripts/verify-package-artifact.mjs
 
   python:
     name: Python (${{ matrix.python-version }})
@@ -150,11 +150,9 @@ jobs:
         if: matrix.python-version == '3.12'
         run: uv build --wheel --sdist
 
-      - name: Verify license in built artifacts
+      - name: Verify license and metadata in built artifacts
         if: matrix.python-version == '3.12'
-        run: |
-          unzip -l dist/*.whl | grep -E "dist-info/licenses/LICENSE|dist-info/LICENSE"
-          tar -ztvf dist/*.tar.gz | grep -E "aembit_edge_sdk-[0-9.]+/LICENSE"
+        run: python scripts/verify_package_artifact.py
 
       - name: Install built wheel
         if: matrix.python-version == '3.12'

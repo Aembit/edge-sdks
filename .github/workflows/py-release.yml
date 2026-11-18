@@ -132,10 +132,8 @@ jobs:
       - name: Build package
         run: uv build --wheel --sdist
 
-      - name: Verify license in built artifacts
-        run: |
-          unzip -l dist/*.whl | grep -E "dist-info/licenses/LICENSE|dist-info/LICENSE"
-          tar -ztvf dist/*.tar.gz | grep -E "aembit_edge_sdk-[0-9a-zA-Z.]+/LICENSE"
+      - name: Verify license and metadata in built artifacts
+        run: python scripts/verify_package_artifact.py
 
       - name: Install built wheel
         run: |
