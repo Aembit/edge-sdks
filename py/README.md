@@ -113,7 +113,7 @@ logging.getLogger("aembit_edge").setLevel(logging.DEBUG)
 
 ## Examples
 
-Runnable integration examples are available in the GitHub repository:
+Runnable integration reference examples (provided as-is; see [Support Policy](https://github.com/Aembit/edge-sdks/blob/main/SUPPORT.md)) are available in the GitHub repository:
 
 - [Logging Integration (Loguru & Structlog)](https://github.com/Aembit/edge-sdks/tree/main/py/examples/logging_integration)
 
@@ -123,6 +123,7 @@ Runnable integration examples are available in the GitHub repository:
 - [Aembit Documentation](https://docs.aembit.io/)
 - [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
 - [Contributing Guide](https://github.com/Aembit/edge-sdks/blob/main/CONTRIBUTING.md)
+- [Support Policy](https://github.com/Aembit/edge-sdks/blob/main/SUPPORT.md)
 
 ## License
 
