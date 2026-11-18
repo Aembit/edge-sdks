@@ -1,18 +1,45 @@
 {
   "name": "@aembit/edge-sdk",
   "version": "1.34.1",
-  "description": "TypeScript SDK for the Aembit Edge API",
+  "description": "Official TypeScript SDK for the Aembit Edge API: workload identity authentication and secretless credential retrieval",
   "license": "Apache-2.0",
   "type": "module",
+  "author": "Aembit, Inc. <support@aembit.io>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Aembit/edge-sdks.git",
     "directory": "ts"
   },
-  "homepage": "https://github.com/Aembit/edge-sdks/tree/main/ts#readme",
+  "homepage": "https://docs.aembit.io/dev-guide/api/edge/",
   "bugs": {
     "url": "https://github.com/Aembit/edge-sdks/issues"
   },
+  "keywords": [
+    "aembit",
+    "ai-agents",
+    "authentication",
+    "aws-imds",
+    "aws-sts",
+    "azure-imds",
+    "credentials",
+    "gcp",
+    "github-actions",
+    "gitlab-ci",
+    "iam",
+    "kubernetes",
+    "mcp",
+    "model-context-protocol",
+    "non-human-identity",
+    "oauth2",
+    "oidc",
+    "secretless",
+    "secrets-management",
+    "security",
+    "terraform-cloud",
+    "token-management",
+    "workload-identity",
+    "zero-trust"
+  ],
   "publishConfig": {
     "access": "public",
     "provenance": true
