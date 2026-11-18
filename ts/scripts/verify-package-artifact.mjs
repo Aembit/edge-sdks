@@ -63,6 +63,7 @@ function main() {
     fs.readFileSync(path.join(tsRoot, "package.json"), "utf8"),
   );
 
+  assert.equal(pkg.version, sourcePkg.version);
   assert.equal(
     pkg.description,
     "Official TypeScript SDK for the Aembit Edge API: workload identity authentication and secretless credential retrieval",

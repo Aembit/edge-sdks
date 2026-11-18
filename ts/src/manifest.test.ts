@@ -17,6 +17,7 @@ const VERIFY_SCRIPT_PATH = path.join(TS_ROOT, "scripts", "verify-package-artifac
 
 interface PackageManifest {
   name?: string
+  version?: string
   description?: string
   author?: string
   funding?: unknown
@@ -315,13 +316,14 @@ function buildSyntheticTarball(
   }
 
   const basePkg = JSON.parse(fs.readFileSync(PACKAGE_JSON_PATH, "utf8")) as Record<string, unknown>
+  const version = String(basePkg.version)
   const mergedPkg = {
     ...basePkg,
     ...options.packageOverrides
   }
   fs.writeFileSync(path.join(pkgDir, "package.json"), JSON.stringify(mergedPkg, null, 2), "utf8")
 
-  const tgzPath = path.join(dir, "aembit-edge-sdk-1.34.1.tgz")
+  const tgzPath = path.join(dir, `aembit-edge-sdk-${version}.tgz`)
   execFileSync("tar", ["-czf", tgzPath, "-C", stageDir, "package"])
   fs.rmSync(stageDir, { recursive: true, force: true })
 }
@@ -330,6 +332,7 @@ describe("verify-package-artifact.mjs", () => {
   it("passes on a valid synthetic package tarball", () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "sdk58-ts-verify-pass-"))
     try {
+      const pkg = readPackageManifest()
       buildSyntheticTarball(tmpDir)
       const result = spawnSync(
         process.execPath,
@@ -337,7 +340,9 @@ describe("verify-package-artifact.mjs", () => {
         { encoding: "utf8" }
       )
       expect(result.status).toBe(0)
-      expect(result.stdout).toContain("Verified TypeScript package artifact aembit-edge-sdk-1.34.1.tgz")
+      expect(result.stdout).toContain(
+        `Verified TypeScript package artifact aembit-edge-sdk-${String(pkg.version)}.tgz`
+      )
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true })
     }
@@ -353,6 +358,11 @@ describe("verify-package-artifact.mjs", () => {
       "missing package/LICENSE",
       { includeLicense: false },
       "missing required entry package/LICENSE"
+    ],
+    [
+      "version drift",
+      { packageOverrides: { version: "0.0.0-drifted" } },
+      "0.0.0-drifted"
     ],
     [
       "description drift",

@@ -41,7 +41,7 @@ def _load_pyproject() -> dict[str, Any]:
     return cast(dict[str, Any], project)
 
 
-def _verify_sdist(dist_dir: Path) -> Path:
+def _verify_sdist(dist_dir: Path, pyproject_project: dict[str, Any]) -> Path:
     sdists = sorted(dist_dir.glob("*.tar.gz"))
     if len(sdists) != 1:
         raise AssertionError(
@@ -54,6 +54,13 @@ def _verify_sdist(dist_dir: Path) -> Path:
     if not any(SDIST_LICENSE_PATTERN.match(name) for name in members):
         raise AssertionError(
             f"sdist {sdist_path.name} is missing LICENSE matching {SDIST_LICENSE_PATTERN.pattern}"
+        )
+    expected_version = cast(str, pyproject_project["version"])
+    expected_sdist_license = f"aembit_edge_sdk-{expected_version}/LICENSE"
+    if expected_sdist_license not in members:
+        raise AssertionError(
+            f"sdist {sdist_path.name} is missing LICENSE for expected version "
+            f"{expected_version!r} ({expected_sdist_license})"
         )
     return sdist_path
 
@@ -81,6 +88,11 @@ def _verify_wheel(dist_dir: Path, pyproject_project: dict[str, Any]) -> Path:
                 f"Expected exactly 1 .dist-info/METADATA in {wheel_path.name}, found {meta_names}"
             )
         msg = BytesParser().parsebytes(zf.read(meta_names[0]))
+
+    expected_version = cast(str, pyproject_project["version"])
+    version = msg["Version"]
+    if version != expected_version:
+        raise AssertionError(f"Unexpected Version: {version!r} != {expected_version!r}")
 
     summary = msg["Summary"]
     if summary != EXPECTED_SUMMARY:
@@ -132,7 +144,7 @@ def verify_artifacts(dist_dir: Path) -> tuple[Path, Path]:
     if not dist_dir.is_dir():
         raise AssertionError(f"Dist directory does not exist: {dist_dir}")
     pyproject_project = _load_pyproject()
-    sdist_path = _verify_sdist(dist_dir)
+    sdist_path = _verify_sdist(dist_dir, pyproject_project)
     wheel_path = _verify_wheel(dist_dir, pyproject_project)
     return sdist_path, wheel_path
 

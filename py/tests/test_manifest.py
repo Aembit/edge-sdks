@@ -185,6 +185,8 @@ def _build_synthetic_artifacts(
     include_sdist_license: bool = True,
     include_wheel: bool = True,
     include_wheel_license: bool = True,
+    sdist_version_override: str | None = None,
+    metadata_version_override: str | None = None,
     summary: str | None = None,
     author_email: str | None = None,
     keywords: str | None = None,
@@ -192,22 +194,29 @@ def _build_synthetic_artifacts(
     classifiers: list[str] | None = None,
 ) -> None:
     project = _load_pyproject_project()
+    project_version = cast(str, project["version"])
+    sdist_version = (
+        sdist_version_override if sdist_version_override is not None else project_version
+    )
+    metadata_version = (
+        metadata_version_override if metadata_version_override is not None else project_version
+    )
 
     if include_sdist:
-        sdist_path = dist_dir / "aembit_edge_sdk-1.34.1.tar.gz"
+        sdist_path = dist_dir / f"aembit_edge_sdk-{project_version}.tar.gz"
         with tarfile.open(sdist_path, "w:gz") as tf:
             pyproject_bytes = b"[project]\nname = 'aembit-edge-sdk'\n"
-            info = tarfile.TarInfo("aembit_edge_sdk-1.34.1/pyproject.toml")
+            info = tarfile.TarInfo(f"aembit_edge_sdk-{sdist_version}/pyproject.toml")
             info.size = len(pyproject_bytes)
             tf.addfile(info, io.BytesIO(pyproject_bytes))
             if include_sdist_license:
                 lic_bytes = b"Apache-2.0\n"
-                lic_info = tarfile.TarInfo("aembit_edge_sdk-1.34.1/LICENSE")
+                lic_info = tarfile.TarInfo(f"aembit_edge_sdk-{sdist_version}/LICENSE")
                 lic_info.size = len(lic_bytes)
                 tf.addfile(lic_info, io.BytesIO(lic_bytes))
 
     if include_wheel:
-        wheel_path = dist_dir / "aembit_edge_sdk-1.34.1-py3-none-any.whl"
+        wheel_path = dist_dir / f"aembit_edge_sdk-{project_version}-py3-none-any.whl"
         meta_summary = (
             summary
             if summary is not None
@@ -238,7 +247,7 @@ def _build_synthetic_artifacts(
         lines = [
             "Metadata-Version: 2.4",
             "Name: aembit-edge-sdk",
-            "Version: 1.34.1",
+            f"Version: {metadata_version}",
             f"Summary: {meta_summary}",
             f"Author-email: {meta_author_email}",
             f"Keywords: {meta_keywords}",
@@ -249,9 +258,12 @@ def _build_synthetic_artifacts(
 
         with zipfile.ZipFile(wheel_path, "w") as zf:
             zf.writestr("aembit_edge/__init__.py", "")
-            zf.writestr("aembit_edge_sdk-1.34.1.dist-info/METADATA", metadata_text)
+            zf.writestr(f"aembit_edge_sdk-{project_version}.dist-info/METADATA", metadata_text)
             if include_wheel_license:
-                zf.writestr("aembit_edge_sdk-1.34.1.dist-info/licenses/LICENSE", "Apache-2.0\n")
+                zf.writestr(
+                    f"aembit_edge_sdk-{project_version}.dist-info/licenses/LICENSE",
+                    "Apache-2.0\n",
+                )
 
 
 def test_verify_package_artifact_passes_on_valid_artifacts(tmp_path: Path) -> None:
@@ -274,6 +286,8 @@ def test_verify_package_artifact_passes_on_valid_artifacts(tmp_path: Path) -> No
         ({"include_sdist": False}, "Expected exactly 1 sdist"),
         ({"include_wheel_license": False}, "missing LICENSE"),
         ({"include_sdist_license": False}, "missing LICENSE"),
+        ({"sdist_version_override": "0.0.0-drifted"}, "missing LICENSE for expected version"),
+        ({"metadata_version_override": "0.0.0-drifted"}, "Unexpected Version"),
         ({"summary": "Drifted summary"}, "Unexpected Summary"),
         ({"author_email": '"Other" <other@example.com>'}, "Unexpected Author-email"),
         ({"keywords": "aembit,mutated"}, "Expected 24 keywords"),
