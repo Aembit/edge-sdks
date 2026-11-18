@@ -5,8 +5,13 @@
 
 from __future__ import annotations
 
+import io
 import json
+import subprocess
+import sys
+import tarfile
 import tomllib
+import zipfile
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -26,6 +31,7 @@ def _find_repo_root() -> Path:
 REPO_ROOT = _find_repo_root()
 PYPROJECT_PATH = REPO_ROOT / "py" / "pyproject.toml"
 TS_PACKAGE_JSON_PATH = REPO_ROOT / "ts" / "package.json"
+VERIFY_SCRIPT_PATH = REPO_ROOT / "py" / "scripts" / "verify_package_artifact.py"
 
 CANONICAL_KEYWORDS: list[str] = [
     "aembit",
@@ -170,3 +176,134 @@ def test_manifest_cross_language_parity_with_ts() -> None:
     assert py_urls["Homepage"] == ts_package["homepage"]
     assert py_urls["Documentation"] == ts_package["homepage"]
     assert py_urls["Issues"] == ts_bugs["url"]
+
+
+def _build_synthetic_artifacts(
+    dist_dir: Path,
+    *,
+    include_sdist: bool = True,
+    include_sdist_license: bool = True,
+    include_wheel: bool = True,
+    include_wheel_license: bool = True,
+    summary: str | None = None,
+    author_email: str | None = None,
+    keywords: str | None = None,
+    project_urls: list[str] | None = None,
+    classifiers: list[str] | None = None,
+) -> None:
+    project = _load_pyproject_project()
+
+    if include_sdist:
+        sdist_path = dist_dir / "aembit_edge_sdk-1.34.1.tar.gz"
+        with tarfile.open(sdist_path, "w:gz") as tf:
+            pyproject_bytes = b"[project]\nname = 'aembit-edge-sdk'\n"
+            info = tarfile.TarInfo("aembit_edge_sdk-1.34.1/pyproject.toml")
+            info.size = len(pyproject_bytes)
+            tf.addfile(info, io.BytesIO(pyproject_bytes))
+            if include_sdist_license:
+                lic_bytes = b"Apache-2.0\n"
+                lic_info = tarfile.TarInfo("aembit_edge_sdk-1.34.1/LICENSE")
+                lic_info.size = len(lic_bytes)
+                tf.addfile(lic_info, io.BytesIO(lic_bytes))
+
+    if include_wheel:
+        wheel_path = dist_dir / "aembit_edge_sdk-1.34.1-py3-none-any.whl"
+        meta_summary = (
+            summary
+            if summary is not None
+            else "Official Python SDK for the Aembit Edge API: "
+            "workload identity authentication and secretless credential retrieval"
+        )
+        meta_author_email = (
+            author_email if author_email is not None else '"Aembit, Inc." <support@aembit.io>'
+        )
+        meta_keywords = (
+            keywords if keywords is not None else ",".join(cast(list[str], project["keywords"]))
+        )
+        meta_urls = (
+            project_urls
+            if project_urls is not None
+            else [
+                "Homepage, https://docs.aembit.io/dev-guide/api/edge/",
+                "Documentation, https://docs.aembit.io/dev-guide/api/edge/",
+                "Repository, https://github.com/Aembit/edge-sdks",
+                "Issues, https://github.com/Aembit/edge-sdks/issues",
+                "Changelog, https://github.com/Aembit/edge-sdks/releases",
+            ]
+        )
+        meta_classifiers = (
+            classifiers if classifiers is not None else cast(list[str], project["classifiers"])
+        )
+
+        lines = [
+            "Metadata-Version: 2.4",
+            "Name: aembit-edge-sdk",
+            "Version: 1.34.1",
+            f"Summary: {meta_summary}",
+            f"Author-email: {meta_author_email}",
+            f"Keywords: {meta_keywords}",
+            *(f"Project-URL: {url}" for url in meta_urls),
+            *(f"Classifier: {cls}" for cls in meta_classifiers),
+        ]
+        metadata_text = "\n".join(lines) + "\n"
+
+        with zipfile.ZipFile(wheel_path, "w") as zf:
+            zf.writestr("aembit_edge/__init__.py", "")
+            zf.writestr("aembit_edge_sdk-1.34.1.dist-info/METADATA", metadata_text)
+            if include_wheel_license:
+                zf.writestr("aembit_edge_sdk-1.34.1.dist-info/licenses/LICENSE", "Apache-2.0\n")
+
+
+def test_verify_package_artifact_passes_on_valid_artifacts(tmp_path: Path) -> None:
+    """Verify verify_package_artifact.py succeeds on valid synthetic wheel and sdist."""
+    _build_synthetic_artifacts(tmp_path)
+    result = subprocess.run(
+        [sys.executable, str(VERIFY_SCRIPT_PATH), "--dist-dir", str(tmp_path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Verified Python package artifacts" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected_error"),
+    [
+        ({"include_wheel": False}, "Expected exactly 1 wheel"),
+        ({"include_sdist": False}, "Expected exactly 1 sdist"),
+        ({"include_wheel_license": False}, "missing LICENSE"),
+        ({"include_sdist_license": False}, "missing LICENSE"),
+        ({"summary": "Drifted summary"}, "Unexpected Summary"),
+        ({"author_email": '"Other" <other@example.com>'}, "Unexpected Author-email"),
+        ({"keywords": "aembit,mutated"}, "Expected 24 keywords"),
+        (
+            {"project_urls": ["Homepage, https://docs.aembit.io/dev-guide/api/edge/"]},
+            "Missing expected Project-URL entries",
+        ),
+        (
+            {
+                "classifiers": [
+                    "Development Status :: 3 - Alpha",
+                    "Typing :: Typed",
+                ]
+            },
+            "Missing 'Development Status :: 5 - Production/Stable' classifier",
+        ),
+    ],
+)
+def test_verify_package_artifact_fails_on_invalid_artifacts(
+    tmp_path: Path,
+    overrides: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Verify verify_package_artifact.py exits non-zero when artifacts or metadata drift."""
+    _build_synthetic_artifacts(tmp_path, **overrides)
+    result = subprocess.run(
+        [sys.executable, str(VERIFY_SCRIPT_PATH), "--dist-dir", str(tmp_path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert expected_error in result.stderr

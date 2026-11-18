@@ -1,7 +1,9 @@
 // Copyright 2024-present Aembit, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { execFileSync, spawnSync } from "node:child_process"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
@@ -11,6 +13,7 @@ const TS_ROOT = path.resolve(__dirname, "..")
 const REPO_ROOT = path.resolve(TS_ROOT, "..")
 const PACKAGE_JSON_PATH = path.join(TS_ROOT, "package.json")
 const PYPROJECT_TOML_PATH = path.join(REPO_ROOT, "py", "pyproject.toml")
+const VERIFY_SCRIPT_PATH = path.join(TS_ROOT, "scripts", "verify-package-artifact.mjs")
 
 interface PackageManifest {
   name?: string
@@ -289,5 +292,101 @@ describe("TypeScript Package Manifest Metadata", () => {
       expect(pyValue).toBeDefined()
       expect(tsValue).toBe(pyValue)
     })
+  })
+})
+
+function buildSyntheticTarball(
+  dir: string,
+  options: {
+    includeLicense?: boolean
+    packageOverrides?: Record<string, unknown>
+    skipTarball?: boolean
+  } = {}
+): void {
+  if (options.skipTarball) {
+    return
+  }
+  const stageDir = path.join(dir, "stage")
+  const pkgDir = path.join(stageDir, "package")
+  fs.mkdirSync(pkgDir, { recursive: true })
+
+  if (options.includeLicense !== false) {
+    fs.writeFileSync(path.join(pkgDir, "LICENSE"), "Apache-2.0\n", "utf8")
+  }
+
+  const basePkg = JSON.parse(fs.readFileSync(PACKAGE_JSON_PATH, "utf8")) as Record<string, unknown>
+  const mergedPkg = {
+    ...basePkg,
+    ...options.packageOverrides
+  }
+  fs.writeFileSync(path.join(pkgDir, "package.json"), JSON.stringify(mergedPkg, null, 2), "utf8")
+
+  const tgzPath = path.join(dir, "aembit-edge-sdk-1.34.1.tgz")
+  execFileSync("tar", ["-czf", tgzPath, "-C", stageDir, "package"])
+  fs.rmSync(stageDir, { recursive: true, force: true })
+}
+
+describe("verify-package-artifact.mjs", () => {
+  it("passes on a valid synthetic package tarball", () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "sdk58-ts-verify-pass-"))
+    try {
+      buildSyntheticTarball(tmpDir)
+      const result = spawnSync(
+        process.execPath,
+        [VERIFY_SCRIPT_PATH, "--dir", tmpDir],
+        { encoding: "utf8" }
+      )
+      expect(result.status).toBe(0)
+      expect(result.stdout).toContain("Verified TypeScript package artifact aembit-edge-sdk-1.34.1.tgz")
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
+  })
+
+  it.each([
+    [
+      "missing tarball",
+      { skipTarball: true },
+      "Expected exactly 1 aembit-edge-sdk-*.tgz"
+    ],
+    [
+      "missing package/LICENSE",
+      { includeLicense: false },
+      "missing required entry package/LICENSE"
+    ],
+    [
+      "description drift",
+      { packageOverrides: { description: "Drifted description" } },
+      "Official TypeScript SDK"
+    ],
+    [
+      "homepage drift",
+      { packageOverrides: { homepage: "https://example.com/wrong" } },
+      "https://docs.aembit.io/dev-guide/api/edge/"
+    ],
+    [
+      "unexpected funding field",
+      { packageOverrides: { funding: "https://example.com/sponsor" } },
+      "package.json must not contain funding"
+    ],
+    [
+      "mutated keywords",
+      { packageOverrides: { keywords: ["aembit", "mutated"] } },
+      "24"
+    ]
+  ])("exits non-zero when %s", (_label, options, expectedErrSubstring) => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "sdk58-ts-verify-fail-"))
+    try {
+      buildSyntheticTarball(tmpDir, options)
+      const result = spawnSync(
+        process.execPath,
+        [VERIFY_SCRIPT_PATH, "--dir", tmpDir],
+        { encoding: "utf8" }
+      )
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain(expectedErrSubstring)
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 })

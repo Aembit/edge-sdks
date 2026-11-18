@@ -80,23 +80,7 @@ jobs:
         run: |
           npm run build
           npm pack
-          tar -ztvf aembit-edge-sdk-*.tgz | grep -F "package/LICENSE"
-          tar -zxOf aembit-edge-sdk-*.tgz package/package.json | node --input-type=module -e '
-            import assert from "node:assert/strict";
-            import fs from "node:fs";
-            const pkg = JSON.parse(fs.readFileSync(0, "utf8"));
-            assert.equal(
-              pkg.description,
-              "Official TypeScript SDK for the Aembit Edge API: workload identity authentication and secretless credential retrieval",
-            );
-            assert.equal(pkg.author, "Aembit, Inc. <support@aembit.io>");
-            assert.equal(pkg.homepage, "https://docs.aembit.io/dev-guide/api/edge/");
-            assert.equal("funding" in pkg, false);
-            assert.ok(Array.isArray(pkg.keywords));
-            assert.equal(pkg.keywords.length, 24);
-            assert.ok(pkg.keywords.includes("workload-identity"));
-            assert.ok(pkg.keywords.includes("model-context-protocol"));
-          '
+          node ./scripts/verify-package-artifact.mjs
 
   python:
     name: Python (${{ matrix.python-version }})
@@ -168,39 +152,7 @@ jobs:
 
       - name: Verify license and metadata in built artifacts
         if: matrix.python-version == '3.12'
-        run: |
-          unzip -l dist/*.whl | grep -E "dist-info/licenses/LICENSE|dist-info/LICENSE"
-          tar -ztvf dist/*.tar.gz | grep -E "aembit_edge_sdk-[0-9.]+/LICENSE"
-          python -c '
-          import glob, zipfile
-          from email.parser import BytesParser
-
-          wheels = glob.glob("dist/*.whl")
-          assert len(wheels) == 1, wheels
-          with zipfile.ZipFile(wheels[0]) as zf:
-              meta_names = [n for n in zf.namelist() if n.endswith(".dist-info/METADATA")]
-              assert len(meta_names) == 1, meta_names
-              msg = BytesParser().parsebytes(zf.read(meta_names[0]))
-
-          assert msg["Summary"] == "Official Python SDK for the Aembit Edge API: workload identity authentication and secretless credential retrieval"
-          assert msg["Author-email"] == "\"Aembit, Inc.\" <support@aembit.io>"
-          keywords = (msg["Keywords"] or "").split(",")
-          assert len(keywords) == 24
-          assert "workload-identity" in keywords
-          assert "model-context-protocol" in keywords
-          expected_urls = {
-              "Homepage, https://docs.aembit.io/dev-guide/api/edge/",
-              "Documentation, https://docs.aembit.io/dev-guide/api/edge/",
-              "Repository, https://github.com/Aembit/edge-sdks",
-              "Issues, https://github.com/Aembit/edge-sdks/issues",
-              "Changelog, https://github.com/Aembit/edge-sdks/releases",
-          }
-          assert expected_urls.issubset(set(msg.get_all("Project-URL") or []))
-          classifiers = set(msg.get_all("Classifier") or [])
-          assert "Development Status :: 5 - Production/Stable" in classifiers
-          assert "Typing :: Typed" in classifiers
-          assert "Development Status :: 3 - Alpha" not in classifiers
-          '
+        run: python scripts/verify_package_artifact.py
 
       - name: Install built wheel
         if: matrix.python-version == '3.12'
