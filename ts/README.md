@@ -156,7 +156,7 @@ const client = new EdgeClient({
 
 ## Examples
 
-Runnable end-to-end examples are available in the GitHub repository:
+Runnable end-to-end reference examples (provided as-is; see [Support Policy](https://github.com/Aembit/edge-sdks/blob/main/SUPPORT.md)) are available in the GitHub repository:
 
 - [AWS EC2 + IMDSv2](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/aws-imds-ec2)
 - [AWS Lambda + IAM Role](https://github.com/Aembit/edge-sdks/tree/main/ts/examples/aws-role-lambda)
@@ -175,6 +175,7 @@ Runnable end-to-end examples are available in the GitHub repository:
 - [Aembit Documentation](https://docs.aembit.io/)
 - [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
 - [Contributing Guide](https://github.com/Aembit/edge-sdks/blob/main/CONTRIBUTING.md)
+- [Support Policy](https://github.com/Aembit/edge-sdks/blob/main/SUPPORT.md)
 
 ## License
 

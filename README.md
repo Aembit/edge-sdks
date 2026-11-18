@@ -34,6 +34,13 @@ This repository is organized as a multi-language SDK monorepo:
 - [Aembit Documentation](https://docs.aembit.io/)
 - [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
 - [Contributing Guidelines](./CONTRIBUTING.md)
+- [Support Policy](./SUPPORT.md)
+
+## Support
+
+The published `@aembit/edge-sdk` (npm) and `aembit-edge-sdk` (PyPI) packages are officially supported by Aembit. Runnable code under `ts/examples/` and `py/examples/` is provided as-is as reference examples.
+
+See the [Support Policy](./SUPPORT.md) for support tiers, supported versions, and contact channels.
 
 ## Contributing
 
