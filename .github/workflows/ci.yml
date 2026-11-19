@@ -192,6 +192,9 @@ jobs:
       - name: Check License Headers
         run: npm run lint:headers
 
+      - name: Run Repo Tooling Tests
+        run: node --test scripts/prepare-security-sarif.test.mjs
+
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
