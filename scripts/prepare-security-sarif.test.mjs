@@ -352,6 +352,65 @@ describe('validateSarifDocument', () => {
       },
       forbiddenPattern: /SECRET_DICT_KEY_XYZ/,
     },
+    {
+      name: 'empty contextRegion object missing startLine/charOffset/byteOffset',
+      input: {
+        version: '2.1.0',
+        runs: [
+          {
+            tool: { driver: { name: 'droid-deep-security-review' } },
+            results: [
+              {
+                ruleId: 'SEC-1',
+                message: { text: 'Issue' },
+                locations: [
+                  {
+                    physicalLocation: {
+                      artifactLocation: { uri: 'ts/src/a.ts' },
+                      region: { startLine: 1 },
+                      contextRegion: {},
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      expectedReasonPattern: /anyOf schema constraint/,
+    },
+    {
+      name: 'empty secondary location physicalLocation.region object',
+      input: {
+        version: '2.1.0',
+        runs: [
+          {
+            tool: { driver: { name: 'droid-deep-security-review' } },
+            results: [
+              {
+                ruleId: 'SEC-1',
+                message: { text: 'Issue' },
+                locations: [
+                  {
+                    physicalLocation: {
+                      artifactLocation: { uri: 'ts/src/a.ts' },
+                      region: { startLine: 1 },
+                    },
+                  },
+                  {
+                    physicalLocation: {
+                      artifactLocation: { uri: 'ts/src/b.ts' },
+                      region: {},
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      expectedReasonPattern: /anyOf schema constraint/,
+    },
   ];
 
   for (const testCase of invalidCases) {
@@ -361,8 +420,66 @@ describe('validateSarifDocument', () => {
       if (testCase.forbiddenPattern) {
         assert.doesNotMatch(result.reason, testCase.forbiddenPattern);
       }
+      if (testCase.expectedReasonPattern) {
+        assert.match(result.reason, testCase.expectedReasonPattern);
+      }
     });
   }
+
+  it('rejects deeply nested SARIF structures exceeding maximum schema validation depth', () => {
+    let node = { id: 'leaf' };
+    for (let i = 0; i < 25; i += 1) {
+      node = { id: `n-${i}`, children: [node] };
+    }
+    const doc = makeSampleSarif({ findings: [] });
+    doc.runs[0].graphs = [{ nodes: [node] }];
+
+    const result = validateSarifDocument(doc);
+    assert.equal(result.valid, false);
+    assert.match(result.reason, /exceeds maximum schema validation depth/);
+  });
+
+  it('accepts valid regions using startLine, charOffset, or byteOffset and complex codeFlows', () => {
+    const doc = makeSampleSarif({
+      findings: [
+        {
+          ruleId: 'CWE-89',
+          message: { text: 'Issue with codeFlow and valid regions' },
+          locations: [
+            {
+              physicalLocation: {
+                artifactLocation: { uri: 'ts/src/a.ts' },
+                region: { startLine: 10 },
+                contextRegion: { charOffset: 120, charLength: 15 },
+              },
+            },
+          ],
+          codeFlows: [
+            {
+              threadFlows: [
+                {
+                  locations: [
+                    {
+                      location: {
+                        physicalLocation: {
+                          artifactLocation: { uri: 'ts/src/a.ts' },
+                          region: { byteOffset: 42, byteLength: 8 },
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = validateSarifDocument(doc);
+    assert.equal(result.valid, true);
+    assert.equal(result.totalFindings, 1);
+  });
 
   it('defaults $schema when omitted and counts findings in single run', () => {
     const doc = {
@@ -394,6 +511,30 @@ describe('validateSarifDocument', () => {
     assert.equal(result.runCount, 1);
     assert.equal(result.sarif.$schema, 'https://json.schemastore.org/sarif-2.1.0.json');
   });
+
+  const dateTimeCases = [
+    { label: 'impossible Feb 30 date', startTimeUtc: '2026-02-30T00:00:00Z', valid: false },
+    { label: 'non-leap-year Feb 29 date', startTimeUtc: '2025-02-29T00:00:00Z', valid: false },
+    { label: 'month 13 rollover', startTimeUtc: '2026-13-01T00:00:00Z', valid: false },
+    { label: 'impossible Apr 31 date', startTimeUtc: '2026-04-31T12:00:00Z', valid: false },
+    { label: 'hour 24 overflow', startTimeUtc: '2026-01-01T24:00:00Z', valid: false },
+    { label: 'out-of-range timezone offset', startTimeUtc: '2026-01-01T12:00:00+25:00', valid: false },
+    { label: 'valid leap day with fractional seconds and offset', startTimeUtc: '2024-02-29T23:59:59.123+02:00', valid: true },
+    { label: 'valid UTC timestamp', startTimeUtc: '2026-11-19T12:00:00Z', valid: true },
+  ];
+
+  for (const testCase of dateTimeCases) {
+    it(`${testCase.valid ? 'accepts' : 'rejects'} invocations[0].startTimeUtc for ${testCase.label}`, () => {
+      const doc = makeSampleSarif({ findings: [] });
+      doc.runs[0].invocations = [{ executionSuccessful: true, startTimeUtc: testCase.startTimeUtc }];
+
+      const result = validateSarifDocument(doc);
+      assert.equal(result.valid, testCase.valid);
+      if (!testCase.valid) {
+        assert.match(result.reason, /not a valid date-time/);
+      }
+    });
+  }
 });
 
 describe('extractSarifFromDroidOutput', () => {

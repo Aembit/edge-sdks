@@ -93,10 +93,47 @@ function isValidDateTime(value) {
   if (typeof value !== 'string') {
     return false;
   }
-  return (
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/i.test(value) &&
-    !Number.isNaN(Date.parse(value))
-  );
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$/i.exec(
+      value,
+    );
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return false;
+  }
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
+    return false;
+  }
+
+  if (match[7]) {
+    const offsetHour = Number(match[8]);
+    const offsetMinute = Number(match[9]);
+    if (offsetHour < 0 || offsetHour > 23 || offsetMinute < 0 || offsetMinute > 59) {
+      return false;
+    }
+  }
+
+  const utcDate = new Date(0);
+  utcDate.setUTCFullYear(year, month - 1, day);
+  if (
+    utcDate.getUTCFullYear() !== year ||
+    utcDate.getUTCMonth() !== month - 1 ||
+    utcDate.getUTCDate() !== day
+  ) {
+    return false;
+  }
+
+  return !Number.isNaN(Date.parse(value));
 }
 
 function matchesSchemaType(value, expectedType) {
@@ -123,8 +160,14 @@ function matchesSchemaType(value, expectedType) {
   }
 }
 
+const MAX_SCHEMA_DEPTH = 40;
+
 function validateAgainstSchemaNode(value, schemaNode, rootSchema, pathLabel, errors, depth = 0) {
-  if (!schemaNode || typeof schemaNode !== 'object' || depth > 40) {
+  if (!schemaNode || typeof schemaNode !== 'object') {
+    return;
+  }
+  if (depth > MAX_SCHEMA_DEPTH) {
+    errors.push(`${pathLabel} exceeds maximum schema validation depth`);
     return;
   }
 
