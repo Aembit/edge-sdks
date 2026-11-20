@@ -477,6 +477,72 @@ function droidLogHasError(rawOutput) {
   return collectJsonCandidates(rawOutput).some((entry) => entry.is_error === true);
 }
 
+const MAX_STARTUP_ERROR_SCAN_LENGTH = 4096;
+
+const TURN_ZERO_ERROR_CLASSIFIERS = [
+  {
+    code: 'auth_failed',
+    pattern:
+      /\b(?:authentication failed|unauthorized|invalid api[\s_-]?key|factory_api_key|api[\s_-]?key\s+(?:is\s+)?(?:missing|invalid|expired|revoked)|http\s*401)\b/i,
+  },
+  {
+    code: 'rate_or_quota_limit',
+    pattern:
+      /\b(?:rate[\s_-]?limit(?:ed)?|too many requests|quota|credit(?:s)?\s+(?:exhausted|exceeded|limit)|usage limit|billing|overage|http\s*429)\b/i,
+  },
+  {
+    code: 'access_denied',
+    pattern:
+      /\b(?:forbidden|access denied|permission denied|not allowed|restricted|missionpolicy|org(?:anization)? policy|http\s*403)\b/i,
+  },
+  {
+    code: 'timeout',
+    pattern: /\b(?:timed?[\s_-]?out|timeout|deadline exceeded|etimedout|http\s*504)\b/i,
+  },
+  {
+    code: 'upstream_or_network_error',
+    pattern:
+      /\b(?:temporarily unavailable|service unavailable|bad gateway|internal server error|overloaded|upstream|econnrefused|econnreset|enotfound|fetch failed|network error|socket hang up|http\s*50[023])\b/i,
+  },
+  {
+    code: 'model_unavailable',
+    pattern:
+      /\b(?:invalid model|unknown model|unsupported model|model\s+(?:is\s+)?(?:not found|unavailable|unsupported|disabled|not available))\b/i,
+  },
+  {
+    code: 'config_or_hook_error',
+    pattern:
+      /\b(?:invalid (?:flag|option|argument|config|settings)|hook (?:refused|blocked|stopped)|sessionstart|userpromptsubmit)\b/i,
+  },
+];
+
+function classifyTurnZeroStartupError(rawResult) {
+  if (typeof rawResult !== 'string') {
+    return null;
+  }
+
+  const trimmed = rawResult.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  const sample =
+    trimmed.length > MAX_STARTUP_ERROR_SCAN_LENGTH
+      ? trimmed.slice(0, MAX_STARTUP_ERROR_SCAN_LENGTH)
+      : trimmed;
+
+  const statusMatch = /\b(?:http|status(?:\s+code)?)\s*[:=]?\s*(4\d\d|5\d\d)\b/i.exec(sample);
+  const httpStatus = statusMatch ? statusMatch[1] : null;
+
+  for (const classifier of TURN_ZERO_ERROR_CLASSIFIERS) {
+    if (classifier.pattern.test(sample)) {
+      return { reason: classifier.code, httpStatus };
+    }
+  }
+
+  return { reason: 'unclassified_startup_error', httpStatus };
+}
+
 function extractSanitizedDroidErrorMetadata(rawOutput) {
   const candidates = collectJsonCandidates(rawOutput);
 
@@ -494,6 +560,17 @@ function extractSanitizedDroidErrorMetadata(rawOutput) {
     }
     if (typeof entry.duration_ms === 'number' && Number.isFinite(entry.duration_ms)) {
       parts.push(`duration_ms=${entry.duration_ms}`);
+    }
+    // Only emit a fixed allowlisted diagnostic code on turn-0 startup failures (before any audit
+    // turn executes); never echo raw entry.result text into public workflow logs.
+    if (entry.num_turns === 0) {
+      const classification = classifyTurnZeroStartupError(entry.result);
+      if (classification) {
+        parts.push(`reason=${classification.reason}`);
+        if (classification.httpStatus) {
+          parts.push(`http_status=${classification.httpStatus}`);
+        }
+      }
     }
     return parts.join(', ');
   }

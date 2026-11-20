@@ -763,6 +763,78 @@ describe('prepareSecuritySarif', () => {
         'Error: Unable to extract valid SARIF v2.1.0 report (droid is_error=true; subtype=error_max_turns, turns=25, duration_ms=1234)\n',
     },
     {
+      name: 'droid is_error=true turn-0 auth failure emits static auth_failed reason without echoing secrets',
+      sarifContent: null,
+      logContent: JSON.stringify({
+        type: 'result',
+        subtype: 'failure',
+        num_turns: 0,
+        duration_ms: 1487,
+        is_error: true,
+        result:
+          'Authentication failed: invalid API key: SENSITIVEVALUE (FACTORY_API_KEY=topsecret)\nSecond line: RAW_SECOND_LINE_SECRET',
+      }),
+      expectedError:
+        'Error: Unable to extract valid SARIF v2.1.0 report (droid is_error=true; subtype=failure, turns=0, duration_ms=1487, reason=auth_failed)\n',
+    },
+    {
+      name: 'droid is_error=true turn-0 upstream 503 failure emits upstream_or_network_error and http_status without echoing URLs or paths',
+      sarifContent: null,
+      logContent: JSON.stringify({
+        type: 'result',
+        subtype: 'failure',
+        num_turns: 0,
+        duration_ms: 512,
+        is_error: true,
+        result:
+          '::error::HTTP 503 Service Unavailable from https://api.example.com/api/SENSITIVEVALUE/data?credential=(LEAKED_QUERY) at /home/runner/work/secret.key',
+      }),
+      expectedError:
+        'Error: Unable to extract valid SARIF v2.1.0 report (droid is_error=true; subtype=failure, turns=0, duration_ms=512, reason=upstream_or_network_error, http_status=503)\n',
+    },
+    {
+      name: 'droid is_error=true turn-0 rate limit failure emits rate_or_quota_limit and http_status',
+      sarifContent: null,
+      logContent: JSON.stringify({
+        type: 'result',
+        subtype: 'failure',
+        num_turns: 0,
+        duration_ms: 410,
+        is_error: true,
+        result: 'Status: 429 Too Many Requests for {"api_key":"quoted-secret-value"}',
+      }),
+      expectedError:
+        'Error: Unable to extract valid SARIF v2.1.0 report (droid is_error=true; subtype=failure, turns=0, duration_ms=410, reason=rate_or_quota_limit, http_status=429)\n',
+    },
+    {
+      name: 'droid is_error=true turn-0 model unavailable failure emits model_unavailable',
+      sarifContent: null,
+      logContent: JSON.stringify({
+        type: 'result',
+        subtype: 'failure',
+        num_turns: 0,
+        duration_ms: 420,
+        is_error: true,
+        result: 'Invalid model requested via /etc/shadow',
+      }),
+      expectedError:
+        'Error: Unable to extract valid SARIF v2.1.0 report (droid is_error=true; subtype=failure, turns=0, duration_ms=420, reason=model_unavailable)\n',
+    },
+    {
+      name: 'droid is_error=true turn-0 unrecognized error emits unclassified_startup_error without echoing raw text',
+      sarifContent: null,
+      logContent: JSON.stringify({
+        type: 'result',
+        subtype: 'failure',
+        num_turns: 0,
+        duration_ms: 300,
+        is_error: true,
+        result: `Unexpected crash https://example.com/${'.'.repeat(50000)}?token=(SENSITIVEVALUE)`,
+      }),
+      expectedError:
+        'Error: Unable to extract valid SARIF v2.1.0 report (droid is_error=true; subtype=failure, turns=0, duration_ms=300, reason=unclassified_startup_error)\n',
+    },
+    {
       name: 'droid is_error=true payload even when partial SARIF file exists',
       sarifContent: JSON.stringify(makeSampleSarif({ findings: [] })),
       logContent:
@@ -808,7 +880,7 @@ describe('prepareSecuritySarif', () => {
         assert.equal(stderr.text(), testCase.expectedError);
         assert.doesNotMatch(
           stderr.text(),
-          /RAW_SENSITIVE_TEXT_LEAK_CHECK|EXPLOIT_PATH|MULTILINE_EXPLOIT_RAW_LEAK/
+          /RAW_SENSITIVE_TEXT_LEAK_CHECK|EXPLOIT_PATH|MULTILINE_EXPLOIT_RAW_LEAK|RAW_SECOND_LINE_SECRET|SENSITIVEVALUE|topsecret|\/home\/runner|quoted-secret-value|LEAKED_QUERY|\/etc\/shadow/
         );
         assert.equal(fs.existsSync(outputPath), false);
         assert.equal(fs.existsSync(sarifInputPath), false);
