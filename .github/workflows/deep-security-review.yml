@@ -3,9 +3,8 @@ name: Deep Security Review
 "on":
   workflow_dispatch: {}
   schedule:
-    - cron: 0 6 * * 1
-permissions:
-  contents: read
+    - cron: 0 6 14 * *
+permissions: {}
 concurrency:
   group: droid-security-audit
   cancel-in-progress: false
@@ -13,21 +12,60 @@ jobs:
   security-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "22.x"
       - name: Install Factory Droid
         run: |
           curl -fsSL https://app.factory.ai/cli | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Run deep security review
-        run: droid exec --mission --auto high -m gemini-4-neon -r high "/security-review across the entire repository"
+        id: droid-review
+        run: |
+          set +e
+          droid exec -o json --mission --auto high -m gemini-4-neon -r high \
+            "/security-review across the entire repository. Write a valid SARIF v2.1.0 JSON report directly to \"$RUNNER_TEMP/security-review.sarif\". Ensure there is a single run with tool.driver.name set to \"droid-deep-security-review\" (and omit automationDetails.id or start it with \"droid-deep-security-review/\"), and every result includes a stable CWE/category-based ruleId, message.text, and a primary locations[0].physicalLocation with a repository-relative artifactLocation.uri and positive integer region.startLine. Do NOT write reports to ~/security-audits/ and do NOT print raw findings or SARIF contents to stdout or stderr." \
+            > "$RUNNER_TEMP/droid-exec.json" 2> "$RUNNER_TEMP/droid-stderr.log"
+          exit_code=$?
+          set -e
+          echo "Droid security review exited with status $exit_code"
+          exit "$exit_code"
         env:
           FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
-      - name: Upload security review output
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Validate and sanitize SARIF output
+        id: validate-sarif
+        if: always() && steps.droid-review.outcome != 'skipped'
+        run: |
+          set +e
+          node scripts/prepare-security-sarif.mjs \
+            --sarif-input "$RUNNER_TEMP/security-review.sarif" \
+            --log-input "$RUNNER_TEMP/droid-exec.json" \
+            --output "$RUNNER_TEMP/validated.sarif" \
+            --cleanup
+          prep_exit=$?
+          set -e
+          if [ "${{ steps.droid-review.outcome }}" = "success" ] && [ "$prep_exit" -eq 0 ] && [ -f "$RUNNER_TEMP/validated.sarif" ]; then
+            echo "sarif_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "sarif_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$prep_exit" -ne 0 ]; then
+            exit "$prep_exit"
+          fi
+      - name: Upload SARIF to GitHub Code Scanning
+        if: (success() || failure()) && steps.droid-review.outcome == 'success' && steps.validate-sarif.outputs.sarif_ready == 'true'
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
         with:
-          name: deep-security-review-${{ github.run_id }}
-          path: ~/security-audits/
-          if-no-files-found: warn
-          retention-days: 90
+          sarif_file: ${{ runner.temp }}/validated.sarif
+          category: droid-deep-security-review
+      - name: Clean up validated SARIF report
+        if: always()
+        run: rm -f "$RUNNER_TEMP/validated.sarif" "$RUNNER_TEMP/security-review.sarif" "$RUNNER_TEMP/droid-exec.json" "$RUNNER_TEMP/droid-stderr.log"
