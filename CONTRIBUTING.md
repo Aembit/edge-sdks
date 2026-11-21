@@ -5,6 +5,7 @@ Thank you for your interest in contributing to the Aembit Edge SDKs! We welcome 
 ## Code of Conduct & Security
 
 - **No Secrets**: Never commit real tenant URLs, live API tokens, or secrets to the repository or tests. Always use representative placeholder values (e.g. `https://tenant.aembit.io`, `your-client-id`).
+- **Vulnerability Reporting**: Do not report security vulnerabilities in public issues or pull requests. Follow our [Security Policy](./SECURITY.md) to report vulnerabilities privately.
 - **Clean Code & Typing**: Maintain strict type safety across all SDKs. Avoid `any` in TypeScript and provide full type annotations in Python.
 - **License**: All contributions to this project will be licensed under the [Apache-2.0 License](./LICENSE).
 

@@ -34,10 +34,15 @@ This repository is organized as a multi-language SDK monorepo:
 - [Aembit Documentation](https://docs.aembit.io/)
 - [GitHub Issue Tracker](https://github.com/Aembit/edge-sdks/issues)
 - [Contributing Guidelines](./CONTRIBUTING.md)
+- [Security Policy](./SECURITY.md)
 
 ## Contributing
 
 Contributions are welcome! Please review our [Contributing Guide](./CONTRIBUTING.md) for branch naming standards, local development checks, and pull request workflows.
+
+## Security
+
+Please do not report security vulnerabilities through public GitHub issues, pull requests, or discussions. Review our [Security Policy](./SECURITY.md) for supported versions and private reporting instructions.
 
 ## License
 
